@@ -75,6 +75,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 _buildLoginButton(),
                 const SizedBox(height: 20),
                 _buildRegisterLink(),
+                const SizedBox(height: 30), // Spasi sebelum footer
+                _buildFooter(),
               ],
             ),
           ),
@@ -135,4 +137,36 @@ class _LoginScreenState extends State<LoginScreen> {
       ],
     );
   }
-}
+
+  Widget _buildFooter() {
+    return Column(
+      children: [
+        Text(
+          "Developed By : PLATFORM PELAYANAN TERBAIK",
+          style: GoogleFonts.poppins(
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+            color: Colors.green.shade700,
+          ),
+        ),
+        Text(
+          "Distributed By : PT. REKAMITRA",
+          style: GoogleFonts.poppins(
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+            color: Colors.green.shade700,
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          "2026 - Indonesia",
+          style: GoogleFonts.poppins(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Colors.green.shade800,
+          ),
+        ),
+      ],
+    );
+  }
+} // <--- Penutup class ini harus ada di paling bawah.

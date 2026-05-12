@@ -215,6 +215,45 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
                       // =========================
                       _sectionTitle("SYSTEM"),
                       _menu("Logout", Icons.logout, isLogout: true),
+                      // =========================
+// FOOTER INFORMATION
+// =========================
+const SizedBox(height: 32),
+Center(
+  child: Column(
+    children: [
+      Text(
+        "Developed By : PLATFORM PELAYANAN TERBAIK",
+        textAlign: TextAlign.center,
+        style: GoogleFonts.plusJakartaSans(
+          fontSize: 8, // Ukuran disesuaikan untuk sidebar landscape
+          fontWeight: FontWeight.w500,
+          color: Colors.green.shade800.withOpacity(0.7),
+        ),
+      ),
+      const SizedBox(height: 2),
+      Text(
+        "Distributed By : PT. REKAMITRA",
+        textAlign: TextAlign.center,
+        style: GoogleFonts.plusJakartaSans(
+          fontSize: 8,
+          fontWeight: FontWeight.w500,
+          color: Colors.green.shade800.withOpacity(0.7),
+        ),
+      ),
+      const SizedBox(height: 6),
+      Text(
+        "2026 - Indonesia",
+        style: GoogleFonts.plusJakartaSans(
+          fontSize: 8,
+          fontWeight: FontWeight.bold,
+          color: Colors.green.shade900.withOpacity(0.8),
+        ),
+      ),
+      const SizedBox(height: 20),
+    ],
+  ),
+),
                     ],
                   ),
                 ),
