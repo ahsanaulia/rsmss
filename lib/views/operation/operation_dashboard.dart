@@ -1,0 +1,688 @@
+import 'dart:ui';
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'task_list_view.dart';
+import 'attendance_view.dart';
+import '../profile_view.dart';
+import 'task_history_view.dart';
+import 'report_history_view.dart';
+import 'attendance_history_view.dart';
+import '../../services/announcement_service.dart';
+
+class OperationDashboard extends StatefulWidget {
+  final String userName;
+  final VoidCallback onLogout;
+
+  const OperationDashboard({
+    super.key,
+    required this.userName,
+    required this.onLogout,
+  });
+
+  @override
+  State<OperationDashboard> createState() => _OperationDashboardState();
+}
+
+class _OperationDashboardState extends State<OperationDashboard> {
+  final supabase = Supabase.instance.client;
+  int _currentNavbarIndex = 0;
+
+  Map<String, dynamic>? _profileData;
+  Map<String, dynamic>? _hospitalData;
+
+  // Stats tetap pake variabel karena butuh logic perhitungan kompleks (looping)
+  int _newTasksCount = 0;
+  int _onGoingTasksCount = 0;
+  int _urgentTasksCount = 0;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStaticData(); // Load data yang jarang berubah (Hospital & Profile)
+    _loadTaskStats(); // Load statistik task
+  }
+
+  /// AMBIL DATA STATIS (Hospital & Profile)
+  Future<void> _loadStaticData() async {
+    try {
+      final user = supabase.auth.currentUser;
+      if (user == null) return;
+
+      final hospital = await supabase
+          .from('hospital_profile')
+          .select()
+          .maybeSingle();
+      final profile = await supabase
+          .from('profiles')
+          .select()
+          .eq('id', user.id)
+          .single();
+
+      if (mounted) {
+        setState(() {
+          _hospitalData = hospital;
+          _profileData = profile;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error Static Data: $e");
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  /// AMBIL STATISTIK TASK (Manual Refresh/Initial)
+  Future<void> _loadTaskStats() async {
+    try {
+      final user = supabase.auth.currentUser;
+      if (user == null) return;
+
+      final List<dynamic> tasksResponse = await supabase
+          .from('tasks')
+          .select()
+          .eq('assignee_id', user.id);
+
+      int n = 0, o = 0, u = 0;
+      for (var t in tasksResponse) {
+        final String? status = t['status']?.toString();
+        final String? priority = t['priority']?.toString();
+        if (status == 'pending') n++;
+        if (status == 'accepted') o++;
+        if ((priority == 'urgent' || priority == 'emergency') &&
+            status != 'done')
+          u++;
+      }
+
+      if (mounted) {
+        setState(() {
+          _newTasksCount = n;
+          _onGoingTasksCount = o;
+          _urgentTasksCount = u;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error Task Stats: $e");
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final double topSpacing = MediaQuery.of(context).size.height * 0.12;
+
+    final List<Widget> pages = [
+      _buildHomeContent(topSpacing),
+      const AttendanceView(),
+      const TaskListView(),
+      const ProfileView(),
+    ];
+
+    return Scaffold(
+      extendBody: true,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFE0F2F1), Color(0xFFB3E5FC), Color(0xFF81D4FA)],
+          ),
+        ),
+        child: SafeArea(
+          top: false,
+          child: IndexedStack(index: _currentNavbarIndex, children: pages),
+        ),
+      ),
+      bottomNavigationBar: _buildBottomNavbar(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: _buildFab(),
+    );
+  }
+
+  Widget _buildHomeContent(double topSpacing) {
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
+
+    return RefreshIndicator(
+      onRefresh: () async {
+        await _loadStaticData();
+        await _loadTaskStats();
+      },
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.zero,
+        children: [
+          SizedBox(height: topSpacing),
+          _buildHospitalInfo(),
+          const SizedBox(height: 50),
+
+          // --- INTEGRASI STREAMBUILDER DI SINI ---
+          _buildRealtimeUserCard(),
+
+          const SizedBox(height: 35),
+          _buildStatsGrid(),
+          const SizedBox(height: 10),
+          _buildMenuCategory("EMPLOYEE REPORT", [
+            _menuItemSmall(
+              "Task History",
+              Icons.history_rounded,
+              Colors.blue,
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const TaskHistoryView(),
+                  ),
+                );
+              },
+            ),
+            _menuItemSmall(
+              "Report History",
+              Icons.assignment_late_outlined,
+              Colors.teal,
+              () {
+                // Navigasi ke Report History (Jika sudah ada class-nya)
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ReportHistoryView(),
+                  ),
+                );
+              },
+            ),
+            _menuItemSmall(
+              "Attendance History",
+              Icons.pending_actions_rounded,
+              Colors.indigo,
+              () {
+                // Navigasi ke Attendance History (Jika sudah ada class-nya)
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AttendanceHistoryView(),
+                  ),
+                );
+              },
+            ),
+          ]),
+          const SizedBox(height: 10),
+          _buildControlRoomSection(),
+          const SizedBox(height: 120),
+        ],
+      ),
+    );
+  }
+
+  /// WIDGET CARD DENGAN STREAMBUILDER (REAL-TIME STATUS)
+  Widget _buildRealtimeUserCard() {
+    final user = supabase.auth.currentUser;
+    if (user == null) return const SizedBox();
+
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      // Listen ke tabel attendance secara realtime
+      stream: supabase
+          .from('attendance')
+          .stream(primaryKey: ['id'])
+          .eq('profile_id', user.id)
+          .order('check_in', ascending: false)
+          .limit(1),
+      builder: (context, snapshot) {
+        // Cek apakah ada record yang check_out-nya masih NULL
+        bool isPresent = false;
+        if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+          isPresent = snapshot.data!.first['check_out'] == null;
+        }
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 25.0),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.fromLTRB(115, 20, 15, 20),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _profileData?['full_name'] ?? widget.userName,
+                          style: GoogleFonts.poppins(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF01579B),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.circle,
+                              size: 8,
+                              color: isPresent ? Colors.green : Colors.red,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              isPresent ? "ON DUTY" : "OFF DUTY",
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: isPresent
+                                    ? Colors.green.shade800
+                                    : Colors.red.shade800,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              // AVATAR POP OUT
+              Positioned(
+                left: 15,
+                top: -35,
+                child: Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 4),
+                  ),
+                  child: CircleAvatar(
+                    radius: 45,
+                    backgroundColor: Colors.white,
+                    backgroundImage: _profileData?['avatar_url'] != null
+                        ? NetworkImage(_profileData!['avatar_url'])
+                        : null,
+                    child: _profileData?['avatar_url'] == null
+                        ? const Icon(Icons.person, size: 50)
+                        : null,
+                  ),
+                ),
+              ),
+              // LOGOUT BUTTON
+              Positioned(
+                right: 8,
+                top: 8,
+                child: IconButton(
+                  onPressed: widget.onLogout,
+                  icon: const Icon(
+                    Icons.logout_rounded,
+                    color: Color(0xFF01579B),
+                    size: 22,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // --- WIDGET PENDUKUNG LAINNYA (TETAP SAMA TAPI BERSIH DARI WARNING) ---
+
+  Widget _buildHospitalInfo() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 30.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Management Support System IOT",
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Colors.blueGrey,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            _hospitalData?['name']?.toUpperCase() ?? "RUMAH SAKIT",
+            style: GoogleFonts.poppins(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF01579B),
+              height: 1.1,
+            ),
+          ),
+          Text(
+            _hospitalData?['address'] ?? "Alamat belum tersedia",
+            style: GoogleFonts.poppins(fontSize: 10, color: Colors.black54),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsGrid() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 25),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 15),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.2),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            _statItem("New", _newTasksCount, Colors.blue),
+            _statItem("Ongoing", _onGoingTasksCount, Colors.indigo),
+            _statItem("Urgent", _urgentTasksCount, Colors.red),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _statItem(String label, int val, Color color) {
+    return Column(
+      children: [
+        Text(
+          "$val",
+          style: GoogleFonts.poppins(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        Text(
+          label,
+          style: GoogleFonts.poppins(fontSize: 10, color: Colors.black54),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMenuCategory(String title, List<Widget> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(30, 15, 25, 8),
+          child: Text(
+            title,
+            style: GoogleFonts.poppins(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF01579B),
+            ),
+          ),
+        ),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 3,
+          padding: const EdgeInsets.symmetric(horizontal: 25),
+          crossAxisSpacing: 15,
+          mainAxisSpacing: 15,
+          childAspectRatio: 1.4,
+          children: items,
+        ),
+      ],
+    );
+  }
+
+  Widget _menuItemSmall(
+    String title,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return GestureDetector(
+      onTap: onTap, // Aksi ketika menu di-klik
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 22),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: GoogleFonts.poppins(
+                fontSize: 9,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildControlRoomSection() {
+    final user = supabase.auth.currentUser;
+    if (user == null || _profileData == null) return const SizedBox();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(30, 15, 25, 8),
+          child: Text(
+            "LATEST ANNOUNCEMENTS",
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: Colors.redAccent,
+            ),
+          ),
+        ),
+        StreamBuilder<List<Map<String, dynamic>>>(
+          stream: AnnouncementService().getFilteredAnnouncements(
+            user.id,
+            _profileData?['position_id'],
+          ),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) return const SizedBox();
+
+            // Jika tidak ada data
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return _buildAnnouncementBox(
+                title: "INFO",
+                content: "Belum ada pesan baru dari pusat kontrol.",
+                priority: "normal",
+              );
+            }
+
+            final announcements = snapshot.data!;
+
+            // Gunakan ConstrainedBox atau SizedBox untuk membatasi tinggi area scroll
+            return ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxHeight: 200, // Tentukan tinggi maksimal area pengumuman
+              ),
+              child: ListView.separated(
+                shrinkWrap:
+                    true, // Agar ListView menyesuaikan konten jika sedikit
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 25,
+                  vertical: 5,
+                ),
+                itemCount: announcements.length,
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final ann = announcements[index];
+                  return _buildAnnouncementBox(
+                    title: ann['title'] ?? "INFO",
+                    content: ann['content'] ?? "",
+                    priority: ann['priority'] ?? "normal",
+                    // Jika ada data waktu di tabel, bisa parsing di sini
+                    // time: formatTime(ann['created_at']),
+                  );
+                },
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  // Widget Helper untuk merender isi kotak pengumuman
+  Widget _buildAnnouncementBox({
+    required String title,
+    required String content,
+    required String priority,
+    String time = "Just now",
+  }) {
+    bool isUrgent = priority == 'urgent' || priority == 'emergency';
+    Color accentColor = isUrgent ? Colors.redAccent : Colors.black38;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: isUrgent
+            ? Colors.red.withValues(alpha: 0.1)
+            : Colors.white.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isUrgent
+              ? Colors.redAccent.withValues(alpha: 0.5)
+              : Colors.white.withValues(alpha: 0.3),
+          width: isUrgent ? 1.5 : 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title.toUpperCase(),
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              color: isUrgent ? Colors.red.shade900 : Colors.black87,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            content,
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              color: isUrgent ? Colors.red.shade900 : Colors.black87,
+              fontWeight: FontWeight.normal,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.bottomRight,
+            child: Text(
+              time,
+              style: GoogleFonts.poppins(
+                fontSize: 9,
+                color: accentColor,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomNavbar() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(15, 0, 15, 50),
+      height: 75,
+      decoration: BoxDecoration(
+        color: const Color(0xFF01579B),
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.2),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _navIcon(Icons.home_filled, "Home", 0),
+          _navIcon(Icons.calendar_month, "Absensi", 1),
+          const SizedBox(width: 45),
+          _navIcon(Icons.assignment, "Tasks", 2),
+          _navIcon(Icons.person, "Profile", 3),
+        ],
+      ),
+    );
+  }
+
+  Widget _navIcon(IconData icon, String label, int index) {
+    bool isSelected = _currentNavbarIndex == index;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _currentNavbarIndex = index),
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? Colors.white : Colors.white54,
+              size: 22,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: isSelected ? Colors.white : Colors.white54,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFab() {
+    return Container(
+      margin: const EdgeInsets.only(top: 30),
+      height: 65,
+      width: 65,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF01579B).withValues(alpha: 0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: FloatingActionButton(
+        onPressed: () {},
+        backgroundColor: const Color(0xFF01579B),
+        shape: const CircleBorder(),
+        child: const Icon(
+          Icons.qr_code_scanner_rounded,
+          color: Colors.white,
+          size: 30,
+        ),
+      ),
+    );
+  }
+}
