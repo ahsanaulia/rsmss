@@ -153,13 +153,13 @@ class _OperationDashboardState extends State<OperationDashboard> {
         children: [
           SizedBox(height: topSpacing),
           _buildHospitalInfo(),
-          const SizedBox(height: 50),
+          const SizedBox(height: 30),
 
           // --- INTEGRASI STREAMBUILDER DI SINI ---
           _buildRealtimeUserCard(),
 
-          const SizedBox(height: 35),
-          _buildStatsGrid(),
+          // const SizedBox(height: 35),
+          // _buildStatsGrid(),
           const SizedBox(height: 10),
           _buildMenuCategory("EMPLOYEE REPORT", [
             _menuItemSmall(
@@ -205,6 +205,69 @@ class _OperationDashboardState extends State<OperationDashboard> {
             ),
           ]),
           const SizedBox(height: 10),
+
+          // =====================================================
+          // WORK OPERATIONS
+          // =====================================================
+          _buildMenuCategory("WORK OPERATIONS", [
+            // =================================================
+            // ASSET INITIAL
+            // =================================================
+            if (_profileData?['is_asset_initial'] == true)
+              _menuItemSmall(
+                "Asset Initial",
+                Icons.inventory_2_outlined,
+                Colors.blue,
+                () {
+                  // TODO:
+                  // NAVIGATE TO ASSET INITIAL SCREEN
+                },
+              ),
+
+            // =================================================
+            // ASSET INSPECTION
+            // =================================================
+            if (_profileData?['is_asset_inspection'] == true)
+              _menuItemSmall(
+                "Asset Inspection",
+                Icons.fact_check_outlined,
+                Colors.teal,
+                () {
+                  // TODO:
+                  // NAVIGATE TO ASSET INSPECTION SCREEN
+                },
+              ),
+
+            // =================================================
+            // STOCK INITIAL
+            // =================================================
+            if (_profileData?['is_stock_initial'] == true)
+              _menuItemSmall(
+                "Stock Initial",
+                Icons.warehouse_outlined,
+                Colors.indigo,
+                () {
+                  // TODO:
+                  // NAVIGATE TO STOCK INITIAL SCREEN
+                },
+              ),
+
+            // =================================================
+            // STOCK OPNAME
+            // =================================================
+            if (_profileData?['is_stock_opname'] == true)
+              _menuItemSmall(
+                "Stock Opname",
+                Icons.playlist_add_check_circle_outlined,
+                Colors.orange,
+                () {
+                  // TODO:
+                  // NAVIGATE TO STOCK OPNAME SCREEN
+                },
+              ),
+          ]),
+
+          const SizedBox(height: 10),
           _buildControlRoomSection(),
           const SizedBox(height: 120),
         ],
@@ -213,119 +276,303 @@ class _OperationDashboardState extends State<OperationDashboard> {
   }
 
   /// WIDGET CARD DENGAN STREAMBUILDER (REAL-TIME STATUS)
+  /// WIDGET CARD DENGAN STREAMBUILDER (REAL-TIME STATUS)
   Widget _buildRealtimeUserCard() {
-    final user = supabase.auth.currentUser;
-    if (user == null) return const SizedBox();
+  final user = supabase.auth.currentUser;
 
-    return StreamBuilder<List<Map<String, dynamic>>>(
-      // Listen ke tabel attendance secara realtime
-      stream: supabase
-          .from('attendance')
-          .stream(primaryKey: ['id'])
-          .eq('profile_id', user.id)
-          .order('check_in', ascending: false)
-          .limit(1),
-      builder: (context, snapshot) {
-        // Cek apakah ada record yang check_out-nya masih NULL
-        bool isPresent = false;
-        if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-          isPresent = snapshot.data!.first['check_out'] == null;
-        }
+  if (user == null) {
+    return const SizedBox();
+  }
 
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 25.0),
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.fromLTRB(115, 20, 15, 20),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _profileData?['full_name'] ?? widget.userName,
-                          style: GoogleFonts.poppins(
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                            color: const Color(0xFF01579B),
-                          ),
+  return StreamBuilder<List<Map<String, dynamic>>>(
+    stream: supabase
+        .from('attendance')
+        .stream(primaryKey: ['id'])
+        .eq('profile_id', user.id)
+        .order('check_in', ascending: false)
+        .limit(1),
+    builder: (context, snapshot) {
+      bool isPresent = false;
+
+      if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+        isPresent = snapshot.data!.first['check_out'] == null;
+      }
+
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 25),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(
+              sigmaX: 12,
+              sigmaY: 12,
+            ),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(
+                18,
+                18,
+                18,
+                18,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.28),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.25),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.white.withValues(alpha: 0.08),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+
+              // ======================================
+              // SINGLE FLOW LAYOUT
+              // ======================================
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ==================================
+                  // AVATAR
+                  // ==================================
+                  Transform.translate(
+                    offset: const Offset(-10, -10),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white,
+                          width: 4,
                         ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.circle,
-                              size: 8,
-                              color: isPresent ? Colors.green : Colors.red,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              isPresent ? "ON DUTY" : "OFF DUTY",
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: isPresent
-                                    ? Colors.green.shade800
-                                    : Colors.red.shade800,
-                              ),
-                            ),
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.white.withValues(alpha: 0.95),
+                            Colors.white.withValues(alpha: 0.75),
                           ],
                         ),
-                      ],
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(
+                              0xFF01579B,
+                            ).withValues(alpha: 0.15),
+                            blurRadius: 20,
+                            spreadRadius: 2,
+                            offset: const Offset(0, 8),
+                          ),
+                          BoxShadow(
+                            color: Colors.white.withValues(alpha: 0.4),
+                            blurRadius: 12,
+                            offset: const Offset(-2, -2),
+                          ),
+                        ],
+                      ),
+                      child: CircleAvatar(
+                        radius: 44,
+                        backgroundColor: Colors.white,
+                        backgroundImage:
+                            _profileData?['avatar_url'] != null
+                                ? NetworkImage(
+                                    _profileData!['avatar_url'],
+                                  )
+                                : null,
+                        child:
+                            _profileData?['avatar_url'] == null
+                                ? Icon(
+                                    Icons.person,
+                                    size: 38,
+                                    color: Colors.blueGrey.shade400,
+                                  )
+                                : null,
+                      ),
                     ),
                   ),
-                ),
-              ),
-              // AVATAR POP OUT
-              Positioned(
-                left: 15,
-                top: -35,
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 4),
+
+                  const SizedBox(width: 10),
+
+                  // ==================================
+                  // CONTENT
+                  // ==================================
+                  Expanded(
+                    child: Transform.translate(
+                      offset: const Offset(-10, 0),
+                      child: Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
+                        children: [
+                          // ==========================
+                          // TOP ROW
+                          // ==========================
+                          Row(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(
+                                    top: 6,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _profileData?['full_name'] ??
+                                            widget.userName,
+                                        maxLines: 1,
+                                        overflow:
+                                            TextOverflow.ellipsis,
+                                        style:
+                                            GoogleFonts.poppins(
+                                              fontSize: 22,
+                                              fontWeight:
+                                                  FontWeight.bold,
+                                              color:
+                                                  const Color(
+                                                    0xFF01579B,
+                                                  ),
+                                              height: 1.1,
+                                            ),
+                                      ),
+
+                                      const SizedBox(height: 10),
+
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.circle,
+                                            size: 10,
+                                            color: isPresent
+                                                ? Colors.green
+                                                : Colors.red,
+                                          ),
+
+                                          const SizedBox(
+                                            width: 8,
+                                          ),
+
+                                          Text(
+                                            isPresent
+                                                ? "ON DUTY"
+                                                : "OFF DUTY",
+                                            style:
+                                                GoogleFonts.poppins(
+                                                  fontSize: 13,
+                                                  fontWeight:
+                                                      FontWeight
+                                                          .w700,
+                                                  letterSpacing:
+                                                      0.4,
+                                                  color: isPresent
+                                                      ? Colors
+                                                            .green
+                                                            .shade800
+                                                      : Colors
+                                                            .red
+                                                            .shade800,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+
+                              // ======================
+                              // LOGOUT
+                              // ======================
+                              Transform.translate(
+                                offset: const Offset(8, -6),
+                                child: IconButton(
+                                  onPressed:
+                                      widget.onLogout,
+                                  splashRadius: 22,
+                                  icon: const Icon(
+                                    Icons.logout_rounded,
+                                    color:
+                                        Color(0xFF01579B),
+                                    size: 22,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 14),
+
+                          // ==========================
+                          // TASK TELEMETRY
+                          // ==========================
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _miniStat(
+                                  "New",
+                                  _newTasksCount,
+                                  Colors.blue,
+                                ),
+
+                                const SizedBox(width: 22),
+
+                                _miniStat(
+                                  "On",
+                                  _onGoingTasksCount,
+                                  Colors.indigo,
+                                ),
+
+                                const SizedBox(width: 22),
+
+                                _miniStat(
+                                  "Urg",
+                                  _urgentTasksCount,
+                                  Colors.red,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  child: CircleAvatar(
-                    radius: 45,
-                    backgroundColor: Colors.white,
-                    backgroundImage: _profileData?['avatar_url'] != null
-                        ? NetworkImage(_profileData!['avatar_url'])
-                        : null,
-                    child: _profileData?['avatar_url'] == null
-                        ? const Icon(Icons.person, size: 50)
-                        : null,
-                  ),
-                ),
+                ],
               ),
-              // LOGOUT BUTTON
-              Positioned(
-                right: 8,
-                top: 8,
-                child: IconButton(
-                  onPressed: widget.onLogout,
-                  icon: const Icon(
-                    Icons.logout_rounded,
-                    color: Color(0xFF01579B),
-                    size: 22,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
-        );
-      },
+        ),
+      );
+    },
+  );
+}
+
+  Widget _miniStat(String label, int value, Color color) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          "$value",
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: Colors.black54,
+          ),
+        ),
+      ],
     );
   }
 
