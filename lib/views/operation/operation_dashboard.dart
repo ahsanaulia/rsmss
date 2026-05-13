@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:rsmss/core/di/service_locator.dart';
+import 'package:rsmss/core/services/auth_service.dart';
 import 'task_list_view.dart';
 import 'attendance_view.dart';
 import '../profile_view.dart';
@@ -9,6 +11,8 @@ import 'task_history_view.dart';
 import 'report_history_view.dart';
 import 'attendance_history_view.dart';
 import '../../services/announcement_service.dart';
+// import 'op_initial_asset.dart';
+import '../../features/asset_initial/views/op_initial_asset.dart';
 
 class OperationDashboard extends StatefulWidget {
   final String userName;
@@ -25,7 +29,9 @@ class OperationDashboard extends StatefulWidget {
 }
 
 class _OperationDashboardState extends State<OperationDashboard> {
-  final supabase = Supabase.instance.client;
+  // HAPUS: final supabase = Supabase.instance.client;
+  late final AuthService _authService;
+  
   int _currentNavbarIndex = 0;
 
   Map<String, dynamic>? _profileData;
@@ -40,25 +46,40 @@ class _OperationDashboardState extends State<OperationDashboard> {
   @override
   void initState() {
     super.initState();
+    _authService = getIt<AuthService>();
     _loadStaticData(); // Load data yang jarang berubah (Hospital & Profile)
     _loadTaskStats(); // Load statistik task
   }
 
   /// AMBIL DATA STATIS (Hospital & Profile)
+  /// OPTIMASI: Profile data sekarang pakai dari AuthService jika tersedia
   Future<void> _loadStaticData() async {
     try {
-      final user = supabase.auth.currentUser;
-      if (user == null) return;
+      final currentSession = _authService.currentSession;
+      final userId = _authService.currentUserId;
+      
+      if (userId == null) return;
 
-      final hospital = await supabase
+      // Ambil hospital profile
+      final hospital = await Supabase.instance.client
           .from('hospital_profile')
           .select()
           .maybeSingle();
-      final profile = await supabase
-          .from('profiles')
-          .select()
-          .eq('id', user.id)
-          .single();
+      
+      // OPTIMASI: Cek apakah profile sudah ada di cache AuthService
+      Map<String, dynamic>? profile;
+      
+      if (currentSession != null && currentSession.rawData != null) {
+        // Pakai data dari cache AuthService untuk mengurangi query
+        profile = currentSession.rawData;
+      } else {
+        // Fallback: query langsung ke database
+        profile = await Supabase.instance.client
+            .from('profiles')
+            .select()
+            .eq('id', userId)
+            .single();
+      }
 
       if (mounted) {
         setState(() {
@@ -76,13 +97,13 @@ class _OperationDashboardState extends State<OperationDashboard> {
   /// AMBIL STATISTIK TASK (Manual Refresh/Initial)
   Future<void> _loadTaskStats() async {
     try {
-      final user = supabase.auth.currentUser;
-      if (user == null) return;
+      final userId = _authService.currentUserId;
+      if (userId == null) return;
 
-      final List<dynamic> tasksResponse = await supabase
+      final List<dynamic> tasksResponse = await Supabase.instance.client
           .from('tasks')
           .select()
-          .eq('assignee_id', user.id);
+          .eq('assignee_id', userId);
 
       int n = 0, o = 0, u = 0;
       for (var t in tasksResponse) {
@@ -158,8 +179,6 @@ class _OperationDashboardState extends State<OperationDashboard> {
           // --- INTEGRASI STREAMBUILDER DI SINI ---
           _buildRealtimeUserCard(),
 
-          // const SizedBox(height: 35),
-          // _buildStatsGrid(),
           const SizedBox(height: 10),
           _buildMenuCategory("EMPLOYEE REPORT", [
             _menuItemSmall(
@@ -180,7 +199,6 @@ class _OperationDashboardState extends State<OperationDashboard> {
               Icons.assignment_late_outlined,
               Colors.teal,
               () {
-                // Navigasi ke Report History (Jika sudah ada class-nya)
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -194,7 +212,6 @@ class _OperationDashboardState extends State<OperationDashboard> {
               Icons.pending_actions_rounded,
               Colors.indigo,
               () {
-                // Navigasi ke Attendance History (Jika sudah ada class-nya)
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -218,9 +235,17 @@ class _OperationDashboardState extends State<OperationDashboard> {
                 "Asset Initial",
                 Icons.inventory_2_outlined,
                 Colors.blue,
-                () {
-                  // TODO:
-                  // NAVIGATE TO ASSET INITIAL SCREEN
+                () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const OpInitialAsset(),
+                    ),
+                  );
+
+                  if (result == true) {
+                    await _loadTaskStats();
+                  }
                 },
               ),
 
@@ -233,8 +258,7 @@ class _OperationDashboardState extends State<OperationDashboard> {
                 Icons.fact_check_outlined,
                 Colors.teal,
                 () {
-                  // TODO:
-                  // NAVIGATE TO ASSET INSPECTION SCREEN
+                  // TODO: NAVIGATE TO ASSET INSPECTION SCREEN
                 },
               ),
 
@@ -247,8 +271,7 @@ class _OperationDashboardState extends State<OperationDashboard> {
                 Icons.warehouse_outlined,
                 Colors.indigo,
                 () {
-                  // TODO:
-                  // NAVIGATE TO STOCK INITIAL SCREEN
+                  // TODO: NAVIGATE TO STOCK INITIAL SCREEN
                 },
               ),
 
@@ -261,8 +284,7 @@ class _OperationDashboardState extends State<OperationDashboard> {
                 Icons.playlist_add_check_circle_outlined,
                 Colors.orange,
                 () {
-                  // TODO:
-                  // NAVIGATE TO STOCK OPNAME SCREEN
+                  // TODO: NAVIGATE TO STOCK OPNAME SCREEN
                 },
               ),
           ]),
@@ -276,281 +298,214 @@ class _OperationDashboardState extends State<OperationDashboard> {
   }
 
   /// WIDGET CARD DENGAN STREAMBUILDER (REAL-TIME STATUS)
-  /// WIDGET CARD DENGAN STREAMBUILDER (REAL-TIME STATUS)
   Widget _buildRealtimeUserCard() {
-  final user = supabase.auth.currentUser;
+    final userId = _authService.currentUserId;
 
-  if (user == null) {
-    return const SizedBox();
-  }
+    if (userId == null) {
+      return const SizedBox();
+    }
 
-  return StreamBuilder<List<Map<String, dynamic>>>(
-    stream: supabase
-        .from('attendance')
-        .stream(primaryKey: ['id'])
-        .eq('profile_id', user.id)
-        .order('check_in', ascending: false)
-        .limit(1),
-    builder: (context, snapshot) {
-      bool isPresent = false;
+    return StreamBuilder<List<Map<String, dynamic>>>(
+      stream: Supabase.instance.client
+          .from('attendance')
+          .stream(primaryKey: ['id'])
+          .eq('profile_id', userId)
+          .order('check_in', ascending: false)
+          .limit(1),
+      builder: (context, snapshot) {
+        bool isPresent = false;
 
-      if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-        isPresent = snapshot.data!.first['check_out'] == null;
-      }
+        if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+          isPresent = snapshot.data!.first['check_out'] == null;
+        }
 
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 25),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(
-              sigmaX: 12,
-              sigmaY: 12,
-            ),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(
-                18,
-                18,
-                18,
-                18,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.28),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.25),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.08),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 25),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.28),
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.25),
                   ),
-                ],
-              ),
-
-              // ======================================
-              // SINGLE FLOW LAYOUT
-              // ======================================
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ==================================
-                  // AVATAR
-                  // ==================================
-                  Transform.translate(
-                    offset: const Offset(-10, -10),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white,
-                          width: 4,
-                        ),
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Colors.white.withValues(alpha: 0.95),
-                            Colors.white.withValues(alpha: 0.75),
-                          ],
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(
-                              0xFF01579B,
-                            ).withValues(alpha: 0.15),
-                            blurRadius: 20,
-                            spreadRadius: 2,
-                            offset: const Offset(0, 8),
-                          ),
-                          BoxShadow(
-                            color: Colors.white.withValues(alpha: 0.4),
-                            blurRadius: 12,
-                            offset: const Offset(-2, -2),
-                          ),
-                        ],
-                      ),
-                      child: CircleAvatar(
-                        radius: 44,
-                        backgroundColor: Colors.white,
-                        backgroundImage:
-                            _profileData?['avatar_url'] != null
-                                ? NetworkImage(
-                                    _profileData!['avatar_url'],
-                                  )
-                                : null,
-                        child:
-                            _profileData?['avatar_url'] == null
-                                ? Icon(
-                                    Icons.person,
-                                    size: 38,
-                                    color: Colors.blueGrey.shade400,
-                                  )
-                                : null,
-                      ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.white.withValues(alpha: 0.08),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
                     ),
-                  ),
-
-                  const SizedBox(width: 10),
-
-                  // ==================================
-                  // CONTENT
-                  // ==================================
-                  Expanded(
-                    child: Transform.translate(
-                      offset: const Offset(-10, 0),
-                      child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                        children: [
-                          // ==========================
-                          // TOP ROW
-                          // ==========================
-                          Row(
-                            crossAxisAlignment:
-                                CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.only(
-                                    top: 6,
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        _profileData?['full_name'] ??
-                                            widget.userName,
-                                        maxLines: 1,
-                                        overflow:
-                                            TextOverflow.ellipsis,
-                                        style:
-                                            GoogleFonts.poppins(
-                                              fontSize: 22,
-                                              fontWeight:
-                                                  FontWeight.bold,
-                                              color:
-                                                  const Color(
-                                                    0xFF01579B,
-                                                  ),
-                                              height: 1.1,
-                                            ),
-                                      ),
-
-                                      const SizedBox(height: 10),
-
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.circle,
-                                            size: 10,
-                                            color: isPresent
-                                                ? Colors.green
-                                                : Colors.red,
-                                          ),
-
-                                          const SizedBox(
-                                            width: 8,
-                                          ),
-
-                                          Text(
-                                            isPresent
-                                                ? "ON DUTY"
-                                                : "OFF DUTY",
-                                            style:
-                                                GoogleFonts.poppins(
-                                                  fontSize: 13,
-                                                  fontWeight:
-                                                      FontWeight
-                                                          .w700,
-                                                  letterSpacing:
-                                                      0.4,
-                                                  color: isPresent
-                                                      ? Colors
-                                                            .green
-                                                            .shade800
-                                                      : Colors
-                                                            .red
-                                                            .shade800,
-                                                ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-
-                              // ======================
-                              // LOGOUT
-                              // ======================
-                              Transform.translate(
-                                offset: const Offset(8, -6),
-                                child: IconButton(
-                                  onPressed:
-                                      widget.onLogout,
-                                  splashRadius: 22,
-                                  icon: const Icon(
-                                    Icons.logout_rounded,
-                                    color:
-                                        Color(0xFF01579B),
-                                    size: 22,
-                                  ),
-                                ),
-                              ),
+                  ],
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ==================================
+                    // AVATAR
+                    // ==================================
+                    Transform.translate(
+                      offset: const Offset(-10, -10),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 4),
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Colors.white.withValues(alpha: 0.95),
+                              Colors.white.withValues(alpha: 0.75),
                             ],
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF01579B).withValues(alpha: 0.15),
+                              blurRadius: 20,
+                              spreadRadius: 2,
+                              offset: const Offset(0, 8),
+                            ),
+                            BoxShadow(
+                              color: Colors.white.withValues(alpha: 0.4),
+                              blurRadius: 12,
+                              offset: const Offset(-2, -2),
+                            ),
+                          ],
+                        ),
+                        child: CircleAvatar(
+                          radius: 44,
+                          backgroundColor: Colors.white,
+                          backgroundImage: _profileData?['avatar_url'] != null
+                              ? NetworkImage(_profileData!['avatar_url'])
+                              : null,
+                          child: _profileData?['avatar_url'] == null
+                              ? Icon(
+                                  Icons.person,
+                                  size: 38,
+                                  color: Colors.blueGrey.shade400,
+                                )
+                              : null,
+                        ),
+                      ),
+                    ),
 
-                          const SizedBox(height: 14),
+                    const SizedBox(width: 10),
 
-                          // ==========================
-                          // TASK TELEMETRY
-                          // ==========================
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
+                    // ==================================
+                    // CONTENT
+                    // ==================================
+                    Expanded(
+                      child: Transform.translate(
+                        offset: const Offset(-10, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // ==========================
+                            // TOP ROW
+                            // ==========================
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _miniStat(
-                                  "New",
-                                  _newTasksCount,
-                                  Colors.blue,
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(top: 6),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          _profileData?['full_name'] ??
+                                              widget.userName,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 22,
+                                            fontWeight: FontWeight.bold,
+                                            color: const Color(0xFF01579B),
+                                            height: 1.1,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 10),
+                                        Row(
+                                          children: [
+                                            Icon(
+                                              Icons.circle,
+                                              size: 10,
+                                              color: isPresent
+                                                  ? Colors.green
+                                                  : Colors.red,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              isPresent ? "ON DUTY" : "OFF DUTY",
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w700,
+                                                letterSpacing: 0.4,
+                                                color: isPresent
+                                                    ? Colors.green.shade800
+                                                    : Colors.red.shade800,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
 
-                                const SizedBox(width: 22),
-
-                                _miniStat(
-                                  "On",
-                                  _onGoingTasksCount,
-                                  Colors.indigo,
-                                ),
-
-                                const SizedBox(width: 22),
-
-                                _miniStat(
-                                  "Urg",
-                                  _urgentTasksCount,
-                                  Colors.red,
+                                // ======================
+                                // LOGOUT
+                                // ======================
+                                Transform.translate(
+                                  offset: const Offset(8, -6),
+                                  child: IconButton(
+                                    onPressed: widget.onLogout,
+                                    splashRadius: 22,
+                                    icon: const Icon(
+                                      Icons.logout_rounded,
+                                      color: Color(0xFF01579B),
+                                      size: 22,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
-                          ),
-                        ],
+
+                            const SizedBox(height: 14),
+
+                            // ==========================
+                            // TASK TELEMETRY
+                            // ==========================
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _miniStat("New", _newTasksCount, Colors.blue),
+                                  const SizedBox(width: 22),
+                                  _miniStat("On", _onGoingTasksCount, Colors.indigo),
+                                  const SizedBox(width: 22),
+                                  _miniStat("Urg", _urgentTasksCount, Colors.red),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      );
-    },
-  );
-}
+        );
+      },
+    );
+  }
 
   Widget _miniStat(String label, int value, Color color) {
     return Column(
@@ -575,8 +530,6 @@ class _OperationDashboardState extends State<OperationDashboard> {
       ],
     );
   }
-
-  // --- WIDGET PENDUKUNG LAINNYA (TETAP SAMA TAPI BERSIH DARI WARNING) ---
 
   Widget _buildHospitalInfo() {
     return Padding(
@@ -687,7 +640,7 @@ class _OperationDashboardState extends State<OperationDashboard> {
     VoidCallback onTap,
   ) {
     return GestureDetector(
-      onTap: onTap, // Aksi ketika menu di-klik
+      onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.5),
@@ -714,8 +667,8 @@ class _OperationDashboardState extends State<OperationDashboard> {
   }
 
   Widget _buildControlRoomSection() {
-    final user = supabase.auth.currentUser;
-    if (user == null || _profileData == null) return const SizedBox();
+    final userId = _authService.currentUserId;
+    if (userId == null || _profileData == null) return const SizedBox();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -733,13 +686,12 @@ class _OperationDashboardState extends State<OperationDashboard> {
         ),
         StreamBuilder<List<Map<String, dynamic>>>(
           stream: AnnouncementService().getFilteredAnnouncements(
-            user.id,
+            userId,
             _profileData?['position_id'],
           ),
           builder: (context, snapshot) {
             if (snapshot.hasError) return const SizedBox();
 
-            // Jika tidak ada data
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
               return _buildAnnouncementBox(
                 title: "INFO",
@@ -750,29 +702,19 @@ class _OperationDashboardState extends State<OperationDashboard> {
 
             final announcements = snapshot.data!;
 
-            // Gunakan ConstrainedBox atau SizedBox untuk membatasi tinggi area scroll
             return ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxHeight: 200, // Tentukan tinggi maksimal area pengumuman
-              ),
+              constraints: const BoxConstraints(maxHeight: 200),
               child: ListView.separated(
-                shrinkWrap:
-                    true, // Agar ListView menyesuaikan konten jika sedikit
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 25,
-                  vertical: 5,
-                ),
+                shrinkWrap: true,
+                padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 5),
                 itemCount: announcements.length,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(height: 12),
+                separatorBuilder: (context, index) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final ann = announcements[index];
                   return _buildAnnouncementBox(
                     title: ann['title'] ?? "INFO",
                     content: ann['content'] ?? "",
                     priority: ann['priority'] ?? "normal",
-                    // Jika ada data waktu di tabel, bisa parsing di sini
-                    // time: formatTime(ann['created_at']),
                   );
                 },
               ),
@@ -783,7 +725,6 @@ class _OperationDashboardState extends State<OperationDashboard> {
     );
   }
 
-  // Widget Helper untuk merender isi kotak pengumuman
   Widget _buildAnnouncementBox({
     required String title,
     required String content,
