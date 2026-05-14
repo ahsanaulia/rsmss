@@ -26,6 +26,7 @@ import '../../features/incident/views/incident_report_bottom_sheet.dart';
 
 import '../../features/dashboard/services/dashboard_stats_service.dart';
 import '../../features/dashboard/widgets/employee_stats_card.dart';
+import '../../features/reports/views/my_reports_view.dart';
 
 class OperationDashboard extends ConsumerStatefulWidget {
   final String userName;
@@ -41,9 +42,7 @@ class OperationDashboard extends ConsumerStatefulWidget {
   ConsumerState<OperationDashboard> createState() => _OperationDashboardState();
 }
 
-// class _OperationDashboardState extends State<OperationDashboard> {
 class _OperationDashboardState extends ConsumerState<OperationDashboard> {
-  // HAPUS: final supabase = Supabase.instance.client;
   late final AuthService _authService;
 
   int _currentNavbarIndex = 0;
@@ -66,13 +65,12 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
   void initState() {
     super.initState();
     _authService = getIt<AuthService>();
-    _loadStaticData(); // Load data yang jarang berubah (Hospital & Profile)
-    _loadTaskStats(); // Load statistik task
+    _loadStaticData();
+    _loadTaskStats();
     _loadEmployeeStats();
   }
 
   /// AMBIL DATA STATIS (Hospital & Profile)
-  /// OPTIMASI: Profile data sekarang pakai dari AuthService jika tersedia
   Future<void> _loadStaticData() async {
     try {
       final currentSession = _authService.currentSession;
@@ -80,20 +78,16 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
 
       if (userId == null) return;
 
-      // Ambil hospital profile
       final hospital = await Supabase.instance.client
           .from('hospital_profile')
           .select()
           .maybeSingle();
 
-      // OPTIMASI: Cek apakah profile sudah ada di cache AuthService
       Map<String, dynamic>? profile;
 
       if (currentSession != null && currentSession.rawData != null) {
-        // Pakai data dari cache AuthService untuk mengurangi query
         profile = currentSession.rawData;
       } else {
-        // Fallback: query langsung ke database
         profile = await Supabase.instance.client
             .from('profiles')
             .select()
@@ -138,7 +132,7 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
     }
   }
 
-  /// AMBIL STATISTIK TASK (Manual Refresh/Initial)
+  /// AMBIL STATISTIK TASK
   Future<void> _loadTaskStats() async {
     try {
       final userId = _authService.currentUserId;
@@ -211,29 +205,162 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
       onRefresh: () async {
         await _loadStaticData();
         await _loadTaskStats();
+        await _loadEmployeeStats();
       },
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.zero,
         children: [
-          SizedBox(height: topSpacing),
-          _buildHospitalInfo(),
-          const SizedBox(height: 20),
-          EmployeeStatsCard(
-            totalPoints: _employeePoints,
-            categoryScores: _categoryScores,
-            fatigueScore: _fatigueScore,
-            fatigueRiskLevel: _fatigueRiskLevel,
-            period: _pointsPeriod,
-            onTap: () {
-              // Optional: Navigate to detail stats page
-            },
+          // =====================================================
+          // 1. NAMA INSTANSI (Header Atas Kiri)
+          // =====================================================
+          Padding(
+            padding: EdgeInsets.only(
+              left: 30,
+              right: 30,
+              top: topSpacing,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Management Support System IOT",
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.blueGrey,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  _hospitalData?['name']?.toUpperCase() ?? "RUMAH SAKIT",
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF01579B),
+                    height: 1.1,
+                  ),
+                ),
+                Text(
+                  _hospitalData?['address'] ?? "Alamat belum tersedia",
+                  style: GoogleFonts.poppins(fontSize: 10, color: Colors.black54),
+                ),
+              ],
+            ),
           ),
-          // --- INTEGRASI STREAMBUILDER DI SINI ---
-          _buildRealtimeUserCard(),
+          const SizedBox(height: 24),
 
-          const SizedBox(height: 10),
+          // =====================================================
+          // 2. WIDGET PEGAWAI (Realtime User Card)
+          // =====================================================
+          _buildRealtimeUserCard(),
+          const SizedBox(height: 20),
+
+          // =====================================================
+          // 3. LATEST ANNOUNCEMENTS
+          // =====================================================
+          _buildControlRoomSection(),
+          const SizedBox(height: 20),
+
+          // =====================================================
+          // 4. OPERASIONAL KERJA
+          // =====================================================
+          _buildMenuCategory("OPERASIONAL KERJA", [
+            _menuItemSmall(
+              "Lapor Insiden",
+              Icons.warning_amber_rounded,
+              Colors.red,
+              () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                  ),
+                  builder: (context) => const IncidentReportBottomSheet(),
+                );
+              },
+            ),
+            if (_profileData?['is_asset_initial'] == true)
+              _menuItemSmall(
+                "Inisialisasi Awal Asset",
+                Icons.inventory_2_outlined,
+                Colors.blue,
+                () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const OpInitialAsset(),
+                    ),
+                  );
+                  if (result == true) {
+                    await _loadTaskStats();
+                  }
+                },
+              ),
+            if (_profileData?['is_asset_inspection'] == true)
+              _menuItemSmall(
+                "Inspeksi Rutin Asset",
+                Icons.fact_check_outlined,
+                Colors.teal,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AssetInspectionView(),
+                    ),
+                  );
+                },
+              ),
+            if (_profileData?['is_stock_initial'] == true)
+              _menuItemSmall(
+                "Inisialisasi Awal Stock",
+                Icons.warehouse_outlined,
+                Colors.indigo,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const StockInitialView(),
+                    ),
+                  );
+                },
+              ),
+            if (_profileData?['is_stock_opname'] == true)
+              _menuItemSmall(
+                "Stock Opname",
+                Icons.playlist_add_check_circle_outlined,
+                Colors.orange,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const StockOpnameView(),
+                    ),
+                  );
+                },
+              ),
+          ]),
+          const SizedBox(height: 16),
+
+          // =====================================================
+          // 5. REPORTS
+          // =====================================================
           _buildMenuCategory("REPORTS", [
+            _menuItemSmall(
+              "Riwayat Pekerjaan",
+              Icons.receipt_long_rounded,
+              Colors.purple,
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MyReportsView(),
+                  ),
+                );
+              },
+            ),
             _menuItemSmall(
               "Riwayat Tugas",
               Icons.history_rounded,
@@ -248,7 +375,7 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
               },
             ),
             _menuItemSmall(
-              "Riwayat Laporan",
+              "Riwayat Laporan Tugas",
               Icons.assignment_late_outlined,
               Colors.teal,
               () {
@@ -274,119 +401,28 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
               },
             ),
           ]),
-          const SizedBox(height: 10),
-
-          // =====================================================
-          // WORK OPERATIONS
-          // =====================================================
-          _buildMenuCategory("OPERASIONAL KERJA", [
-            // =================================================
-            // INCIDENT REPORT (TAMBAHKAN INI)
-            // =================================================
-            _menuItemSmall(
-              "Lapor Insiden",
-              Icons.warning_amber_rounded,
-              Colors.red,
-              () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(28),
-                    ),
-                  ),
-                  builder: (context) => const IncidentReportBottomSheet(),
-                );
-              },
-            ),
-
-            // =================================================
-            // ASSET INITIAL
-            // =================================================
-            if (_profileData?['is_asset_initial'] == true)
-              _menuItemSmall(
-                "Inisialisasi Awal Asset",
-                Icons.inventory_2_outlined,
-                Colors.blue,
-                () async {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const OpInitialAsset(),
-                    ),
-                  );
-
-                  if (result == true) {
-                    await _loadTaskStats();
-                  }
-                },
-              ),
-
-            // =================================================
-            // ASSET INSPECTION
-            // =================================================
-            if (_profileData?['is_asset_inspection'] == true)
-              _menuItemSmall(
-                "Inspeksi Rutin Asset",
-                Icons.fact_check_outlined,
-                Colors.teal,
-                () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const AssetInspectionView(),
-                    ),
-                  );
-                },
-              ),
-
-            // =================================================
-            // STOCK INITIAL
-            // =================================================
-            if (_profileData?['is_stock_initial'] == true)
-              _menuItemSmall(
-                "Inisialisasi Awal Stock",
-                Icons.warehouse_outlined,
-                Colors.indigo,
-                () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const StockInitialView(),
-                    ),
-                  );
-                },
-              ),
-
-            // =================================================
-            // STOCK OPNAME
-            // =================================================
-            if (_profileData?['is_stock_opname'] == true)
-              _menuItemSmall(
-                "Stock Opname",
-                Icons.playlist_add_check_circle_outlined,
-                Colors.orange,
-                () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const StockOpnameView(),
-                    ),
-                  );
-                },
-              ),
-          ]),
-
-          const SizedBox(height: 10),
-          _buildControlRoomSection(),
           const SizedBox(height: 16),
 
           // =====================================================
-          // ROSTER REMINDER CARD
+          // 6. ROSTER REMINDER CARD
           // =====================================================
           _buildRosterReminderCard(),
+          const SizedBox(height: 16),
+
+          // =====================================================
+          // 7. KINERJA BULAN INI (Employee Stats Card)
+          // =====================================================
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: EmployeeStatsCard(
+              totalPoints: _employeePoints,
+              categoryScores: _categoryScores,
+              fatigueScore: _fatigueScore,
+              fatigueRiskLevel: _fatigueRiskLevel,
+              period: _pointsPeriod,
+              onTap: () {},
+            ),
+          ),
           const SizedBox(height: 120),
         ],
       ),
@@ -396,12 +432,10 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
   Widget _buildRosterReminderCard() {
     final rosterState = ref.watch(rosterStateProvider);
 
-    // Hanya tampilkan jika ada roster atau sedang loading
     if (rosterState.isLoading) {
       return const SizedBox.shrink();
     }
 
-    // Jika tidak ada roster dan bukan flexible roster, tidak usah ditampilkan
     if (!rosterState.hasRoster && !rosterState.isFlexibleRoster) {
       return const SizedBox.shrink();
     }
@@ -457,9 +491,7 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // ==================================
                     // AVATAR
-                    // ==================================
                     Transform.translate(
                       offset: const Offset(-10, -10),
                       child: Container(
@@ -476,9 +508,7 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(
-                                0xFF01579B,
-                              ).withValues(alpha: 0.15),
+                              color: const Color(0xFF01579B).withValues(alpha: 0.15),
                               blurRadius: 20,
                               spreadRadius: 2,
                               offset: const Offset(0, 8),
@@ -497,30 +527,20 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                               ? NetworkImage(_profileData!['avatar_url'])
                               : null,
                           child: _profileData?['avatar_url'] == null
-                              ? Icon(
-                                  Icons.person,
-                                  size: 38,
-                                  color: Colors.blueGrey.shade400,
-                                )
+                              ? Icon(Icons.person, size: 38, color: Colors.blueGrey.shade400)
                               : null,
                         ),
                       ),
                     ),
-
                     const SizedBox(width: 10),
 
-                    // ==================================
                     // CONTENT
-                    // ==================================
                     Expanded(
                       child: Transform.translate(
                         offset: const Offset(-10, 0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // ==========================
-                            // TOP ROW
-                            // ==========================
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -528,12 +548,10 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                                   child: Padding(
                                     padding: const EdgeInsets.only(top: 6),
                                     child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          _profileData?['full_name'] ??
-                                              widget.userName,
+                                          _profileData?['full_name'] ?? widget.userName,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: GoogleFonts.poppins(
@@ -549,15 +567,11 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                                             Icon(
                                               Icons.circle,
                                               size: 10,
-                                              color: isPresent
-                                                  ? Colors.green
-                                                  : Colors.red,
+                                              color: isPresent ? Colors.green : Colors.red,
                                             ),
                                             const SizedBox(width: 8),
                                             Text(
-                                              isPresent
-                                                  ? "ON DUTY"
-                                                  : "OFF DUTY",
+                                              isPresent ? "ON DUTY" : "OFF DUTY",
                                               style: GoogleFonts.poppins(
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.w700,
@@ -573,10 +587,6 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                                     ),
                                   ),
                                 ),
-
-                                // ======================
-                                // LOGOUT
-                                // ======================
                                 Transform.translate(
                                   offset: const Offset(8, -6),
                                   child: IconButton(
@@ -591,12 +601,7 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                                 ),
                               ],
                             ),
-
                             const SizedBox(height: 14),
-
-                            // ==========================
-                            // TASK TELEMETRY
-                            // ==========================
                             Align(
                               alignment: Alignment.centerRight,
                               child: Row(
@@ -604,17 +609,9 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                                 children: [
                                   _miniStat("New", _newTasksCount, Colors.blue),
                                   const SizedBox(width: 22),
-                                  _miniStat(
-                                    "On",
-                                    _onGoingTasksCount,
-                                    Colors.indigo,
-                                  ),
+                                  _miniStat("On", _onGoingTasksCount, Colors.indigo),
                                   const SizedBox(width: 22),
-                                  _miniStat(
-                                    "Urg",
-                                    _urgentTasksCount,
-                                    Colors.red,
-                                  ),
+                                  _miniStat("Urg", _urgentTasksCount, Colors.red),
                                 ],
                               ),
                             ),
@@ -656,79 +653,6 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
     );
   }
 
-  Widget _buildHospitalInfo() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 30.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Management Support System IOT",
-            style: GoogleFonts.poppins(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: Colors.blueGrey,
-            ),
-          ),
-          const SizedBox(height: 5),
-          Text(
-            _hospitalData?['name']?.toUpperCase() ?? "RUMAH SAKIT",
-            style: GoogleFonts.poppins(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF01579B),
-              height: 1.1,
-            ),
-          ),
-          Text(
-            _hospitalData?['address'] ?? "Alamat belum tersedia",
-            style: GoogleFonts.poppins(fontSize: 10, color: Colors.black54),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatsGrid() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 25),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 15),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _statItem("New", _newTasksCount, Colors.blue),
-            _statItem("Ongoing", _onGoingTasksCount, Colors.indigo),
-            _statItem("Urgent", _urgentTasksCount, Colors.red),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _statItem(String label, int val, Color color) {
-    return Column(
-      children: [
-        Text(
-          "$val",
-          style: GoogleFonts.poppins(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-        Text(
-          label,
-          style: GoogleFonts.poppins(fontSize: 10, color: Colors.black54),
-        ),
-      ],
-    );
-  }
-
   Widget _buildMenuCategory(String title, List<Widget> items) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -751,7 +675,7 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
           padding: const EdgeInsets.symmetric(horizontal: 25),
           crossAxisSpacing: 15,
           mainAxisSpacing: 15,
-          childAspectRatio: 1.4,
+          childAspectRatio: 0.9,  // ← Kotak lebih tinggi untuk teks 2 baris
           children: items,
         ),
       ],
@@ -767,6 +691,8 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
+        height: 70,
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(15),
@@ -775,15 +701,18 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 22),
-            const SizedBox(height: 4),
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 6),
             Text(
               title,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
               style: GoogleFonts.poppins(
                 fontSize: 9,
                 fontWeight: FontWeight.w600,
+                height: 1.2,
               ),
-              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -829,8 +758,8 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
 
             return ListView.separated(
               shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(), // ← PENTING
-              padding: EdgeInsets.zero, // ← Padding sudah di dalam box
+              physics: const NeverScrollableScrollPhysics(),
+              padding: EdgeInsets.zero,
               itemCount: announcements.length,
               separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
@@ -857,7 +786,6 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
     bool isUrgent = priority == 'urgent' || priority == 'emergency';
     bool isInfo = priority == 'info' || priority == 'normal';
 
-    // Warna berdasarkan priority
     Color borderColor;
     Color bgColor;
     Color titleColor;
@@ -882,9 +810,7 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.symmetric(
-        horizontal: 16,
-      ), // ← SAMA DENGAN ROSTER
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: bgColor,
@@ -907,9 +833,7 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
           Row(
             children: [
               Icon(
-                isUrgent
-                    ? Icons.warning_amber_rounded
-                    : Icons.announcement_rounded,
+                isUrgent ? Icons.warning_amber_rounded : Icons.announcement_rounded,
                 color: titleColor,
                 size: 16,
               ),
@@ -927,10 +851,7 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
               ),
               if (isUrgent)
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     color: Colors.red.shade100,
                     borderRadius: BorderRadius.circular(12),
@@ -1032,28 +953,21 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
   }
 
   Widget _buildFab() {
-    return Container(
-      margin: const EdgeInsets.only(top: 30),
-      height: 65,
-      width: 65,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF01579B).withValues(alpha: 0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: FloatingActionButton(
-        onPressed: () {
+  return Container(
+    margin: const EdgeInsets.only(top: 30),
+    child: Material(
+      elevation: 6.0,
+      shape: const CircleBorder(),
+      clipBehavior: Clip.antiAlias,
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
           showModalBottomSheet(
             context: context,
-            isScrollControlled: true, // ✅ WAJIB (Anda sudah punya)
+            isScrollControlled: true,
             isDismissible: true,
             enableDrag: true,
-            useRootNavigator: true, // ← TAMBAHKAN INI
+            useRootNavigator: true,
             backgroundColor: Colors.transparent,
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -1061,14 +975,42 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
             builder: (context) => const DutyNoteBottomSheet(),
           );
         },
-        backgroundColor: const Color(0xFF01579B),
-        shape: const CircleBorder(),
-        child: const Icon(
-          Icons.qr_code_scanner_rounded,
-          color: Colors.white,
-          size: 30,
+        child: Container(
+          width: 65,
+          height: 75,
+          decoration: BoxDecoration(
+            color: const Color(0xFF01579B),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF01579B).withValues(alpha: 0.4),
+                blurRadius: 15,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.edit_note,
+                color: Colors.white,
+                size: 24,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                "Catatan",
+                style: GoogleFonts.poppins(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
