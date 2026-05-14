@@ -13,8 +13,21 @@ import 'attendance_history_view.dart';
 import '../../services/announcement_service.dart';
 // import 'op_initial_asset.dart';
 import '../../features/asset_initial/views/op_initial_asset.dart';
+import '../../features/asset_inspection/views/asset_inspection_view.dart';
+import '../../features/stock/views/stock_initial_view.dart';
+import '../../features/stock/views/stock_opname_view.dart';
 
-class OperationDashboard extends StatefulWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../features/roster/providers/roster_provider.dart';
+import '../../features/roster/widgets/roster_reminder_card.dart';
+
+import '../../features/duty/views/duty_note_bottom_sheet.dart';
+import '../../features/incident/views/incident_report_bottom_sheet.dart';
+
+import '../../features/dashboard/services/dashboard_stats_service.dart';
+import '../../features/dashboard/widgets/employee_stats_card.dart';
+
+class OperationDashboard extends ConsumerStatefulWidget {
   final String userName;
   final VoidCallback onLogout;
 
@@ -25,13 +38,14 @@ class OperationDashboard extends StatefulWidget {
   });
 
   @override
-  State<OperationDashboard> createState() => _OperationDashboardState();
+  ConsumerState<OperationDashboard> createState() => _OperationDashboardState();
 }
 
-class _OperationDashboardState extends State<OperationDashboard> {
+// class _OperationDashboardState extends State<OperationDashboard> {
+class _OperationDashboardState extends ConsumerState<OperationDashboard> {
   // HAPUS: final supabase = Supabase.instance.client;
   late final AuthService _authService;
-  
+
   int _currentNavbarIndex = 0;
 
   Map<String, dynamic>? _profileData;
@@ -42,6 +56,11 @@ class _OperationDashboardState extends State<OperationDashboard> {
   int _onGoingTasksCount = 0;
   int _urgentTasksCount = 0;
   bool _isLoading = true;
+  double _employeePoints = 0;
+  Map<String, double> _categoryScores = {};
+  double _fatigueScore = 0;
+  String _fatigueRiskLevel = 'normal';
+  String _pointsPeriod = '';
 
   @override
   void initState() {
@@ -49,6 +68,7 @@ class _OperationDashboardState extends State<OperationDashboard> {
     _authService = getIt<AuthService>();
     _loadStaticData(); // Load data yang jarang berubah (Hospital & Profile)
     _loadTaskStats(); // Load statistik task
+    _loadEmployeeStats();
   }
 
   /// AMBIL DATA STATIS (Hospital & Profile)
@@ -57,7 +77,7 @@ class _OperationDashboardState extends State<OperationDashboard> {
     try {
       final currentSession = _authService.currentSession;
       final userId = _authService.currentUserId;
-      
+
       if (userId == null) return;
 
       // Ambil hospital profile
@@ -65,10 +85,10 @@ class _OperationDashboardState extends State<OperationDashboard> {
           .from('hospital_profile')
           .select()
           .maybeSingle();
-      
+
       // OPTIMASI: Cek apakah profile sudah ada di cache AuthService
       Map<String, dynamic>? profile;
-      
+
       if (currentSession != null && currentSession.rawData != null) {
         // Pakai data dari cache AuthService untuk mengurangi query
         profile = currentSession.rawData;
@@ -91,6 +111,30 @@ class _OperationDashboardState extends State<OperationDashboard> {
     } catch (e) {
       debugPrint("Error Static Data: $e");
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _loadEmployeeStats() async {
+    final userId = _authService.currentUserId;
+    if (userId == null) return;
+
+    final service = DashboardStatsService();
+
+    try {
+      final pointsData = await service.getEmployeePoints(userId);
+      final fatigueData = await service.getTodayFatigue(userId);
+
+      if (mounted) {
+        setState(() {
+          _employeePoints = pointsData['totalScore'] ?? 0;
+          _categoryScores = pointsData['categoryScores'] ?? {};
+          _pointsPeriod = pointsData['period'] ?? '';
+          _fatigueScore = fatigueData['fatigueScore'] ?? 0;
+          _fatigueRiskLevel = fatigueData['riskLevel'] ?? 'normal';
+        });
+      }
+    } catch (e) {
+      debugPrint("Error loading employee stats: $e");
     }
   }
 
@@ -174,15 +218,24 @@ class _OperationDashboardState extends State<OperationDashboard> {
         children: [
           SizedBox(height: topSpacing),
           _buildHospitalInfo(),
-          const SizedBox(height: 30),
-
+          const SizedBox(height: 20),
+          EmployeeStatsCard(
+            totalPoints: _employeePoints,
+            categoryScores: _categoryScores,
+            fatigueScore: _fatigueScore,
+            fatigueRiskLevel: _fatigueRiskLevel,
+            period: _pointsPeriod,
+            onTap: () {
+              // Optional: Navigate to detail stats page
+            },
+          ),
           // --- INTEGRASI STREAMBUILDER DI SINI ---
           _buildRealtimeUserCard(),
 
           const SizedBox(height: 10),
-          _buildMenuCategory("EMPLOYEE REPORT", [
+          _buildMenuCategory("REPORTS", [
             _menuItemSmall(
-              "Task History",
+              "Riwayat Tugas",
               Icons.history_rounded,
               Colors.blue,
               () {
@@ -195,7 +248,7 @@ class _OperationDashboardState extends State<OperationDashboard> {
               },
             ),
             _menuItemSmall(
-              "Report History",
+              "Riwayat Laporan",
               Icons.assignment_late_outlined,
               Colors.teal,
               () {
@@ -208,7 +261,7 @@ class _OperationDashboardState extends State<OperationDashboard> {
               },
             ),
             _menuItemSmall(
-              "Attendance History",
+              "Riwayat Absensi",
               Icons.pending_actions_rounded,
               Colors.indigo,
               () {
@@ -226,13 +279,35 @@ class _OperationDashboardState extends State<OperationDashboard> {
           // =====================================================
           // WORK OPERATIONS
           // =====================================================
-          _buildMenuCategory("WORK OPERATIONS", [
+          _buildMenuCategory("OPERASIONAL KERJA", [
+            // =================================================
+            // INCIDENT REPORT (TAMBAHKAN INI)
+            // =================================================
+            _menuItemSmall(
+              "Lapor Insiden",
+              Icons.warning_amber_rounded,
+              Colors.red,
+              () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(28),
+                    ),
+                  ),
+                  builder: (context) => const IncidentReportBottomSheet(),
+                );
+              },
+            ),
+
             // =================================================
             // ASSET INITIAL
             // =================================================
             if (_profileData?['is_asset_initial'] == true)
               _menuItemSmall(
-                "Asset Initial",
+                "Inisialisasi Awal Asset",
                 Icons.inventory_2_outlined,
                 Colors.blue,
                 () async {
@@ -254,11 +329,16 @@ class _OperationDashboardState extends State<OperationDashboard> {
             // =================================================
             if (_profileData?['is_asset_inspection'] == true)
               _menuItemSmall(
-                "Asset Inspection",
+                "Inspeksi Rutin Asset",
                 Icons.fact_check_outlined,
                 Colors.teal,
                 () {
-                  // TODO: NAVIGATE TO ASSET INSPECTION SCREEN
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AssetInspectionView(),
+                    ),
+                  );
                 },
               ),
 
@@ -267,11 +347,16 @@ class _OperationDashboardState extends State<OperationDashboard> {
             // =================================================
             if (_profileData?['is_stock_initial'] == true)
               _menuItemSmall(
-                "Stock Initial",
+                "Inisialisasi Awal Stock",
                 Icons.warehouse_outlined,
                 Colors.indigo,
                 () {
-                  // TODO: NAVIGATE TO STOCK INITIAL SCREEN
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const StockInitialView(),
+                    ),
+                  );
                 },
               ),
 
@@ -284,17 +369,44 @@ class _OperationDashboardState extends State<OperationDashboard> {
                 Icons.playlist_add_check_circle_outlined,
                 Colors.orange,
                 () {
-                  // TODO: NAVIGATE TO STOCK OPNAME SCREEN
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const StockOpnameView(),
+                    ),
+                  );
                 },
               ),
           ]),
 
           const SizedBox(height: 10),
           _buildControlRoomSection(),
+          const SizedBox(height: 16),
+
+          // =====================================================
+          // ROSTER REMINDER CARD
+          // =====================================================
+          _buildRosterReminderCard(),
           const SizedBox(height: 120),
         ],
       ),
     );
+  }
+
+  Widget _buildRosterReminderCard() {
+    final rosterState = ref.watch(rosterStateProvider);
+
+    // Hanya tampilkan jika ada roster atau sedang loading
+    if (rosterState.isLoading) {
+      return const SizedBox.shrink();
+    }
+
+    // Jika tidak ada roster dan bukan flexible roster, tidak usah ditampilkan
+    if (!rosterState.hasRoster && !rosterState.isFlexibleRoster) {
+      return const SizedBox.shrink();
+    }
+
+    return RosterReminderCard(state: rosterState);
   }
 
   /// WIDGET CARD DENGAN STREAMBUILDER (REAL-TIME STATUS)
@@ -364,7 +476,9 @@ class _OperationDashboardState extends State<OperationDashboard> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF01579B).withValues(alpha: 0.15),
+                              color: const Color(
+                                0xFF01579B,
+                              ).withValues(alpha: 0.15),
                               blurRadius: 20,
                               spreadRadius: 2,
                               offset: const Offset(0, 8),
@@ -414,7 +528,8 @@ class _OperationDashboardState extends State<OperationDashboard> {
                                   child: Padding(
                                     padding: const EdgeInsets.only(top: 6),
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           _profileData?['full_name'] ??
@@ -440,7 +555,9 @@ class _OperationDashboardState extends State<OperationDashboard> {
                                             ),
                                             const SizedBox(width: 8),
                                             Text(
-                                              isPresent ? "ON DUTY" : "OFF DUTY",
+                                              isPresent
+                                                  ? "ON DUTY"
+                                                  : "OFF DUTY",
                                               style: GoogleFonts.poppins(
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.w700,
@@ -487,9 +604,17 @@ class _OperationDashboardState extends State<OperationDashboard> {
                                 children: [
                                   _miniStat("New", _newTasksCount, Colors.blue),
                                   const SizedBox(width: 22),
-                                  _miniStat("On", _onGoingTasksCount, Colors.indigo),
+                                  _miniStat(
+                                    "On",
+                                    _onGoingTasksCount,
+                                    Colors.indigo,
+                                  ),
                                   const SizedBox(width: 22),
-                                  _miniStat("Urg", _urgentTasksCount, Colors.red),
+                                  _miniStat(
+                                    "Urg",
+                                    _urgentTasksCount,
+                                    Colors.red,
+                                  ),
                                 ],
                               ),
                             ),
@@ -702,22 +827,20 @@ class _OperationDashboardState extends State<OperationDashboard> {
 
             final announcements = snapshot.data!;
 
-            return ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 200),
-              child: ListView.separated(
-                shrinkWrap: true,
-                padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 5),
-                itemCount: announcements.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final ann = announcements[index];
-                  return _buildAnnouncementBox(
-                    title: ann['title'] ?? "INFO",
-                    content: ann['content'] ?? "",
-                    priority: ann['priority'] ?? "normal",
-                  );
-                },
-              ),
+            return ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(), // ← PENTING
+              padding: EdgeInsets.zero, // ← Padding sudah di dalam box
+              itemCount: announcements.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final ann = announcements[index];
+                return _buildAnnouncementBox(
+                  title: ann['title'] ?? "INFO",
+                  content: ann['content'] ?? "",
+                  priority: ann['priority'] ?? "normal",
+                );
+              },
             );
           },
         ),
@@ -732,41 +855,103 @@ class _OperationDashboardState extends State<OperationDashboard> {
     String time = "Just now",
   }) {
     bool isUrgent = priority == 'urgent' || priority == 'emergency';
-    Color accentColor = isUrgent ? Colors.redAccent : Colors.black38;
+    bool isInfo = priority == 'info' || priority == 'normal';
+
+    // Warna berdasarkan priority
+    Color borderColor;
+    Color bgColor;
+    Color titleColor;
+    Color contentColor;
+
+    if (isUrgent) {
+      borderColor = Colors.red.shade400;
+      bgColor = Colors.red.shade50.withValues(alpha: 0.9);
+      titleColor = Colors.red.shade800;
+      contentColor = Colors.red.shade900;
+    } else if (isInfo) {
+      borderColor = Colors.blue.shade300;
+      bgColor = Colors.blue.shade50.withValues(alpha: 0.85);
+      titleColor = Colors.blue.shade800;
+      contentColor = Colors.blue.shade900;
+    } else {
+      borderColor = Colors.grey.shade300;
+      bgColor = Colors.white.withValues(alpha: 0.85);
+      titleColor = Colors.grey.shade800;
+      contentColor = Colors.grey.shade800;
+    }
 
     return Container(
       width: double.infinity,
+      margin: const EdgeInsets.symmetric(
+        horizontal: 16,
+      ), // ← SAMA DENGAN ROSTER
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: isUrgent
-            ? Colors.red.withValues(alpha: 0.1)
-            : Colors.white.withValues(alpha: 0.4),
+        color: bgColor,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isUrgent
-              ? Colors.redAccent.withValues(alpha: 0.5)
-              : Colors.white.withValues(alpha: 0.3),
+          color: borderColor.withValues(alpha: 0.6),
           width: isUrgent ? 1.5 : 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title.toUpperCase(),
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              color: isUrgent ? Colors.red.shade900 : Colors.black87,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
-            ),
+          Row(
+            children: [
+              Icon(
+                isUrgent
+                    ? Icons.warning_amber_rounded
+                    : Icons.announcement_rounded,
+                color: titleColor,
+                size: 16,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title.toUpperCase(),
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: titleColor,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+              if (isUrgent)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    "URGENT",
+                    style: GoogleFonts.poppins(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red.shade700,
+                    ),
+                  ),
+                ),
+            ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Text(
             content,
             style: GoogleFonts.poppins(
-              fontSize: 11,
-              color: isUrgent ? Colors.red.shade900 : Colors.black87,
+              fontSize: 12,
+              color: contentColor,
               fontWeight: FontWeight.normal,
               height: 1.4,
             ),
@@ -778,7 +963,7 @@ class _OperationDashboardState extends State<OperationDashboard> {
               time,
               style: GoogleFonts.poppins(
                 fontSize: 9,
-                color: accentColor,
+                color: isUrgent ? Colors.red.shade400 : Colors.grey.shade500,
                 fontStyle: FontStyle.italic,
               ),
             ),
@@ -862,7 +1047,20 @@ class _OperationDashboardState extends State<OperationDashboard> {
         ],
       ),
       child: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true, // ✅ WAJIB (Anda sudah punya)
+            isDismissible: true,
+            enableDrag: true,
+            useRootNavigator: true, // ← TAMBAHKAN INI
+            backgroundColor: Colors.transparent,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+            ),
+            builder: (context) => const DutyNoteBottomSheet(),
+          );
+        },
         backgroundColor: const Color(0xFF01579B),
         shape: const CircleBorder(),
         child: const Icon(
