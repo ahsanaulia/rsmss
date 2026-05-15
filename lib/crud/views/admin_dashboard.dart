@@ -1,5 +1,3 @@
-// lib/crud/views/admin_dashboard.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -23,10 +21,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
   bool _isSidebarVisible = true;
   final Color deepBlue = const Color(0xFF01579B);
   
-  // Expanded menu groups
   final Set<String> _expandedGroups = {};
 
-  // Menu Group Definition
   final List<MenuGroup> _menuGroups = [
     MenuGroup(
       title: "📁 OPERATIONAL DATA",
@@ -74,9 +70,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
         MenuItem("Transaksi Stock", Icons.swap_horiz, "stock_transactions"),
         MenuItem("Penggunaan Stock", Icons.remove_shopping_cart, "stock_usages"),
         MenuItem("Lokasi Penyimpanan", Icons.location_on, "storage_locations"),
-        // Warehousing
         MenuItem("Zona Gudang", Icons.map, "warehouse_zones"),
-        MenuItem("Rak Penyimpanan", Icons.shelves, "storage_racks"),
+        MenuItem("Rak Penyimpanan", Icons.storage, "storage_racks"),
         MenuItem("Level Rak", Icons.view_agenda, "rack_levels"),
         MenuItem("Bin/Slot", Icons.grid_view, "storage_bins"),
         MenuItem("Pergerakan Bin", Icons.move_to_inbox, "stock_bin_movements"),
@@ -114,8 +109,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
       icon: Icons.settings,
       isDisabled: true,
       menus: [
-        MenuItem("App Config", Icons.app_settings_alt, "apps_config"),
-        MenuItem("Hospital Profile", Icons.local_hospital_outlined, "hospital_profile"),
+        MenuItem("App Config", Icons.settings_applications, "apps_config"),
+        MenuItem("Hospital Profile", Icons.local_hospital, "hospital_profile"),
       ],
     ),
   ];
@@ -155,9 +150,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
   void _handleLogout() {
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((_) {
-      Navigator.pop(context);
-    });
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    Navigator.pop(context);
   }
 
   @override
@@ -172,9 +166,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
-          // Main Content
           Positioned.fill(child: _buildMainCanvas()),
-          // Sidebar
           AnimatedPositioned(
             duration: const Duration(milliseconds: 250),
             curve: Curves.easeInOut,
@@ -183,7 +175,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
             bottom: 0,
             child: _buildSidebar(),
           ),
-          // Toggle Button
           Positioned(
             top: 20,
             left: _isSidebarVisible ? 10 : 10,
@@ -223,18 +214,18 @@ class _AdminDashboardState extends State<AdminDashboard> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Colors.white.withOpacity(0.20),
-                Colors.white.withOpacity(0.05),
+                Colors.white.withValues(alpha: 0.20),
+                Colors.white.withValues(alpha: 0.05),
               ],
             ),
             borderRadius: const BorderRadius.only(
               topRight: Radius.circular(20),
               bottomRight: Radius.circular(20),
             ),
-            border: Border.all(color: Colors.white.withOpacity(0.25), width: 1),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 1),
             boxShadow: [
               BoxShadow(
-                color: const Color.fromARGB(255, 36, 86, 194).withOpacity(0.15),
+                color: const Color.fromARGB(255, 36, 86, 194).withValues(alpha: 0.15),
                 blurRadius: 20,
                 offset: const Offset(4, 0),
               ),
@@ -270,13 +261,12 @@ class _AdminDashboardState extends State<AdminDashboard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Group Header
         GestureDetector(
           onTap: group.isDisabled ? null : () => _toggleGroup(group.title),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: isExpanded ? Colors.white.withOpacity(0.15) : Colors.transparent,
+              color: isExpanded ? Colors.white.withValues(alpha: 0.15) : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -306,7 +296,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
             ),
           ),
         ),
-        // Menu Items (if expanded)
         if (isExpanded)
           Column(
             children: group.menus.map((menu) => _buildMenuItem(menu)).toList(),
@@ -329,7 +318,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
         margin: const EdgeInsets.only(left: 32, bottom: 2),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white.withOpacity(0.25) : Colors.transparent,
+          color: isSelected ? Colors.white.withValues(alpha: 0.25) : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -390,9 +379,26 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
   Widget _buildMainCanvas() {
-  final config = tableConfigs[_selectedTable];
-  
-  if (config == null) {
+    final config = tableConfigs[_selectedTable];
+    
+    if (config == null) {
+      return Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFE0F2F1), Color(0xFFB3E5FC), Color(0xFF81D4FA)],
+          ),
+        ),
+        child: Center(
+          child: Text(
+            "Konfigurasi tabel '$_selectedTable' tidak ditemukan",
+            style: GoogleFonts.poppins(fontSize: 16, color: Colors.red),
+          ),
+        ),
+      );
+    }
+    
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -401,32 +407,49 @@ class _AdminDashboardState extends State<AdminDashboard> {
           colors: [Color(0xFFE0F2F1), Color(0xFFB3E5FC), Color(0xFF81D4FA)],
         ),
       ),
-      child: Center(
-        child: Text(
-          "Konfigurasi tabel '$_selectedTable' tidak ditemukan",
-          style: GoogleFonts.poppins(fontSize: 16, color: Colors.red),
-        ),
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.7),
+              border: const Border(
+                bottom: BorderSide(color: Colors.white, width: 1),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.table_chart,
+                  size: 24,
+                  color: const Color(0xFF01579B),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Admin : ${config.displayName}',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF01579B),
+                  ),
+                ),
+                const Spacer(),
+              ],
+            ),
+          ),
+          Expanded(
+            child: DynamicPlutoGrid(
+              tableName: _selectedTable,
+              config: config,
+            ),
+          ),
+        ],
       ),
     );
   }
-  
-  return Container(
-    decoration: const BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [Color(0xFFE0F2F1), Color(0xFFB3E5FC), Color(0xFF81D4FA)],
-      ),
-    ),
-    child: DynamicPlutoGrid(
-      tableName: _selectedTable,
-      config: config,
-    ),
-  );
-}
 }
 
-// Models
 class MenuGroup {
   final String title;
   final IconData icon;

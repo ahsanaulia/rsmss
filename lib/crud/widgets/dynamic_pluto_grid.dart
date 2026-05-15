@@ -36,10 +36,17 @@ class _DynamicPlutoGridState extends State<DynamicPlutoGrid> {
 
   void _initColumns() {
     _columns = widget.config.columns.map((colConfig) {
+      PlutoColumnType columnType = colConfig.type;
+      
+      // Jika ada selectItems, gunakan tipe select
+      if (colConfig.selectItems != null && colConfig.selectItems!.isNotEmpty) {
+        columnType = PlutoColumnType.select(colConfig.selectItems!);
+      }
+      
       return PlutoColumn(
         title: colConfig.title,
         field: colConfig.field,
-        type: colConfig.type,
+        type: columnType,
         readOnly: colConfig.readOnly,
         width: colConfig.width?.toDouble() ?? 150.0,
         backgroundColor: Colors.white,
@@ -121,6 +128,7 @@ class _DynamicPlutoGridState extends State<DynamicPlutoGrid> {
       
       if (newData.isNotEmpty) {
         await _supabase.from(widget.tableName).insert(newData);
+        _showSnackBar('Data berhasil ditambahkan', Colors.green);
         await _loadData();
       }
     } else {
@@ -141,30 +149,21 @@ class _DynamicPlutoGridState extends State<DynamicPlutoGrid> {
             .from(widget.tableName)
             .update(updateData)
             .eq('id', id);
+        _showSnackBar('Data berhasil diupdate', Colors.blue);
       }
     }
   }
 
-  Future<void> _deleteRow(PlutoRow row) async {
-    final id = row.cells['id']?.value;
-    if (id == null || id.toString().isEmpty) return;
-    
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Konfirmasi Hapus'),
-        content: const Text('Hapus data ini?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Batal')),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Hapus')),
-        ],
+  void _showSnackBar(String message, Color color) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: GoogleFonts.poppins()),
+        backgroundColor: color,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
       ),
     );
-    
-    if (confirm == true) {
-      await _supabase.from(widget.tableName).delete().eq('id', id);
-      await _loadData();
-    }
   }
 
   void _addNewRow() {
@@ -181,7 +180,9 @@ class _DynamicPlutoGridState extends State<DynamicPlutoGrid> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFF01579B)),
+      );
     }
     
     if (_errorMessage != null) {
@@ -192,6 +193,11 @@ class _DynamicPlutoGridState extends State<DynamicPlutoGrid> {
             Icon(Icons.error_outline, size: 48, color: Colors.red.shade400),
             const SizedBox(height: 16),
             Text('Error: $_errorMessage', style: GoogleFonts.poppins()),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadData,
+              child: const Text('Coba Lagi'),
+            ),
           ],
         ),
       );
@@ -200,8 +206,14 @@ class _DynamicPlutoGridState extends State<DynamicPlutoGrid> {
     return Column(
       children: [
         // Toolbar
-        Padding(
-          padding: const EdgeInsets.all(8),
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.7),
+            border: const Border(
+              bottom: BorderSide(color: Color(0xFFE0E0E0), width: 1),
+            ),
+          ),
           child: Row(
             children: [
               ElevatedButton.icon(
@@ -210,13 +222,24 @@ class _DynamicPlutoGridState extends State<DynamicPlutoGrid> {
                 label: const Text('Tambah Baris'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF01579B),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               OutlinedButton.icon(
                 onPressed: _loadData,
                 icon: const Icon(Icons.refresh, size: 18),
                 label: const Text('Refresh'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF01579B),
+                  side: const BorderSide(color: Color(0xFF01579B)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
               ),
             ],
           ),
@@ -224,22 +247,33 @@ class _DynamicPlutoGridState extends State<DynamicPlutoGrid> {
         
         // PlutoGrid
         Expanded(
-          child: PlutoGrid(
-            key: _gridKey,
-            columns: _columns,
-            rows: _rows,
-            onChanged: (PlutoGridOnChangedEvent event) {
-              final row = event.row;
-              _saveRow(row);
-            },
-            onLoaded: (PlutoGridOnLoadedEvent event) {
-              _stateManager = event.stateManager;
-            },
-            configuration: const PlutoGridConfiguration(
-              style: PlutoGridStyleConfig(
-                oddRowColor: Color(0xFFF5F5F5),
-                gridBorderColor: Colors.grey,
-                enableGridBorderShadow: true,
+          child: Container(
+            margin: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: PlutoGrid(
+              key: _gridKey,
+              columns: _columns,
+              rows: _rows,
+              onChanged: (PlutoGridOnChangedEvent event) {
+                _saveRow(event.row);
+              },
+              onLoaded: (PlutoGridOnLoadedEvent event) {
+                _stateManager = event.stateManager;
+              },
+              configuration: const PlutoGridConfiguration(
+                scrollbar: PlutoGridScrollbarConfig(
+                  isAlwaysShown: true,
+                ),
               ),
             ),
           ),
