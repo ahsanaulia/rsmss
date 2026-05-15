@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import '../services/auth_service.dart';
+import '../services/tracking_service.dart';
 
 final getIt = GetIt.instance;
 
@@ -8,6 +9,8 @@ final getIt = GetIt.instance;
 Future<void> setupServiceLocator() async {
   // Register AuthService sebagai singleton
   getIt.registerLazySingleton<AuthService>(() => AuthService());
+  // getIt.registerLazySingleton<AuthService>(() => AuthService());
+  getIt.registerSingleton<TrackingService>(trackingService);
   
   // Nanti tambahkan service lain di sini:
   // getIt.registerLazySingleton<StorageService>(() => StorageService());

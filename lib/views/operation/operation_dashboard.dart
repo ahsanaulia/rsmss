@@ -6,6 +6,7 @@ import 'package:rsmss/core/di/service_locator.dart';
 import 'package:rsmss/core/services/auth_service.dart';
 import 'task_list_view.dart';
 import 'attendance_view.dart';
+// import '../../features/attendance/views/attendance_view.dart';
 import '../profile_view.dart';
 import 'task_history_view.dart';
 import 'report_history_view.dart';

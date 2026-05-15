@@ -123,7 +123,7 @@ class _IncidentReportBottomSheetState
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(), // ← Perbaikan scroll
+        physics: const BouncingScrollPhysics(),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -149,10 +149,20 @@ class _IncidentReportBottomSheetState
             ),
             const SizedBox(height: 20),
 
+            // 🔴 PERBAIKAN: Loading state yang lebih aman
             if (state.isLoading)
               const Center(child: CircularProgressIndicator())
             else if (state.categories.isEmpty)
-              const Center(child: CircularProgressIndicator())
+              const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text("Memuat data kategori..."),
+                  ],
+                ),
+              )
             else ...[
               // Title
               TextField(
@@ -257,7 +267,7 @@ class _IncidentReportBottomSheetState
                 ),
               ),
             ],
-            const SizedBox(height: 30), // ← Perbaikan scroll (padding bottom)
+            const SizedBox(height: 30),
           ],
         ),
       ),
@@ -373,6 +383,7 @@ class _IncidentReportBottomSheetState
       IncidentNotifier notifier, IncidentState state) {
     final List<Map<String, dynamic>> items = state.categories;
 
+    // 🔴 PERBAIKAN: Jika items kosong, jangan render dropdown
     if (items.isEmpty) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
@@ -388,15 +399,30 @@ class _IncidentReportBottomSheetState
       );
     }
 
+    // 🔴 PERBAIKAN: Cari selected item dengan aman
     Map<String, dynamic>? selectedItem;
     if (state.selectedCategoryId != null && state.selectedCategoryId!.isNotEmpty) {
       try {
-        selectedItem = items.firstWhere(
-          (e) => e['id'].toString() == state.selectedCategoryId,
-        );
+        final found = items.where((e) => e['id'].toString() == state.selectedCategoryId);
+        if (found.isNotEmpty) {
+          selectedItem = found.first;
+        }
       } catch (e) {
         selectedItem = null;
       }
+    }
+
+    // 🔴 PERBAIKAN: Jika tidak ada selected item, pilih item pertama
+    if (selectedItem == null && items.isNotEmpty) {
+      selectedItem = items.first;
+      // Update state dengan item pertama
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifier.selectCategory(
+          selectedItem!['id'].toString(),
+          selectedItem['name'] ?? '',
+          selectedItem['code'] ?? '',
+        );
+      });
     }
 
     return Container(
@@ -449,12 +475,14 @@ class _IncidentReportBottomSheetState
   Widget _buildRoomDropdown(IncidentNotifier notifier, IncidentState state) {
     final List<Map<String, dynamic>> items = state.rooms;
 
+    // 🔴 PERBAIKAN: Cari selected item dengan aman
     Map<String, dynamic>? selectedItem;
     if (state.selectedRoomId != null && state.selectedRoomId!.isNotEmpty) {
       try {
-        selectedItem = items.firstWhere(
-          (e) => e['id'].toString() == state.selectedRoomId,
-        );
+        final found = items.where((e) => e['id'].toString() == state.selectedRoomId);
+        if (found.isNotEmpty) {
+          selectedItem = found.first;
+        }
       } catch (e) {
         selectedItem = null;
       }
@@ -511,6 +539,12 @@ class _IncidentReportBottomSheetState
       {'value': 'CRITICAL', 'label': 'Kritis', 'color': Colors.red},
     ];
 
+    // 🔴 PERBAIKAN: Pastikan value ada di items
+    String currentValue = state.severity;
+    if (!severityItems.any((e) => e['value'] == currentValue)) {
+      currentValue = 'MEDIUM';
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
@@ -521,7 +555,7 @@ class _IncidentReportBottomSheetState
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           isExpanded: true,
-          value: state.severity,
+          value: currentValue,
           hint: Text("Tingkat Keparahan", style: GoogleFonts.poppins()),
           items: severityItems.map((item) {
             return DropdownMenuItem<String>(

@@ -118,13 +118,13 @@
 // }
 
 // lib/views/main_screen.dart (perubahan)
-
 import 'package:flutter/material.dart';
 import 'package:rsmss/core/di/service_locator.dart';
 import 'package:rsmss/core/services/auth_service.dart';
 import 'login_screen.dart';
 import 'operation/operation_dashboard.dart';
 import 'monitor/monitor_dashboard.dart';
+import '../crud/views/admin_dashboard.dart';
 
 // ⚠️ Bagian INI jangan diubah - tetap seperti asli
 class MainScreen extends StatefulWidget {
@@ -230,6 +230,11 @@ class _MainScreenState extends State<MainScreen> {
         userName: _userName,
         onLogout: _handleLogout,
       );
+    }
+    
+    // Admin role
+    if (_userRole == 'admin') {
+      return const AdminDashboard();
     }
     
     return Scaffold(
