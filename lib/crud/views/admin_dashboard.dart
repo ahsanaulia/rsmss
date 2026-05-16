@@ -2,117 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:ui';
 import '../../models/hospital_profile_model.dart';
-import '../configs/table_configs.dart';
-import '../widgets/dynamic_pluto_grid.dart';
+import 'tables/employee_table.dart';
 
-class AdminDashboard extends StatefulWidget {
+class AdminDashboard extends ConsumerStatefulWidget {
   const AdminDashboard({super.key});
 
   @override
-  State<AdminDashboard> createState() => _AdminDashboardState();
+  ConsumerState<AdminDashboard> createState() => _AdminDashboardState();
 }
 
-class _AdminDashboardState extends State<AdminDashboard> {
+class _AdminDashboardState extends ConsumerState<AdminDashboard> {
   final _supabase = Supabase.instance.client;
-  String _selectedTable = "employee_shift_rosters";
   HospitalProfileModel? _hospitalProfile;
   bool _isSidebarVisible = true;
   final Color deepBlue = const Color(0xFF01579B);
-  
-  final Set<String> _expandedGroups = {};
 
-  final List<MenuGroup> _menuGroups = [
-    MenuGroup(
-      title: "📁 OPERATIONAL DATA",
-      icon: Icons.work,
-      menus: [
-        MenuItem("Jadwal Kerja", Icons.calendar_month, "employee_shift_rosters"),
-        MenuItem("Penugasan", Icons.assignment, "tasks"),
-        MenuItem("Laporan Tugas", Icons.receipt, "tasks_reports"),
-        MenuItem("Pemberitahuan", Icons.announcement, "announcements"),
-        MenuItem("Catatan Dinas", Icons.note, "duty_notes"),
-        MenuItem("Insiden", Icons.warning_amber, "incidents"),
-      ],
-    ),
-    MenuGroup(
-      title: "📁 HRD DATA",
-      icon: Icons.people,
-      menus: [
-        MenuItem("Data Pegawai", Icons.person, "profiles"),
-        MenuItem("Unit Kerja", Icons.business, "employee_units"),
-        MenuItem("Posisi/Jabatan", Icons.work_history, "ref_positions"),
-        MenuItem("Kualifikasi Pegawai", Icons.school, "employee_qualifications"),
-        MenuItem("Assignment Kualifikasi", Icons.assignment_ind, "employee_qualification_assignments"),
-        MenuItem("Pengajuan Cuti", Icons.beach_access, "employee_leave_requests"),
-        MenuItem("Tipe Cuti", Icons.category, "leave_types"),
-        MenuItem("Scoring Pegawai", Icons.star, "employee_scoring"),
-        MenuItem("Kategori Scoring", Icons.star_border, "scoring_categories"),
-        MenuItem("Wellbeing Log", Icons.favorite, "employee_wellbeing_logs"),
-      ],
-    ),
-    MenuGroup(
-      title: "📁 LOGISTIC DATA",
-      icon: Icons.inventory,
-      menus: [
-        MenuItem("Asset", Icons.inventory_2, "assets"),
-        MenuItem("Tipe Asset", Icons.category, "ref_asset_types"),
-        MenuItem("Kategori Asset", Icons.folder, "ref_asset_categories"),
-        MenuItem("Sub Kategori Asset", Icons.subdirectory_arrow_right, "ref_asset_sub_categories"),
-        MenuItem("Inspeksi Asset", Icons.fact_check, "asset_inspections"),
-        MenuItem("Assignment Asset", Icons.assignment, "asset_assignments"),
-        MenuItem("Pergerakan Asset", Icons.timeline, "asset_movements"),
-        MenuItem("Stock", Icons.warehouse, "stocks"),
-        MenuItem("Tipe Stock", Icons.label, "ref_stock_types"),
-        MenuItem("Opname Stock", Icons.playlist_add_check, "stocks_opnames"),
-        MenuItem("Pembelian Stock", Icons.shopping_cart, "stock_purchases"),
-        MenuItem("Transaksi Stock", Icons.swap_horiz, "stock_transactions"),
-        MenuItem("Penggunaan Stock", Icons.remove_shopping_cart, "stock_usages"),
-        MenuItem("Lokasi Penyimpanan", Icons.location_on, "storage_locations"),
-        MenuItem("Zona Gudang", Icons.map, "warehouse_zones"),
-        MenuItem("Rak Penyimpanan", Icons.storage, "storage_racks"),
-        MenuItem("Level Rak", Icons.view_agenda, "rack_levels"),
-        MenuItem("Bin/Slot", Icons.grid_view, "storage_bins"),
-        MenuItem("Pergerakan Bin", Icons.move_to_inbox, "stock_bin_movements"),
-      ],
-    ),
-    MenuGroup(
-      title: "📁 HOSPITAL INITIAL",
-      icon: Icons.local_hospital,
-      menus: [
-        MenuItem("Gedung", Icons.business, "buildings"),
-        MenuItem("Lantai", Icons.layers, "floors"),
-        MenuItem("Ruangan", Icons.door_front_door, "rooms"),
-        MenuItem("Kategori Ruangan", Icons.category, "ref_room_categories"),
-        MenuItem("Fungsi Gedung", Icons.apartment, "ref_building_functions"),
-        MenuItem("Detektor", Icons.sensors, "detectors"),
-        MenuItem("Lokasi Tracking", Icons.gps_fixed, "employee_location_tracking"),
-        MenuItem("Pergerakan People", Icons.directions_walk, "people_movements"),
-      ],
-    ),
-    MenuGroup(
-      title: "📁 REFERENSI DATA",
-      icon: Icons.dataset,
-      menus: [
-        MenuItem("Shift Kerja", Icons.schedule, "ref_shifts"),
-        MenuItem("Tipe Tugas", Icons.task, "ref_task_types"),
-        MenuItem("Kategori Insiden", Icons.warning, "ref_incident_categories"),
-        MenuItem("Kategori People", Icons.group, "ref_people_categories"),
-        MenuItem("Kategori Laporan", Icons.report, "ref_reports_category"),
-        MenuItem("People", Icons.people_outline, "people"),
-        MenuItem("Spatial Ref", Icons.map, "spatial_ref_sys"),
-      ],
-    ),
-    MenuGroup(
-      title: "🔒 SYSTEM (Super Admin Only)",
-      icon: Icons.settings,
-      isDisabled: true,
-      menus: [
-        MenuItem("App Config", Icons.settings_applications, "apps_config"),
-        MenuItem("Hospital Profile", Icons.local_hospital, "hospital_profile"),
-      ],
-    ),
+  String _selectedMenu = "Data Pegawai";
+
+  final List<Map<String, dynamic>> _menus = [
+    {'title': 'Data Pegawai', 'icon': Icons.people, 'widget': const EmployeeTable()},
+    // Tambahkan menu lain di sini nanti
   ];
 
   @override
@@ -123,16 +35,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
       DeviceOrientation.landscapeRight,
     ]);
     _fetchHospitalProfile();
-  }
-
-  void _toggleGroup(String groupTitle) {
-    setState(() {
-      if (_expandedGroups.contains(groupTitle)) {
-        _expandedGroups.remove(groupTitle);
-      } else {
-        _expandedGroups.add(groupTitle);
-      }
-    });
   }
 
   Future<void> _fetchHospitalProfile() async {
@@ -163,35 +65,49 @@ class _AdminDashboardState extends State<AdminDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true,
-      body: Stack(
+      resizeToAvoidBottomInset: false,
+      body: Row(
         children: [
-          Positioned.fill(child: _buildMainCanvas()),
-          AnimatedPositioned(
+          // Sidebar - tidak menimpa main canvas
+          AnimatedContainer(
             duration: const Duration(milliseconds: 250),
             curve: Curves.easeInOut,
-            left: _isSidebarVisible ? 0 : -280,
-            top: 0,
-            bottom: 0,
-            child: _buildSidebar(),
+            width: _isSidebarVisible ? 260 : 0,
+            child: _isSidebarVisible ? _buildSidebar() : const SizedBox.shrink(),
           ),
-          Positioned(
-            top: 20,
-            left: _isSidebarVisible ? 10 : 10,
-            child: GestureDetector(
-              onTap: () => setState(() => _isSidebarVisible = !_isSidebarVisible),
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 93, 160, 177),
-                  borderRadius: BorderRadius.circular(12),
+          
+          // Main Content - selalu di kanan sidebar
+          Expanded(
+            child: Stack(
+              children: [
+                // Main Canvas
+                Positioned.fill(child: _buildMainCanvas()),
+                
+                // Toggle Button (di dalam main canvas, pojok kiri atas)
+                Positioned(
+                  top: 20,
+                  left: 10,
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _isSidebarVisible = !_isSidebarVisible;
+                      });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color.fromARGB(255, 93, 160, 177),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        _isSidebarVisible ? Icons.arrow_back : Icons.menu,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                    ),
+                  ),
                 ),
-                child: Icon(
-                  _isSidebarVisible ? Icons.arrow_back : Icons.menu,
-                  color: Colors.white,
-                  size: 18,
-                ),
-              ),
+              ],
             ),
           ),
         ],
@@ -199,6 +115,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
+  // ======================
+  // SIDEBAR
+  // ======================
   Widget _buildSidebar() {
     return ClipRRect(
       borderRadius: const BorderRadius.only(
@@ -208,7 +127,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
         child: Container(
-          width: 280,
+          width: 260,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
@@ -237,12 +156,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
               _buildHospitalBrand(),
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ..._menuGroups.map((group) => _buildMenuGroup(group)),
-                      const SizedBox(height: 30),
+                      _sectionTitle("MASTER DATA"),
+                      ..._menus.map((menu) => _menu(menu['title'], menu['icon'])),
+                      const SizedBox(height: 24),
+                      _sectionTitle("SYSTEM"),
+                      _menu("Logout", Icons.logout, isLogout: true),
+                      const SizedBox(height: 32),
                       _buildFooter(),
                     ],
                   ),
@@ -255,83 +178,61 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  Widget _buildMenuGroup(MenuGroup group) {
-    final isExpanded = _expandedGroups.contains(group.title);
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        GestureDetector(
-          onTap: group.isDisabled ? null : () => _toggleGroup(group.title),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: isExpanded ? Colors.white.withValues(alpha: 0.15) : Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  group.icon,
-                  size: 18,
-                  color: group.isDisabled ? Colors.grey : Colors.black54,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    group.title,
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: group.isDisabled ? Colors.grey : Colors.black87,
-                    ),
-                  ),
-                ),
-                Icon(
-                  isExpanded ? Icons.expand_less : Icons.expand_more,
-                  size: 18,
-                  color: group.isDisabled ? Colors.grey : Colors.black54,
-                ),
-              ],
-            ),
-          ),
+  Widget _sectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, bottom: 10, top: 4),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: const Color.fromARGB(255, 3, 37, 150).withValues(alpha: 0.7),
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.2,
         ),
-        if (isExpanded)
-          Column(
-            children: group.menus.map((menu) => _buildMenuItem(menu)).toList(),
-          ),
-        const SizedBox(height: 4),
-      ],
+      ),
     );
   }
 
-  Widget _buildMenuItem(MenuItem menu) {
-    final isSelected = _selectedTable == menu.tableName;
-    
+  Widget _menu(String title, IconData icon, {bool isLogout = false}) {
+    final active = _selectedMenu == title;
+
     return GestureDetector(
       onTap: () {
-        setState(() {
-          _selectedTable = menu.tableName;
-        });
+        if (isLogout) {
+          _handleLogout();
+        } else {
+          setState(() {
+            _selectedMenu = title;
+          });
+        }
       },
-      child: Container(
-        margin: const EdgeInsets.only(left: 32, bottom: 2),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        margin: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white.withValues(alpha: 0.25) : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          color: active ? Colors.white.withValues(alpha: 0.28) : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+          border: active ? Border.all(color: Colors.white.withValues(alpha: 0.35)) : null,
         ),
         child: Row(
           children: [
-            Icon(menu.icon, size: 16, color: isSelected ? deepBlue : Colors.grey.shade600),
-            const SizedBox(width: 12),
+            Icon(
+              icon,
+              size: 16,
+              color: isLogout ? Colors.red : (active ? deepBlue : Colors.black54),
+            ),
+            const SizedBox(width: 10),
             Expanded(
               child: Text(
-                menu.title,
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.poppins(
                   fontSize: 11,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                  color: isSelected ? deepBlue : Colors.black54,
+                  fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                  color: isLogout ? Colors.red : (active ? deepBlue : Colors.black87),
+                  letterSpacing: 0.2,
                 ),
               ),
             ),
@@ -347,20 +248,47 @@ class _AdminDashboardState extends State<AdminDashboard> {
       child: Column(
         children: [
           SizedBox(
-            width: 60,
-            height: 60,
+            width: 74,
+            height: 74,
             child: _hospitalProfile?.logoUrl != null && _hospitalProfile!.logoUrl!.isNotEmpty
-                ? Image.network(_hospitalProfile!.logoUrl!, fit: BoxFit.contain)
-                : Icon(Icons.local_hospital, color: deepBlue, size: 40),
+                ? Image.network(
+                    _hospitalProfile!.logoUrl!,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Icon(Icons.local_hospital, color: deepBlue, size: 42);
+                    },
+                  )
+                : Icon(Icons.local_hospital, color: deepBlue, size: 42),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           Text(
             _hospitalProfile?.name ?? 'HOSPITAL HUMAN ASSET TRACKING SYSTEM',
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.poppins(fontWeight: FontWeight.w800, fontSize: 11, color: deepBlue),
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.w800,
+              fontSize: 13,
+              height: 1.35,
+              letterSpacing: 0.2,
+              color: deepBlue,
+            ),
           ),
+          if (_hospitalProfile?.address != null && _hospitalProfile!.address!.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              _hospitalProfile!.address!,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.poppins(
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                height: 1.4,
+                color: Colors.black54,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -370,35 +298,44 @@ class _AdminDashboardState extends State<AdminDashboard> {
     return Center(
       child: Column(
         children: [
-          Text("Developed By : PLATFORM PELAYANAN TERBAIK", style: GoogleFonts.poppins(fontSize: 7)),
-          Text("Distributed By : PT. REKAMITRA", style: GoogleFonts.poppins(fontSize: 7)),
-          Text("2026 - Indonesia", style: GoogleFonts.poppins(fontSize: 7, fontWeight: FontWeight.bold)),
+          Text(
+            "Developed By : PLATFORM PELAYANAN TERBAIK",
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: 8,
+              fontWeight: FontWeight.w500,
+              color: Colors.green.shade800.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            "Distributed By : PT. REKAMITRA",
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: 8,
+              fontWeight: FontWeight.w500,
+              color: Colors.green.shade800.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            "2026 - Indonesia",
+            style: GoogleFonts.poppins(
+              fontSize: 8,
+              fontWeight: FontWeight.bold,
+              color: Colors.green.shade900.withValues(alpha: 0.8),
+            ),
+          ),
+          const SizedBox(height: 20),
         ],
       ),
     );
   }
 
+  // ======================
+  // MAIN CANVAS
+  // ======================
   Widget _buildMainCanvas() {
-    final config = tableConfigs[_selectedTable];
-    
-    if (config == null) {
-      return Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFFE0F2F1), Color(0xFFB3E5FC), Color(0xFF81D4FA)],
-          ),
-        ),
-        child: Center(
-          child: Text(
-            "Konfigurasi tabel '$_selectedTable' tidak ditemukan",
-            style: GoogleFonts.poppins(fontSize: 16, color: Colors.red),
-          ),
-        ),
-      );
-    }
-    
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -407,62 +344,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
           colors: [Color(0xFFE0F2F1), Color(0xFFB3E5FC), Color(0xFF81D4FA)],
         ),
       ),
-      child: Column(
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.7),
-              border: const Border(
-                bottom: BorderSide(color: Colors.white, width: 1),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.table_chart,
-                  size: 24,
-                  color: const Color(0xFF01579B),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Admin : ${config.displayName}',
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF01579B),
-                  ),
-                ),
-                const Spacer(),
-              ],
-            ),
-          ),
-          Expanded(
-            child: DynamicPlutoGrid(
-              tableName: _selectedTable,
-              config: config,
-            ),
-          ),
-        ],
-      ),
+      child: _getBody(),
     );
   }
-}
 
-class MenuGroup {
-  final String title;
-  final IconData icon;
-  final List<MenuItem> menus;
-  final bool isDisabled;
-  
-  MenuGroup({required this.title, required this.icon, required this.menus, this.isDisabled = false});
-}
+  Widget _getBody() {
+    final selectedWidget = _menus.firstWhere(
+      (menu) => menu['title'] == _selectedMenu,
+      orElse: () => _menus[0],
+    )['widget'];
 
-class MenuItem {
-  final String title;
-  final IconData icon;
-  final String tableName;
-  
-  MenuItem(this.title, this.icon, this.tableName);
+    return selectedWidget;
+  }
 }
