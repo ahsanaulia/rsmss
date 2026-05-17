@@ -6,9 +6,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:ui';
 import '../../models/hospital_profile_model.dart';
 import 'tables/employee_table.dart';
-
+import 'tables/tasks_table.dart';  // ← TAMBAHKAN IMPORT
+import 'tables/announcements_table.dart';  // ← TAMBAHKAN IMPORT
 class AdminDashboard extends ConsumerStatefulWidget {
-  const AdminDashboard({super.key});
+
+  final VoidCallback onLogout;  // ← Tambahkan ini
+  
+  const AdminDashboard({super.key,required this.onLogout,});
 
   @override
   ConsumerState<AdminDashboard> createState() => _AdminDashboardState();
@@ -22,10 +26,34 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
 
   String _selectedMenu = "Data Pegawai";
 
-  final List<Map<String, dynamic>> _menus = [
-    {'title': 'Data Pegawai', 'icon': Icons.people, 'widget': const EmployeeTable()},
-    // Tambahkan menu lain di sini nanti
+  // Menu groups dengan struktur expandable
+  final List<MenuGroup> _menuGroups = [
+    MenuGroup(
+      title: "MASTER DATA",
+      icon: Icons.storage,
+      menus: [
+        MenuItem("Data Pegawai", Icons.people, EmployeeTable()),
+      ],
+    ),
+    MenuGroup(
+      title: "OPERASIONAL",
+      icon: Icons.work,
+      menus: [
+        MenuItem("Pengumuman", Icons.assignment, AnnouncementsTable()),
+        MenuItem("Penugasan", Icons.assignment, TasksTable()),  // ← TAMBAHKAN
+      ],
+    ),
+    MenuGroup(
+      title: "SYSTEM",
+      icon: Icons.settings,
+      menus: [
+        MenuItem("Logout", Icons.logout, null, true),
+      ],
+    ),
   ];
+
+  // Expanded groups state
+  final Set<String> _expandedGroups = {"MASTER DATA", "OPERASIONAL"};
 
   @override
   void initState() {
@@ -52,8 +80,38 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
   }
 
   void _handleLogout() {
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    Navigator.pop(context);
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Konfirmasi Logout'),
+      content: const Text('Apakah Anda yakin ingin keluar?'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text('Batal'),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.pop(ctx); // Tutup dialog
+            SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+            widget.onLogout(); // ← Panggil callback ke login screen
+          },
+          style: TextButton.styleFrom(foregroundColor: Colors.red),
+          child: const Text('Logout'),
+        ),
+      ],
+    ),
+  );
+}
+
+  void _toggleGroup(String groupTitle) {
+    setState(() {
+      if (_expandedGroups.contains(groupTitle)) {
+        _expandedGroups.remove(groupTitle);
+      } else {
+        _expandedGroups.add(groupTitle);
+      }
+    });
   }
 
   @override
@@ -68,7 +126,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
       resizeToAvoidBottomInset: false,
       body: Row(
         children: [
-          // Sidebar - tidak menimpa main canvas
+          // Sidebar
           AnimatedContainer(
             duration: const Duration(milliseconds: 250),
             curve: Curves.easeInOut,
@@ -76,14 +134,11 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
             child: _isSidebarVisible ? _buildSidebar() : const SizedBox.shrink(),
           ),
           
-          // Main Content - selalu di kanan sidebar
+          // Main Content
           Expanded(
             child: Stack(
               children: [
-                // Main Canvas
                 Positioned.fill(child: _buildMainCanvas()),
-                
-                // Toggle Button (di dalam main canvas, pojok kiri atas)
                 Positioned(
                   top: 20,
                   left: 10,
@@ -160,11 +215,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _sectionTitle("MASTER DATA"),
-                      ..._menus.map((menu) => _menu(menu['title'], menu['icon'])),
-                      const SizedBox(height: 24),
-                      _sectionTitle("SYSTEM"),
-                      _menu("Logout", Icons.logout, isLogout: true),
+                      ..._menuGroups.map((group) => _buildMenuGroup(group)),
                       const SizedBox(height: 32),
                       _buildFooter(),
                     ],
@@ -178,61 +229,85 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
     );
   }
 
-  Widget _sectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 8, bottom: 10, top: 4),
-      child: Text(
-        title,
-        style: TextStyle(
-          color: const Color.fromARGB(255, 3, 37, 150).withValues(alpha: 0.7),
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.2,
+  Widget _buildMenuGroup(MenuGroup group) {
+    final isExpanded = _expandedGroups.contains(group.title);
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Group Header
+        GestureDetector(
+          onTap: () => _toggleGroup(group.title),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: isExpanded ? Colors.white.withValues(alpha: 0.15) : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(group.icon, size: 18, color: Colors.black54),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    group.title,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                Icon(
+                  isExpanded ? Icons.expand_less : Icons.expand_more,
+                  size: 18,
+                  color: Colors.black54,
+                ),
+              ],
+            ),
+          ),
         ),
-      ),
+        // Menu Items (if expanded)
+        if (isExpanded)
+          Column(
+            children: group.menus.map((menu) => _buildMenuItem(menu)).toList(),
+          ),
+        const SizedBox(height: 4),
+      ],
     );
   }
 
-  Widget _menu(String title, IconData icon, {bool isLogout = false}) {
-    final active = _selectedMenu == title;
+  Widget _buildMenuItem(MenuItem menu) {
+    final isSelected = _selectedMenu == menu.title;
 
     return GestureDetector(
       onTap: () {
-        if (isLogout) {
+        if (menu.isLogout) {
           _handleLogout();
         } else {
           setState(() {
-            _selectedMenu = title;
+            _selectedMenu = menu.title;
           });
         }
       },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        margin: const EdgeInsets.only(bottom: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      child: Container(
+        margin: const EdgeInsets.only(left: 32, bottom: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? Colors.white.withValues(alpha: 0.28) : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          border: active ? Border.all(color: Colors.white.withValues(alpha: 0.35)) : null,
+          color: isSelected ? Colors.white.withValues(alpha: 0.25) : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
           children: [
-            Icon(
-              icon,
-              size: 16,
-              color: isLogout ? Colors.red : (active ? deepBlue : Colors.black54),
-            ),
-            const SizedBox(width: 10),
+            Icon(menu.icon, size: 16, color: isSelected ? deepBlue : Colors.grey.shade600),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                menu.title,
                 style: GoogleFonts.poppins(
                   fontSize: 11,
-                  fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-                  color: isLogout ? Colors.red : (active ? deepBlue : Colors.black87),
-                  letterSpacing: 0.2,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  color: isSelected ? deepBlue : Colors.black54,
                 ),
               ),
             ),
@@ -349,11 +424,36 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
   }
 
   Widget _getBody() {
-    final selectedWidget = _menus.firstWhere(
-      (menu) => menu['title'] == _selectedMenu,
-      orElse: () => _menus[0],
-    )['widget'];
-
-    return selectedWidget;
+    // Cari menu yang dipilih
+    for (var group in _menuGroups) {
+      for (var menu in group.menus) {
+        if (menu.title == _selectedMenu && menu.widget != null) {
+          return menu.widget!;
+        }
+      }
+    }
+    return const Center(child: Text("Pilih menu dari sidebar"));
   }
+}
+
+// Models untuk menu
+class MenuGroup {
+  final String title;
+  final IconData icon;
+  final List<MenuItem> menus;
+
+  MenuGroup({
+    required this.title,
+    required this.icon,
+    required this.menus,
+  });
+}
+
+class MenuItem {
+  final String title;
+  final IconData icon;
+  final Widget? widget;
+  final bool isLogout;
+
+  MenuItem(this.title, this.icon, this.widget, [this.isLogout = false]);
 }

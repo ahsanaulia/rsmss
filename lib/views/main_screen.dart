@@ -207,40 +207,43 @@ class _MainScreenState extends State<MainScreen> {
     super.dispose();
   }
   
-  @override
-  Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(
-          child: CircularProgressIndicator(color: Color(0xFF01579B)),
-        ),
-      );
-    }
-    
-    if (_userRole == 'operation') {
-      return OperationDashboard(
-        userName: _userName,
-        onLogout: _handleLogout,
-      );
-    }
-    
-    if (_userRole == 'monitor') {
-      return MonitorDashboard(
-        userName: _userName,
-        onLogout: _handleLogout,
-      );
-    }
-    
-    // Admin role
-    if (_userRole == 'admin') {
-      return const AdminDashboard();
-    }
-    
-    return Scaffold(
+ // lib/views/main_screen.dart (bagian akhir - method build)
+@override
+Widget build(BuildContext context) {
+  if (_isLoading) {
+    return const Scaffold(
+      backgroundColor: Colors.white,
       body: Center(
-        child: Text("Role $_userRole tidak dikenal."),
+        child: CircularProgressIndicator(color: Color(0xFF01579B)),
       ),
     );
   }
+  
+  if (_userRole == 'operation') {
+    return OperationDashboard(
+      userName: _userName,
+      onLogout: _handleLogout,
+    );
+  }
+  
+  if (_userRole == 'monitor') {
+    return MonitorDashboard(
+      userName: _userName,
+      onLogout: _handleLogout,
+    );
+  }
+  
+  // ADMIN ROLE - PERBAIKAN DI SINI
+  if (_userRole == 'admin') {
+    return AdminDashboard(
+      onLogout: _handleLogout,  // ← Tambahkan callback
+    );
+  }
+  
+  return Scaffold(
+    body: Center(
+      child: Text("Role $_userRole tidak dikenal."),
+    ),
+  );
+}
 }
