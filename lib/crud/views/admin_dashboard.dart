@@ -6,13 +6,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:ui';
 import '../../models/hospital_profile_model.dart';
 import 'tables/employee_table.dart';
-import 'tables/tasks_table.dart';  // ← TAMBAHKAN IMPORT
-import 'tables/announcements_table.dart';  // ← TAMBAHKAN IMPORT
-class AdminDashboard extends ConsumerStatefulWidget {
+import 'tables/tasks_table.dart';
+import 'tables/announcements_table.dart';
+import '../../crud/roster/presentation/pages/roster_page.dart';
 
-  final VoidCallback onLogout;  // ← Tambahkan ini
-  
-  const AdminDashboard({super.key,required this.onLogout,});
+class AdminDashboard extends ConsumerStatefulWidget {
+  final VoidCallback onLogout;
+
+  const AdminDashboard({super.key, required this.onLogout});
 
   @override
   ConsumerState<AdminDashboard> createState() => _AdminDashboardState();
@@ -26,7 +27,6 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
 
   String _selectedMenu = "Data Pegawai";
 
-  // Menu groups dengan struktur expandable
   final List<MenuGroup> _menuGroups = [
     MenuGroup(
       title: "MASTER DATA",
@@ -39,8 +39,9 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
       title: "OPERASIONAL",
       icon: Icons.work,
       menus: [
+        MenuItem("Penjadwalan", Icons.calendar_today, const RosterPage()),
         MenuItem("Pengumuman", Icons.assignment, AnnouncementsTable()),
-        MenuItem("Penugasan", Icons.assignment, TasksTable()),  // ← TAMBAHKAN
+        MenuItem("Penugasan", Icons.assignment, TasksTable()),
       ],
     ),
     MenuGroup(
@@ -52,7 +53,6 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
     ),
   ];
 
-  // Expanded groups state
   final Set<String> _expandedGroups = {"MASTER DATA", "OPERASIONAL"};
 
   @override
@@ -80,29 +80,29 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
   }
 
   void _handleLogout() {
-  showDialog(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: const Text('Konfirmasi Logout'),
-      content: const Text('Apakah Anda yakin ingin keluar?'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx),
-          child: const Text('Batal'),
-        ),
-        TextButton(
-          onPressed: () {
-            Navigator.pop(ctx); // Tutup dialog
-            SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-            widget.onLogout(); // ← Panggil callback ke login screen
-          },
-          style: TextButton.styleFrom(foregroundColor: Colors.red),
-          child: const Text('Logout'),
-        ),
-      ],
-    ),
-  );
-}
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Konfirmasi Logout'),
+        content: const Text('Apakah Anda yakin ingin keluar?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+              widget.onLogout();
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _toggleGroup(String groupTitle) {
     setState(() {
@@ -126,44 +126,17 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
       resizeToAvoidBottomInset: false,
       body: Row(
         children: [
-          // Sidebar
+          // ========== SIDEBAR ==========
           AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
+            duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
             width: _isSidebarVisible ? 260 : 0,
             child: _isSidebarVisible ? _buildSidebar() : const SizedBox.shrink(),
           ),
-          
-          // Main Content
+
+          // ========== MAIN CONTENT ==========
           Expanded(
-            child: Stack(
-              children: [
-                Positioned.fill(child: _buildMainCanvas()),
-                Positioned(
-                  top: 20,
-                  left: 10,
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _isSidebarVisible = !_isSidebarVisible;
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: const Color.fromARGB(255, 93, 160, 177),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        _isSidebarVisible ? Icons.arrow_back : Icons.menu,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            child: _buildMainCanvas(),
           ),
         ],
       ),
@@ -176,8 +149,8 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
   Widget _buildSidebar() {
     return ClipRRect(
       borderRadius: const BorderRadius.only(
-        topRight: Radius.circular(40),
-        bottomRight: Radius.circular(40),
+        topRight: Radius.circular(24),
+        bottomRight: Radius.circular(24),
       ),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
@@ -188,18 +161,17 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Colors.white.withValues(alpha: 0.20),
-                Colors.white.withValues(alpha: 0.05),
+                Colors.white.withOpacity(0.95),
+                Colors.white.withOpacity(0.85),
               ],
             ),
             borderRadius: const BorderRadius.only(
-              topRight: Radius.circular(20),
-              bottomRight: Radius.circular(20),
+              topRight: Radius.circular(24),
+              bottomRight: Radius.circular(24),
             ),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 1),
             boxShadow: [
               BoxShadow(
-                color: const Color.fromARGB(255, 36, 86, 194).withValues(alpha: 0.15),
+                color: deepBlue.withOpacity(0.15),
                 blurRadius: 20,
                 offset: const Offset(4, 0),
               ),
@@ -207,11 +179,12 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
           ),
           child: Column(
             children: [
-              const SizedBox(height: 40),
+              const SizedBox(height: 20),
+              _buildSidebarHeader(),
               _buildHospitalBrand(),
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -229,45 +202,77 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
     );
   }
 
+  Widget _buildSidebarHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: deepBlue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(Icons.menu, size: 18, color: deepBlue),
+          ),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _isSidebarVisible = false;
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.chevron_left, size: 24, color: deepBlue),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMenuGroup(MenuGroup group) {
     final isExpanded = _expandedGroups.contains(group.title);
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Group Header
         GestureDetector(
           onTap: () => _toggleGroup(group.title),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
             decoration: BoxDecoration(
-              color: isExpanded ? Colors.white.withValues(alpha: 0.15) : Colors.transparent,
+              color: isExpanded ? deepBlue.withOpacity(0.08) : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
-                Icon(group.icon, size: 18, color: Colors.black54),
-                const SizedBox(width: 12),
+                Icon(group.icon, size: 18, color: deepBlue),
+                const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     group.title,
                     style: GoogleFonts.poppins(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: deepBlue,
                     ),
                   ),
                 ),
                 Icon(
                   isExpanded ? Icons.expand_less : Icons.expand_more,
                   size: 18,
-                  color: Colors.black54,
+                  color: deepBlue,
                 ),
               ],
             ),
           ),
         ),
-        // Menu Items (if expanded)
         if (isExpanded)
           Column(
             children: group.menus.map((menu) => _buildMenuItem(menu)).toList(),
@@ -279,10 +284,11 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
 
   Widget _buildMenuItem(MenuItem menu) {
     final isSelected = _selectedMenu == menu.title;
+    final isLogout = menu.isLogout;
 
     return GestureDetector(
       onTap: () {
-        if (menu.isLogout) {
+        if (isLogout) {
           _handleLogout();
         } else {
           setState(() {
@@ -291,23 +297,23 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
         }
       },
       child: Container(
-        margin: const EdgeInsets.only(left: 32, bottom: 2),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        margin: const EdgeInsets.only(left: 30, bottom: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white.withValues(alpha: 0.25) : Colors.transparent,
+          color: isSelected ? deepBlue.withOpacity(0.12) : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
           children: [
-            Icon(menu.icon, size: 16, color: isSelected ? deepBlue : Colors.grey.shade600),
-            const SizedBox(width: 12),
+            Icon(menu.icon, size: 16, color: isLogout ? Colors.red : (isSelected ? deepBlue : Colors.grey.shade600)),
+            const SizedBox(width: 10),
             Expanded(
               child: Text(
                 menu.title,
                 style: GoogleFonts.poppins(
                   fontSize: 11,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                  color: isSelected ? deepBlue : Colors.black54,
+                  color: isLogout ? Colors.red : (isSelected ? deepBlue : Colors.grey.shade800),
                 ),
               ),
             ),
@@ -319,51 +325,41 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
 
   Widget _buildHospitalBrand() {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       child: Column(
         children: [
-          SizedBox(
-            width: 74,
-            height: 74,
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: deepBlue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
             child: _hospitalProfile?.logoUrl != null && _hospitalProfile!.logoUrl!.isNotEmpty
-                ? Image.network(
-                    _hospitalProfile!.logoUrl!,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Icon(Icons.local_hospital, color: deepBlue, size: 42);
-                    },
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.network(
+                      _hospitalProfile!.logoUrl!,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(Icons.local_hospital, color: deepBlue, size: 32);
+                      },
+                    ),
                   )
-                : Icon(Icons.local_hospital, color: deepBlue, size: 42),
+                : Icon(Icons.local_hospital, color: deepBlue, size: 32),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 8),
           Text(
-            _hospitalProfile?.name ?? 'HOSPITAL HUMAN ASSET TRACKING SYSTEM',
+            _hospitalProfile?.name ?? 'HOSPITAL SYSTEM',
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: GoogleFonts.poppins(
-              fontWeight: FontWeight.w800,
-              fontSize: 13,
-              height: 1.35,
-              letterSpacing: 0.2,
+              fontWeight: FontWeight.w700,
+              fontSize: 11,
               color: deepBlue,
             ),
           ),
-          if (_hospitalProfile?.address != null && _hospitalProfile!.address!.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Text(
-              _hospitalProfile!.address!,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.poppins(
-                fontSize: 10,
-                fontWeight: FontWeight.w500,
-                height: 1.4,
-                color: Colors.black54,
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -374,34 +370,22 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
       child: Column(
         children: [
           Text(
-            "Developed By : PLATFORM PELAYANAN TERBAIK",
+            "Developed By: PLATFORM PELAYANAN TERBAIK",
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              fontSize: 8,
-              fontWeight: FontWeight.w500,
-              color: Colors.green.shade800.withValues(alpha: 0.7),
-            ),
+            style: GoogleFonts.poppins(fontSize: 7, color: Colors.grey.shade500),
           ),
           const SizedBox(height: 2),
           Text(
-            "Distributed By : PT. REKAMITRA",
+            "Distributed By: PT. REKAMITRA",
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              fontSize: 8,
-              fontWeight: FontWeight.w500,
-              color: Colors.green.shade800.withValues(alpha: 0.7),
-            ),
+            style: GoogleFonts.poppins(fontSize: 7, color: Colors.grey.shade500),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 2),
           Text(
             "2026 - Indonesia",
-            style: GoogleFonts.poppins(
-              fontSize: 8,
-              fontWeight: FontWeight.bold,
-              color: Colors.green.shade900.withValues(alpha: 0.8),
-            ),
+            style: GoogleFonts.poppins(fontSize: 7, fontWeight: FontWeight.bold, color: Colors.grey.shade600),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
         ],
       ),
     );
@@ -419,16 +403,68 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
           colors: [Color(0xFFE0F2F1), Color(0xFFB3E5FC), Color(0xFF81D4FA)],
         ),
       ),
-      child: _getBody(),
+      child: Stack(
+        children: [
+          // Konten Utama
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: _getBody(),
+          ),
+          
+          // Tombol Toggle Sidebar (hanya muncul saat sidebar tertutup)
+          if (!_isSidebarVisible)
+            Positioned(
+              top: 20,
+              left: 16,
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _isSidebarVisible = true;
+                  });
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: deepBlue,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.menu, color: Colors.white, size: 20),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
   Widget _getBody() {
-    // Cari menu yang dipilih
     for (var group in _menuGroups) {
       for (var menu in group.menus) {
         if (menu.title == _selectedMenu && menu.widget != null) {
-          return menu.widget!;
+          return Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: menu.widget!,
+            ),
+          );
         }
       }
     }
@@ -436,17 +472,11 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
   }
 }
 
-// Models untuk menu
 class MenuGroup {
   final String title;
   final IconData icon;
   final List<MenuItem> menus;
-
-  MenuGroup({
-    required this.title,
-    required this.icon,
-    required this.menus,
-  });
+  MenuGroup({required this.title, required this.icon, required this.menus});
 }
 
 class MenuItem {
@@ -454,6 +484,5 @@ class MenuItem {
   final IconData icon;
   final Widget? widget;
   final bool isLogout;
-
   MenuItem(this.title, this.icon, this.widget, [this.isLogout = false]);
 }
