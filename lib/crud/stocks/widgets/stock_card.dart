@@ -1,73 +1,66 @@
 // ============================================================
-// WIDGET: Asset Card
+// WIDGET: Stock Card
 // ============================================================
 // TANGGUNG JAWAB:
-// 1. Menampilkan ringkasan informasi aset dalam bentuk card
+// 1. Menampilkan ringkasan informasi stok dalam bentuk card
 // 2. Mendukung aksi: tap (detail), edit, delete
-// 3. Menampilkan status kondisi dengan warna yang sesuai
-// 4. Menampilkan foto aset jika ada (avatar style)
+// 3. Menampilkan status stok (Habis, Stok Rendah, Stok Aman) dengan warna berbeda
+// 4. Menampilkan foto stok jika ada (avatar style)
 // ============================================================
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../models/asset_model.dart';
+import '../models/stock_model.dart';
 
-class AssetCard extends StatelessWidget {
-  final Asset asset;
+class StockCard extends StatelessWidget {
+  final Stock stock;
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
-  const AssetCard({
+  const StockCard({
     super.key,
-    required this.asset,
+    required this.stock,
     required this.onTap,
     required this.onEdit,
     required this.onDelete,
   });
 
-  /// Mendapatkan warna berdasarkan status kondisi aset
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'good':
+  /// Mendapatkan status stok (Habis, Stok Rendah, Stok Aman)
+  StockStatus _getStockStatus() {
+    return StockStatus.fromStock(stock);
+  }
+
+  /// Mendapatkan label kondisi stok (GOOD/LOW)
+  String _getConditionLabel(String condition) {
+    switch (condition.toUpperCase()) {
+      case 'GOOD':
+        return 'Baik';
+      case 'LOW':
+        return 'Stok Rendah';
+      default:
+        return condition;
+    }
+  }
+
+  /// Mendapatkan warna untuk kondisi stok
+  Color _getConditionColor(String condition) {
+    switch (condition.toUpperCase()) {
+      case 'GOOD':
         return Colors.green;
-      case 'fair':
+      case 'LOW':
         return Colors.orange;
-      case 'damage':
-        return Colors.deepOrange;
-      case 'critical':
-        return Colors.red;
       default:
         return Colors.grey;
     }
   }
 
-  /// Mendapatkan label status dalam Bahasa Indonesia
-  String _getStatusLabel(String status) {
-    switch (status.toLowerCase()) {
-      case 'good':
-        return 'Baik';
-      case 'fair':
-        return 'Cukup';
-      case 'damage':
-        return 'Rusak';
-      case 'critical':
-        return 'Kritis';
-      default:
-        return status;
-    }
-  }
-
-  /// Mendapatkan warna background untuk level kontaminasi
-  Color _getContaminationColor(int level) {
-    return ContaminationLevel.getColor(level);
-  }
-
   @override
   Widget build(BuildContext context) {
-    final statusColor = _getStatusColor(asset.statusCondition);
-    final statusLabel = _getStatusLabel(asset.statusCondition);
-    
+    final stockStatus = _getStockStatus();
+    final conditionColor = _getConditionColor(stock.stockCondition);
+    final conditionLabel = _getConditionLabel(stock.stockCondition);
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -89,47 +82,77 @@ class AssetCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ==================================================
-              // LEFT: FOTO ASET (Avatar)
+              // LEFT: FOTO STOK (Avatar)
               // ==================================================
               _buildPhotoAvatar(),
               
               const SizedBox(width: 12),
               
               // ==================================================
-              // MIDDLE: INFORMASI ASET
+              // MIDDLE: INFORMASI STOK
               // ==================================================
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Nama Aset
-                    Text(
-                      asset.assetName,
-                      style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: Colors.grey.shade800,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    // Nama Stok
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            stock.stockName,
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: Colors.grey.shade800,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        // Status Stok (Habis/Rendah/Aman)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: stockStatus.color.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            stockStatus.label,
+                            style: GoogleFonts.poppins(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                              color: stockStatus.color,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     
                     const SizedBox(height: 4),
                     
-                    // RFID Tag (Kode Asset - Track)
+                    // Kode Stok & Satuan
                     Row(
                       children: [
-                        Icon(
-                          Icons.qr_code_scanner,
-                          size: 12,
-                          color: Colors.grey.shade500,
-                        ),
-                        const SizedBox(width: 4),
+                        if (stock.stockCode != null && stock.stockCode!.isNotEmpty)
+                          Expanded(
+                            child: Text(
+                              'Kode: ${stock.stockCode}',
+                              style: GoogleFonts.poppins(
+                                fontSize: 10,
+                                color: Colors.grey.shade500,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        if (stock.stockCode != null && stock.stockCode!.isNotEmpty)
+                          const SizedBox(width: 8),
                         Text(
-                          '${asset.rfidTagId}',
+                          'Satuan: ${stock.unit}',
                           style: GoogleFonts.poppins(
                             fontSize: 10,
-                            color: Colors.grey.shade600,
+                            color: Colors.grey.shade500,
                           ),
                         ),
                       ],
@@ -142,71 +165,57 @@ class AssetCard extends StatelessWidget {
                       spacing: 6,
                       runSpacing: 4,
                       children: [
-                        // Status Kondisi Chip
+                        // Stok Saat Ini Chip
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: statusColor.withValues(alpha: 0.1),
+                            color: Colors.blue.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.circle,
-                                size: 8,
-                                color: statusColor,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                statusLabel,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 10,
-                                  color: statusColor,
-                                ),
-                              ),
-                            ],
+                          child: Text(
+                            'Stok: ${stock.currentStock} ${stock.unit}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 10,
+                              color: Colors.blue.shade700,
+                            ),
                           ),
                         ),
                         
-                        // Level Kontaminasi Chip
-                        if (asset.levelContaminated > 0)
+                        // Minimum Stok Chip
+                        if (stock.minimumStock > 0)
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: _getContaminationColor(asset.levelContaminated).withValues(alpha: 0.1),
+                              color: Colors.orange.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              'Kontaminasi Lv.${asset.levelContaminated}',
+                              'Min: ${stock.minimumStock} ${stock.unit}',
                               style: GoogleFonts.poppins(
                                 fontSize: 10,
-                                color: _getContaminationColor(asset.levelContaminated),
+                                color: Colors.orange.shade700,
                               ),
                             ),
                           ),
                         
-                        // Tipe Aset Chip
-                        if (asset.typeName != null)
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              asset.typeName!,
-                              style: GoogleFonts.poppins(
-                                fontSize: 10,
-                                color: Colors.blue.shade700,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                        // Kondisi Stok Chip
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: conditionColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            conditionLabel,
+                            style: GoogleFonts.poppins(
+                              fontSize: 10,
+                              color: conditionColor,
                             ),
                           ),
+                        ),
                         
-                        // Ruangan Chip
-                        if (asset.lastRoomName != null)
+                        // Tipe Stok Chip
+                        if (stock.stockTypeName != null)
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
@@ -214,7 +223,7 @@ class AssetCard extends StatelessWidget {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              asset.lastRoomName!,
+                              stock.stockTypeName!,
                               style: GoogleFonts.poppins(
                                 fontSize: 10,
                                 color: Colors.teal.shade700,
@@ -224,31 +233,22 @@ class AssetCard extends StatelessWidget {
                             ),
                           ),
                         
-                        // Berbahaya Chip (jika is_dangerous = true)
-                        if (asset.isDangerous)
+                        // Lokasi Chip
+                        if (stock.storageLocationName != null)
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.red.withValues(alpha: 0.1),
+                              color: Colors.purple.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.warning_amber_rounded,
-                                  size: 10,
-                                  color: Colors.red.shade700,
-                                ),
-                                const SizedBox(width: 2),
-                                Text(
-                                  'Berbahaya',
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 10,
-                                    color: Colors.red.shade700,
-                                  ),
-                                ),
-                              ],
+                            child: Text(
+                              stock.storageLocationName!,
+                              style: GoogleFonts.poppins(
+                                fontSize: 10,
+                                color: Colors.purple.shade700,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                       ],
@@ -258,7 +258,7 @@ class AssetCard extends StatelessWidget {
                     
                     // Informasi Waktu
                     Text(
-                      'Terdaftar: ${_formatDate(asset.registeredAt)}',
+                      'Dibuat: ${_formatDate(stock.createdAt)}',
                       style: GoogleFonts.poppins(
                         fontSize: 9,
                         color: Colors.grey.shade400,
@@ -281,7 +281,7 @@ class AssetCard extends StatelessWidget {
                       size: 18,
                       color: Color(0xFF01579B),
                     ),
-                    tooltip: 'Edit Aset',
+                    tooltip: 'Edit Stok',
                     constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                     padding: EdgeInsets.zero,
                   ),
@@ -294,7 +294,7 @@ class AssetCard extends StatelessWidget {
                       size: 18,
                       color: Colors.red,
                     ),
-                    tooltip: 'Hapus Aset',
+                    tooltip: 'Hapus Stok',
                     constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
                     padding: EdgeInsets.zero,
                   ),
@@ -307,18 +307,17 @@ class AssetCard extends StatelessWidget {
     );
   }
 
-  /// Widget foto aset (avatar style)
-    /// Widget foto aset (avatar style - PERSISTENT SQUARE)
+  /// Widget foto stok (avatar style - SQUARE)
   Widget _buildPhotoAvatar() {
     // Jika ada foto, tampilkan foto dengan BoxFit.cover
-    if (asset.fotoUrl != null && asset.fotoUrl!.isNotEmpty) {
+    if (stock.photoUrl != null && stock.photoUrl!.isNotEmpty) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: Image.network(
-          asset.fotoUrl!,
+          stock.photoUrl!,
           width: 56,
           height: 56,
-          fit: BoxFit.cover, // MEMAKSA GAMBAR MEMENUHI FRAME PERSISTENT SQUARE
+          fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
             return _buildDefaultAvatar();
           },
@@ -350,8 +349,8 @@ class AssetCard extends StatelessWidget {
 
   /// Avatar default (saat tidak ada foto)
   Widget _buildDefaultAvatar() {
-    // Ambil huruf pertama dari nama aset untuk ditampilkan di avatar
-    final initial = asset.assetName.isNotEmpty ? asset.assetName[0].toUpperCase() : 'A';
+    // Ambil huruf pertama dari nama stok untuk ditampilkan di avatar
+    final initial = stock.stockName.isNotEmpty ? stock.stockName[0].toUpperCase() : 'S';
     
     return Container(
       width: 56,

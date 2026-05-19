@@ -1,10 +1,10 @@
 // ============================================================
-// PAGE: Asset Detail Page
+// PAGE: Stock Detail Page
 // ============================================================
 // TANGGUNG JAWAB:
-// 1. Menampilkan detail lengkap aset
-// 2. Header dengan foto aset dan informasi utama
-// 3. Informasi detail dalam card-grid (2 kolom)
+// 1. Menampilkan detail lengkap stok
+// 2. Header dengan foto stok dan informasi utama
+// 3. Informasi detail dalam card-grid (3 kolom)
 // 4. Aksi: Edit (buka dialog), Delete (konfirmasi), Back
 // 5. Refresh data saat kembali dari edit
 // ============================================================
@@ -14,35 +14,35 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/di/service_locator.dart';
-import '../../providers/asset_providers.dart';
-import '../../providers/asset_state.dart';
-import '../../models/asset_model.dart';
-import '../../services/asset_service.dart';
-import '../dialogs/asset_form_dialog.dart';
+import '../../providers/stock_providers.dart';
+import '../../providers/stock_state.dart';
+import '../../models/stock_model.dart';
+import '../../services/stock_service.dart';
+import '../dialogs/stock_form_dialog.dart';
 
-class AssetDetailPage extends ConsumerStatefulWidget {
-  final String assetId;
-  final VoidCallback onAssetUpdated;
+class StockDetailPage extends ConsumerStatefulWidget {
+  final String stockId;
+  final VoidCallback onStockUpdated;
 
-  const AssetDetailPage({
+  const StockDetailPage({
     super.key,
-    required this.assetId,
-    required this.onAssetUpdated,
+    required this.stockId,
+    required this.onStockUpdated,
   });
 
   @override
-  ConsumerState<AssetDetailPage> createState() => _AssetDetailPageState();
+  ConsumerState<StockDetailPage> createState() => _StockDetailPageState();
 }
 
-class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
+class _StockDetailPageState extends ConsumerState<StockDetailPage> {
   late final AuthService _authService;
-  late final AssetService _assetService;
+  late final StockService _stockService;
 
   @override
   void initState() {
     super.initState();
     _authService = getIt<AuthService>();
-    _assetService = AssetService();
+    _stockService = StockService();
   }
 
   String? get _currentUserId {
@@ -54,38 +54,36 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
   }
 
   Future<void> _refreshDetail() async {
-    final notifier = ref.read(assetDetailProvider(widget.assetId).notifier);
-    await notifier.loadAsset(widget.assetId);
+    final notifier = ref.read(stockDetailProvider(widget.stockId).notifier);
+    await notifier.loadStock(widget.stockId);
   }
 
-  void _showEditDialog(Asset asset) {
+  void _showEditDialog(Stock stock) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
-        return AssetFormDialog(
+        return StockFormDialog(
           isEditing: true,
-          existingAsset: asset,
-          assetService: _assetService,
+          existingStock: stock,
+          stockService: _stockService,
           currentUserId: _currentUserId,
           onSuccess: () {
             Navigator.pop(dialogContext);
             _refreshDetail();
-            widget.onAssetUpdated();
+            widget.onStockUpdated();
           },
         );
       },
     );
   }
 
-  void _confirmDelete(Asset asset) {
+  void _confirmDelete(Stock stock) {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Konfirmasi Hapus'),
-        content: Text(
-          'Apakah Anda yakin ingin menghapus aset "${asset.assetName}"?',
-        ),
+        content: Text('Apakah Anda yakin ingin menghapus stok "${stock.stockName}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
@@ -94,7 +92,7 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(dialogContext);
-
+              
               if (_currentUserId == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -104,24 +102,24 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
                 );
                 return;
               }
-
+              
               try {
-                await _assetService.deleteAsset(asset.id, _currentUserId!);
+                await _stockService.deleteStock(stock.id, _currentUserId!);
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Aset berhasil dihapus'),
+                      content: Text('Stok berhasil dihapus'),
                       backgroundColor: Colors.green,
                     ),
                   );
-                  Navigator.pop(context); // Kembali ke list page
-                  widget.onAssetUpdated();
+                  Navigator.pop(context);
+                  widget.onStockUpdated();
                 }
               } catch (e) {
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Gagal menghapus aset: $e'),
+                      content: Text('Gagal menghapus stok: $e'),
                       backgroundColor: Colors.red,
                     ),
                   );
@@ -138,12 +136,12 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(assetDetailProvider(widget.assetId));
+    final state = ref.watch(stockDetailProvider(widget.stockId));
 
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       appBar: AppBar(
-        title: const Text('Detail Aset'),
+        title: const Text('Detail Stok'),
         centerTitle: true,
         backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF01579B),
@@ -153,14 +151,14 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
-          if (state.asset != null && !state.isLoading)
+          if (state.stock != null && !state.isLoading)
             PopupMenuButton<String>(
               icon: const Icon(Icons.more_vert),
               onSelected: (value) {
                 if (value == 'edit') {
-                  _showEditDialog(state.asset!);
+                  _showEditDialog(state.stock!);
                 } else if (value == 'delete') {
-                  _confirmDelete(state.asset!);
+                  _confirmDelete(state.stock!);
                 }
               },
               itemBuilder: (context) => [
@@ -170,7 +168,7 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
                     children: [
                       Icon(Icons.edit, size: 18, color: Color(0xFF01579B)),
                       SizedBox(width: 8),
-                      Text('Edit Aset'),
+                      Text('Edit Stok'),
                     ],
                   ),
                 ),
@@ -180,7 +178,7 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
                     children: [
                       Icon(Icons.delete, size: 18, color: Colors.red),
                       SizedBox(width: 8),
-                      Text('Hapus Aset'),
+                      Text('Hapus Stok'),
                     ],
                   ),
                 ),
@@ -193,46 +191,44 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
               child: CircularProgressIndicator(color: Color(0xFF01579B)),
             )
           : state.error != null
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Gagal memuat detail aset',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Gagal memuat detail stok',
+                        style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        state.error!,
+                        style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: _refreshDetail,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF01579B),
+                        ),
+                        child: const Text('Coba Lagi'),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    state.error!,
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: Colors.grey,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: _refreshDetail,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF01579B),
-                    ),
-                    child: const Text('Coba Lagi'),
-                  ),
-                ],
-              ),
-            )
-          : state.asset == null
-          ? const Center(child: Text('Aset tidak ditemukan'))
-          : _buildDetailContent(state.asset!),
+                )
+              : state.stock == null
+                  ? const Center(
+                      child: Text('Stok tidak ditemukan'),
+                    )
+                  : _buildDetailContent(state.stock!),
     );
   }
 
-  Widget _buildDetailContent(Asset asset) {
+  Widget _buildDetailContent(Stock stock) {
+    final stockStatus = StockStatus.fromStock(stock);
+    
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -241,7 +237,7 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
           // ==================================================
           // HEADER CARD: Foto & Informasi Utama
           // ==================================================
-          _buildHeaderCard(asset),
+          _buildHeaderCard(stock, stockStatus),
           const SizedBox(height: 16),
 
           // ==================================================
@@ -250,139 +246,106 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
           _buildSectionTitle('Informasi Identitas'),
           const SizedBox(height: 8),
           _buildInfoGrid([
-            InfoItem('Kode Asset - Track', asset.rfidTagId, Icons.qr_code),
-            InfoItem('Nama Aset', asset.assetName, Icons.inventory_2),
-            InfoItem('Tipe Aset', asset.typeName ?? '-', Icons.category),
-            InfoItem('Kategori', asset.categoryName ?? '-', Icons.folder),
-            InfoItem(
-              'Sub Kategori',
-              asset.subCategoryName ?? '-',
-              Icons.subdirectory_arrow_right,
-            ),
+            InfoItem('Nama Stok', stock.stockName, Icons.inventory_2),
+            InfoItem('Kode Stok', stock.stockCode ?? '-', Icons.code),
+            InfoItem('Satuan', stock.unit, Icons.scale),
+            InfoItem('Tipe Stok', stock.stockTypeName ?? '-', Icons.category),
+            InfoItem('Lokasi Gudang', stock.storageLocationName ?? '-', Icons.warehouse),
+            InfoItem('Batch Number', stock.batchNumber ?? '-', Icons.production_quantity_limits),
           ]),
           const SizedBox(height: 16),
 
           // ==================================================
-          // SECTION: Kondisi & Perawatan
+          // SECTION: Stok & Kondisi
           // ==================================================
-          _buildSectionTitle('Kondisi & Perawatan'),
+          _buildSectionTitle('Stok & Kondisi'),
           const SizedBox(height: 8),
           _buildInfoGrid([
             InfoItem(
-              'Status Kondisi',
-              _getStatusLabel(asset.statusCondition),
-              Icons.health_and_safety,
-              color: _getStatusColor(asset.statusCondition),
+              'Status Stok',
+              stockStatus.label,
+              Icons.inventory,
+              color: stockStatus.color,
             ),
             InfoItem(
-              'Level Kontaminasi',
-              '${asset.levelContaminated} - ${ContaminationLevel.getLabel(asset.levelContaminated)}',
-              Icons.coronavirus_outlined,
-              color: ContaminationLevel.getColor(asset.levelContaminated),
+              'Stok Saat Ini',
+              '${stock.currentStock} ${stock.unit}',
+              Icons.inventory_2,
             ),
             InfoItem(
-              'Berbahaya',
-              asset.isDangerous ? 'Ya' : 'Tidak',
-              Icons.warning,
-              color: asset.isDangerous ? Colors.red : Colors.grey,
+              'Minimum Stok',
+              '${stock.minimumStock} ${stock.unit}',
+              Icons.warning_amber,
+              color: stock.isLowStock ? Colors.orange : null,
             ),
             InfoItem(
-              'Pola Perawatan',
-              asset.maintenancePattern ?? '-',
-              Icons.build,
+              'Kondisi Stok',
+              stock.stockCondition == 'GOOD' ? 'Baik' : 'Stok Rendah',
+              Icons.check_circle,
+              color: stock.stockCondition == 'GOOD' ? Colors.green : Colors.orange,
             ),
             InfoItem(
-              'Hari Inspeksi',
-              asset.inspectionDayOfMonth != null
-                  ? 'Setiap tanggal ${asset.inspectionDayOfMonth}'
+              'Tanggal Kadaluarsa',
+              stock.expiryDate != null 
+                  ? _formatDate(stock.expiryDate!) 
                   : '-',
-              Icons.calendar_today,
+              Icons.event_busy,
+              color: _getExpiryDateColor(stock.expiryDate),
             ),
             InfoItem(
-              'Terakhir Inspeksi',
-              _formatDate(asset.lastInspectionAt),
-              Icons.assignment_turned_in,
-            ),
-            InfoItem(
-              'Inspeksi Berikutnya',
-              _formatDate(asset.nextInspectionAt),
-              Icons.event,
+              'Status Aktif',
+              stock.isActive ? 'Aktif' : 'Tidak Aktif',
+              Icons.power_settings_new,
+              color: stock.isActive ? Colors.green : Colors.red,
             ),
           ]),
           const SizedBox(height: 16),
 
           // ==================================================
-          // SECTION: Lokasi & Assignment
+          // SECTION: Riwayat Terakhir
           // ==================================================
-          _buildSectionTitle('Lokasi & Assignment'),
+          _buildSectionTitle('Riwayat Terakhir'),
           const SizedBox(height: 8),
           _buildInfoGrid([
-            InfoItem(
-              'Ruangan Saat Ini',
-              asset.lastRoomName ?? '-',
-              Icons.location_on,
-            ),
-            InfoItem(
-              'Detektor Terakhir',
-              asset.lastDetectorId ?? '-',
-              Icons.sensors,
-            ),
-            InfoItem(
-              'Terakhir Terdeteksi',
-              _formatDate(asset.lastDetectedAt),
-              Icons.access_time,
-            ),
-            InfoItem(
-              'Status Pergerakan',
-              asset.lastMovementStatus ?? '-',
-              Icons.directions_walk,
-            ),
-            InfoItem(
-              'Pengguna Terakhir',
-              asset.lastUsedByName ?? '-',
-              Icons.person,
-            ),
-            InfoItem(
-              'Terakhir Assign',
-              _formatDate(asset.lastAssignedAt),
-              Icons.assignment_ind,
-            ),
+            InfoItem('Stok Opname Terakhir', _formatDate(stock.lastOpnameAt), Icons.assignment),
+            InfoItem('Stok Opname Oleh', stock.lastOpnameByName ?? '-', Icons.person),
+            InfoItem('Stok Opname Catatan', stock.lastOpnameNote ?? '-', Icons.note),
+            InfoItem('Stok Opname Hasil', '${stock.lastOpnameStock ?? '-'} ${stock.unit}', Icons.numbers),
           ]),
           const SizedBox(height: 16),
 
           // ==================================================
-          // SECTION: Inspeksi Terakhir
+          // SECTION: Pembelian Terakhir
           // ==================================================
-          if (asset.lastInspectionResult != null ||
-              asset.lastInspectionNotes != null ||
-              asset.lastActionTaken != null ||
-              asset.lastRecommendation != null)
+          if (stock.lastPurchaseAt != null)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildSectionTitle('Hasil Inspeksi Terakhir'),
+                _buildSectionTitle('Pembelian Terakhir'),
                 const SizedBox(height: 8),
                 _buildInfoGrid([
-                  if (asset.lastInspectionResult != null)
-                    InfoItem(
-                      'Hasil',
-                      asset.lastInspectionResult!,
-                      Icons.assessment,
-                    ),
-                  if (asset.lastInspectionNotes != null)
-                    InfoItem('Catatan', asset.lastInspectionNotes!, Icons.note),
-                  if (asset.lastActionTaken != null)
-                    InfoItem(
-                      'Tindakan',
-                      asset.lastActionTaken!,
-                      Icons.handyman,
-                    ),
-                  if (asset.lastRecommendation != null)
-                    InfoItem(
-                      'Rekomendasi',
-                      asset.lastRecommendation!,
-                      Icons.lightbulb,
-                    ),
+                  InfoItem('Tanggal', _formatDate(stock.lastPurchaseAt!), Icons.calendar_today),
+                  InfoItem('Oleh', stock.lastPurchaseByName ?? '-', Icons.person),
+                  InfoItem('Jumlah', '${stock.lastPurchaseQty ?? '-'} ${stock.unit}', Icons.shopping_cart),
+                  InfoItem('Harga', _formatCurrency(stock.lastPurchasePrice), Icons.attach_money),
+                ]),
+                const SizedBox(height: 16),
+              ],
+            ),
+
+          // ==================================================
+          // SECTION: Penggunaan Terakhir
+          // ==================================================
+          if (stock.lastUsageAt != null)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSectionTitle('Penggunaan Terakhir'),
+                const SizedBox(height: 8),
+                _buildInfoGrid([
+                  InfoItem('Tanggal', _formatDate(stock.lastUsageAt!), Icons.calendar_today),
+                  InfoItem('Oleh', stock.lastUsageByName ?? '-', Icons.person),
+                  InfoItem('Jumlah', '${stock.lastUsageQty ?? '-'} ${stock.unit}', Icons.production_quantity_limits),
                 ]),
                 const SizedBox(height: 16),
               ],
@@ -391,7 +354,7 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
           // ==================================================
           // SECTION: Deskripsi
           // ==================================================
-          if (asset.description != null && asset.description!.isNotEmpty)
+          if (stock.description != null && stock.description!.isNotEmpty)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -412,7 +375,7 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
                     ],
                   ),
                   child: Text(
-                    asset.description!,
+                    stock.description!,
                     style: GoogleFonts.poppins(fontSize: 13, height: 1.4),
                   ),
                 ),
@@ -426,26 +389,9 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
           _buildSectionTitle('Informasi Sistem'),
           const SizedBox(height: 8),
           _buildInfoGrid([
-            InfoItem(
-              'Dibuat Oleh',
-              asset.registeredByName ?? '-',
-              Icons.person_add,
-            ),
-            InfoItem(
-              'Tanggal Dibuat',
-              _formatDate(asset.registeredAt),
-              Icons.create,
-            ),
-            InfoItem(
-              'Terakhir Update',
-              asset.updatedByName ?? '-',
-              Icons.person,
-            ),
-            InfoItem(
-              'Tanggal Update',
-              _formatDate(asset.updatedAt),
-              Icons.update,
-            ),
+            InfoItem('Dibuat Oleh', stock.createdByName ?? '-', Icons.person_add),
+            InfoItem('Tanggal Dibuat', _formatDate(stock.createdAt), Icons.create),
+            InfoItem('Terakhir Update', _formatDate(stock.updatedAt), Icons.update),
           ]),
           const SizedBox(height: 32),
         ],
@@ -464,13 +410,16 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
     );
   }
 
-  Widget _buildHeaderCard(Asset asset) {
+  Widget _buildHeaderCard(Stock stock, StockStatus stockStatus) {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [const Color(0xFF01579B), const Color(0xFF0288D1)],
+          colors: [
+            const Color(0xFF01579B),
+            const Color(0xFF0288D1),
+          ],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
@@ -485,24 +434,23 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
         padding: const EdgeInsets.all(20),
         child: Row(
           children: [
-            // Foto Aset - PERSISTENT SQUARE
+            // Foto Stok - SQUARE
             ClipRRect(
               borderRadius: BorderRadius.circular(16),
               child: SizedBox(
                 width: 80,
                 height: 80,
-                child: asset.fotoUrl != null && asset.fotoUrl!.isNotEmpty
+                child: stock.photoUrl != null && stock.photoUrl!.isNotEmpty
                     ? Image.network(
-                        asset.fotoUrl!,
+                        stock.photoUrl!,
                         width: 80,
                         height: 80,
-                        fit: BoxFit
-                            .cover, // MEMAKSA GAMBAR MEMENUHI FRAME SQUARE
+                        fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
-                          return _buildDefaultAvatar(asset.assetName);
+                          return _buildDefaultAvatar(stock.stockName);
                         },
                       )
-                    : _buildDefaultAvatar(asset.assetName),
+                    : _buildDefaultAvatar(stock.stockName),
               ),
             ),
             const SizedBox(width: 16),
@@ -512,29 +460,27 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
+                      color: stockStatus.color.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          asset.isActive ? Icons.check_circle : Icons.cancel,
+                          stockStatus == StockStatus.empty ? Icons.inventory : 
+                          (stockStatus == StockStatus.low ? Icons.warning : Icons.check_circle),
                           size: 12,
-                          color: Colors.white,
+                          color: stockStatus.color,
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          asset.isActive ? 'Aktif' : 'Tidak Aktif',
+                          stockStatus.label,
                           style: GoogleFonts.poppins(
                             fontSize: 10,
                             fontWeight: FontWeight.w500,
-                            color: Colors.white,
+                            color: stockStatus.color,
                           ),
                         ),
                       ],
@@ -542,7 +488,7 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    asset.assetName,
+                    stock.stockName,
                     style: GoogleFonts.poppins(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -552,12 +498,26 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    asset.rfidTagId,
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: Colors.white.withValues(alpha: 0.8),
-                    ),
+                  Row(
+                    children: [
+                      Text(
+                        'Stok: ${stock.currentStock} ${stock.unit}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      if (stock.stockCode != null && stock.stockCode!.isNotEmpty)
+                        Text(
+                          'Kode: ${stock.stockCode}',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: Colors.white.withValues(alpha: 0.7),
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),
@@ -568,8 +528,8 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
     );
   }
 
-  Widget _buildDefaultAvatar(String assetName) {
-    final initial = assetName.isNotEmpty ? assetName[0].toUpperCase() : 'A';
+  Widget _buildDefaultAvatar(String stockName) {
+    final initial = stockName.isNotEmpty ? stockName[0].toUpperCase() : 'S';
     return Container(
       width: 80,
       height: 80,
@@ -595,10 +555,10 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3, // ← 2 → 3 KOLOM
+        crossAxisCount: 3,
         crossAxisSpacing: 12,
         mainAxisSpacing: 8,
-        childAspectRatio: 4.5, // card pipih/tipis
+        childAspectRatio: 4.5,
       ),
       itemCount: items.length,
       itemBuilder: (context, index) {
@@ -619,17 +579,15 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
           child: Row(
             children: [
               Container(
-                width: 28,
-                height: 28,
+                width: 32,
+                height: 32,
                 decoration: BoxDecoration(
-                  color: (item.color ?? const Color(0xFF01579B)).withValues(
-                    alpha: 0.1,
-                  ),
+                  color: (item.color ?? const Color(0xFF01579B)).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
                   item.icon,
-                  size: 14,
+                  size: 16,
                   color: item.color ?? const Color(0xFF01579B),
                 ),
               ),
@@ -642,7 +600,7 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
                     Text(
                       item.label,
                       style: GoogleFonts.poppins(
-                        fontSize: 13,
+                        fontSize: 11,
                         color: Colors.grey.shade500,
                       ),
                       maxLines: 1,
@@ -653,7 +611,7 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
                       style: GoogleFonts.poppins(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: Colors.grey.shade800,
+                        color: item.color ?? Colors.grey.shade800,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -668,40 +626,24 @@ class _AssetDetailPageState extends ConsumerState<AssetDetailPage> {
     );
   }
 
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'good':
-        return Colors.green;
-      case 'fair':
-        return Colors.orange;
-      case 'damage':
-        return Colors.deepOrange;
-      case 'critical':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  String _getStatusLabel(String status) {
-    switch (status.toLowerCase()) {
-      case 'good':
-        return 'Baik';
-      case 'fair':
-        return 'Cukup';
-      case 'damage':
-        return 'Rusak';
-      case 'critical':
-        return 'Kritis';
-      default:
-        return status;
-    }
+  Color _getExpiryDateColor(DateTime? expiryDate) {
+    if (expiryDate == null) return Colors.grey;
+    final now = DateTime.now();
+    final daysLeft = expiryDate.difference(now).inDays;
+    if (daysLeft < 0) return Colors.red;
+    if (daysLeft < 30) return Colors.orange;
+    return Colors.green;
   }
 
   String _formatDate(DateTime? date) {
     if (date == null) return '-';
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} '
         '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+  }
+
+  String _formatCurrency(num? value) {
+    if (value == null) return '-';
+    return 'Rp ${value.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]},')}';
   }
 }
 

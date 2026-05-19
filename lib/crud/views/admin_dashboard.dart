@@ -10,6 +10,7 @@ import 'tables/tasks_table.dart';
 import 'tables/announcements_table.dart';
 import '../../crud/roster/presentation/pages/roster_page.dart';
 import '../../crud/assets/presentation/pages/asset_list_page.dart';
+import '../../crud/stocks/presentation/pages/stock_list_page.dart';
 
 class AdminDashboard extends ConsumerStatefulWidget {
   final VoidCallback onLogout;
@@ -45,6 +46,16 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
         MenuItem("Daftar Asset", Icons.inventory_2, const AssetListPage()),
         // MenuItem("Kategori Asset", Icons.category, null), // Placeholder untuk nanti
         // MenuItem("Inspeksi Asset", Icons.assignment_turned_in, null), // Placeholder untuk nanti
+        // MenuItem("Laporan Asset", Icons.assessment, null), // Placeholder untuk nanti
+      ],
+    ),
+    MenuGroup(
+      title: "MANAJEMEN STOK/INVENTORI",  // ← Group baru untuk Asset Management
+      icon: Icons.inventory,
+      menus: [
+        MenuItem("Daftar Stok", Icons.inventory_2, const StockListPage()),
+        // MenuItem("Kategori Stok", Icons.category, null), // Placeholder untuk nanti
+        // MenuItem("Inspeksi Stok", Icons.assignment_turned_in, null), // Placeholder untuk nanti
         // MenuItem("Laporan Asset", Icons.assessment, null), // Placeholder untuk nanti
       ],
     ),
