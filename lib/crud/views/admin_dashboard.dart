@@ -9,6 +9,7 @@ import 'tables/employee_table.dart';
 import 'tables/tasks_table.dart';
 import 'tables/announcements_table.dart';
 import '../../crud/roster/presentation/pages/roster_page.dart';
+import '../../crud/assets/presentation/pages/asset_list_page.dart';
 
 class AdminDashboard extends ConsumerStatefulWidget {
   final VoidCallback onLogout;
@@ -33,6 +34,18 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
       icon: Icons.storage,
       menus: [
         MenuItem("Data Pegawai", Icons.people, EmployeeTable()),
+        // ← Tambahkan menu Data Asset di sini
+        // MenuItem("Data Asset", Icons.inventory_2, const AssetPage()),
+      ],
+    ),
+    MenuGroup(
+      title: "MANAJEMEN ASSET",  // ← Group baru untuk Asset Management
+      icon: Icons.inventory,
+      menus: [
+        MenuItem("Daftar Asset", Icons.inventory_2, const AssetListPage()),
+        // MenuItem("Kategori Asset", Icons.category, null), // Placeholder untuk nanti
+        // MenuItem("Inspeksi Asset", Icons.assignment_turned_in, null), // Placeholder untuk nanti
+        // MenuItem("Laporan Asset", Icons.assessment, null), // Placeholder untuk nanti
       ],
     ),
     MenuGroup(
@@ -53,7 +66,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
     ),
   ];
 
-  final Set<String> _expandedGroups = {"MASTER DATA", "OPERASIONAL"};
+  final Set<String> _expandedGroups = {"MASTER DATA", "OPERASIONAL", "MANAJEMEN ASSET"}; // ← Tambahkan group baru
 
   @override
   void initState() {
