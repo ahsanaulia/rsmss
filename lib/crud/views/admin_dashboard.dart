@@ -13,7 +13,10 @@ import '../../crud/assets/presentation/pages/asset_list_page.dart';
 import '../../crud/stocks/presentation/pages/stock_list_page.dart';
 import '../../features/asset_assignment/views/admin/admin_asset_verification_page.dart';
 import '../../features/asset_report/views/asset_report_page.dart';
-import '../../features/stock_in_entry/presentations/stock_in_entry_list_screen.dart';
+// import '../../features/stock_in/presentations/stock_in_form_admin.dart';
+import '../../features/stock_in/presentations/stock_in_list_screen.dart';
+import '../../features/stock_in_bins/presentations/pending_put_away_admin_list.dart';
+
 
 class AdminDashboard extends ConsumerStatefulWidget {
   final VoidCallback onLogout;
@@ -59,7 +62,8 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
       icon: Icons.inventory,
       menus: [
         MenuItem("Daftar Stok", Icons.inventory_2, const StockListPage()),
-        MenuItem("Stok Masuk", Icons.input, const StockInEntryListScreen()),
+        MenuItem("Stok Masuk", Icons.input, const StockInListScreen()),
+        MenuItem("Pending Put Away", Icons.pending, const PendingPutAwayAdminList()),
         // MenuItem("Inspeksi Stok", Icons.assignment_turned_in, null), // Placeholder untuk nanti
         // MenuItem("Laporan Asset", Icons.assessment, null), // Placeholder untuk nanti
       ],

@@ -32,6 +32,12 @@ import '../../features/reports/views/my_reports_view.dart';
 import '../../features/asset_assignment/views/employee/employee_asset_request_page.dart';
 import '../../features/asset_assignment/views/employee/employee_asset_return_page.dart';
 
+import '../../features/stock_in/presentations/stock_in_form_mobile.dart';
+import '../../features/stock_in_bins/presentations/pending_put_away_list.dart';
+
+import '../../features/stock_request/presentations/stock_request_list_page.dart';
+import '../../features/stock_request/presentations/stock_request_approval_page.dart';
+
 class OperationDashboard extends ConsumerStatefulWidget {
   final String userName;
   final VoidCallback onLogout;
@@ -179,6 +185,7 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
       const AttendanceView(),
       const TaskListView(),
       const ProfileView(),
+      const StockRequestListPage(),
     ];
 
     return Scaffold(
@@ -332,20 +339,6 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                   );
                 },
               ),
-            if (_profileData?['is_stock_opname'] == true)
-              _menuItemSmall(
-                "Stock Opname",
-                Icons.playlist_add_check_circle_outlined,
-                Colors.orange,
-                () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const StockOpnameView(),
-                    ),
-                  );
-                },
-              ),
             _menuItemSmall(
               "Permintaan Aset",
               Icons.inventory_2_outlined,
@@ -368,6 +361,80 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => const EmployeeAssetReturnPage(),
+                  ),
+                );
+              },
+            ),
+            if (_profileData?['is_stock_opname'] == true)
+              _menuItemSmall(
+                "Stock Opname",
+                Icons.playlist_add_check_circle_outlined,
+                Colors.orange,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const StockOpnameView(),
+                    ),
+                  );
+                },
+              ),
+            if (_profileData?['is_stock_opname'] == true)
+              _menuItemSmall(
+                "Stok Masuk",
+                Icons.input_rounded,
+                Colors.green,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const StockInFormMobile(),
+                    ),
+                  ).then((_) {
+                    // Refresh data jika perlu
+                    _loadTaskStats();
+                  });
+                },
+              ),
+            if (_profileData?['is_stock_opname'] == true)
+              _menuItemSmall(
+                "Penempatan Stok Pada Bin",
+                Icons.shelves,
+                Colors.green,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PendingPutAwayList(),
+                    ),
+                  ).then((_) {
+                    // Refresh data jika perlu
+                    _loadTaskStats();
+                  });
+                },
+              ),
+            _menuItemSmall(
+              "Permintaan Stok",
+              Icons.request_page,
+              Colors.purple,
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const StockRequestListPage(),
+                  ),
+                );
+              },
+            ),
+            _menuItemSmall(
+              "Persetujuan Permintaan Stok",
+              Icons.approval_rounded,
+              Colors.purple,
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const StockRequestApprovalPage(),
                   ),
                 );
               },
