@@ -29,6 +29,9 @@ import '../../features/dashboard/services/dashboard_stats_service.dart';
 import '../../features/dashboard/widgets/employee_stats_card.dart';
 import '../../features/reports/views/my_reports_view.dart';
 
+import '../../features/asset_assignment/views/employee/employee_asset_request_page.dart';
+import '../../features/asset_assignment/views/employee/employee_asset_return_page.dart';
+
 class OperationDashboard extends ConsumerStatefulWidget {
   final String userName;
   final VoidCallback onLogout;
@@ -216,11 +219,7 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
           // 1. NAMA INSTANSI (Header Atas Kiri)
           // =====================================================
           Padding(
-            padding: EdgeInsets.only(
-              left: 30,
-              right: 30,
-              top: topSpacing,
-            ),
+            padding: EdgeInsets.only(left: 30, right: 30, top: topSpacing),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -244,7 +243,10 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                 ),
                 Text(
                   _hospitalData?['address'] ?? "Alamat belum tersedia",
-                  style: GoogleFonts.poppins(fontSize: 10, color: Colors.black54),
+                  style: GoogleFonts.poppins(
+                    fontSize: 10,
+                    color: Colors.black54,
+                  ),
                 ),
               ],
             ),
@@ -277,7 +279,9 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                   isScrollControlled: true,
                   backgroundColor: Colors.transparent,
                   shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(28),
+                    ),
                   ),
                   builder: (context) => const IncidentReportBottomSheet(),
                 );
@@ -342,6 +346,32 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                   );
                 },
               ),
+            _menuItemSmall(
+              "Permintaan Aset",
+              Icons.inventory_2_outlined,
+              Colors.green,
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const EmployeeAssetRequestPage(),
+                  ),
+                );
+              },
+            ),
+            _menuItemSmall(
+              "Kembalikan Aset",
+              Icons.assignment_return_outlined,
+              Colors.deepOrange,
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const EmployeeAssetReturnPage(),
+                  ),
+                );
+              },
+            ),
           ]),
           const SizedBox(height: 16),
 
@@ -509,7 +539,9 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF01579B).withValues(alpha: 0.15),
+                              color: const Color(
+                                0xFF01579B,
+                              ).withValues(alpha: 0.15),
                               blurRadius: 20,
                               spreadRadius: 2,
                               offset: const Offset(0, 8),
@@ -528,7 +560,11 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                               ? NetworkImage(_profileData!['avatar_url'])
                               : null,
                           child: _profileData?['avatar_url'] == null
-                              ? Icon(Icons.person, size: 38, color: Colors.blueGrey.shade400)
+                              ? Icon(
+                                  Icons.person,
+                                  size: 38,
+                                  color: Colors.blueGrey.shade400,
+                                )
                               : null,
                         ),
                       ),
@@ -549,10 +585,12 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                                   child: Padding(
                                     padding: const EdgeInsets.only(top: 6),
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          _profileData?['full_name'] ?? widget.userName,
+                                          _profileData?['full_name'] ??
+                                              widget.userName,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: GoogleFonts.poppins(
@@ -568,11 +606,15 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                                             Icon(
                                               Icons.circle,
                                               size: 10,
-                                              color: isPresent ? Colors.green : Colors.red,
+                                              color: isPresent
+                                                  ? Colors.green
+                                                  : Colors.red,
                                             ),
                                             const SizedBox(width: 8),
                                             Text(
-                                              isPresent ? "ON DUTY" : "OFF DUTY",
+                                              isPresent
+                                                  ? "ON DUTY"
+                                                  : "OFF DUTY",
                                               style: GoogleFonts.poppins(
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.w700,
@@ -610,9 +652,17 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                                 children: [
                                   _miniStat("New", _newTasksCount, Colors.blue),
                                   const SizedBox(width: 22),
-                                  _miniStat("On", _onGoingTasksCount, Colors.indigo),
+                                  _miniStat(
+                                    "On",
+                                    _onGoingTasksCount,
+                                    Colors.indigo,
+                                  ),
                                   const SizedBox(width: 22),
-                                  _miniStat("Urg", _urgentTasksCount, Colors.red),
+                                  _miniStat(
+                                    "Urg",
+                                    _urgentTasksCount,
+                                    Colors.red,
+                                  ),
                                 ],
                               ),
                             ),
@@ -676,7 +726,7 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
           padding: const EdgeInsets.symmetric(horizontal: 25),
           crossAxisSpacing: 15,
           mainAxisSpacing: 15,
-          childAspectRatio: 0.9,  // ← Kotak lebih tinggi untuk teks 2 baris
+          childAspectRatio: 0.9, // ← Kotak lebih tinggi untuk teks 2 baris
           children: items,
         ),
       ],
@@ -834,7 +884,9 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
           Row(
             children: [
               Icon(
-                isUrgent ? Icons.warning_amber_rounded : Icons.announcement_rounded,
+                isUrgent
+                    ? Icons.warning_amber_rounded
+                    : Icons.announcement_rounded,
                 color: titleColor,
                 size: 16,
               ),
@@ -852,7 +904,10 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
               ),
               if (isUrgent)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.red.shade100,
                     borderRadius: BorderRadius.circular(12),
@@ -954,64 +1009,60 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
   }
 
   Widget _buildFab() {
-  return Container(
-    margin: const EdgeInsets.only(top: 30),
-    child: Material(
-      elevation: 6.0,
-      shape: const CircleBorder(),
-      clipBehavior: Clip.antiAlias,
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            isDismissible: true,
-            enableDrag: true,
-            useRootNavigator: true,
-            backgroundColor: Colors.transparent,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-            ),
-            builder: (context) => const DutyNoteBottomSheet(),
-          );
-        },
-        child: Container(
-          width: 65,
-          height: 75,
-          decoration: BoxDecoration(
-            color: const Color(0xFF01579B),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF01579B).withValues(alpha: 0.4),
-                blurRadius: 15,
-                offset: const Offset(0, 4),
+    return Container(
+      margin: const EdgeInsets.only(top: 30),
+      child: Material(
+        elevation: 6.0,
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              isDismissible: true,
+              enableDrag: true,
+              useRootNavigator: true,
+              backgroundColor: Colors.transparent,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
               ),
-            ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.edit_note,
-                color: Colors.white,
-                size: 24,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                "Catatan",
-                style: GoogleFonts.poppins(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
+              builder: (context) => const DutyNoteBottomSheet(),
+            );
+          },
+          child: Container(
+            width: 65,
+            height: 75,
+            decoration: BoxDecoration(
+              color: const Color(0xFF01579B),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF01579B).withValues(alpha: 0.4),
+                  blurRadius: 15,
+                  offset: const Offset(0, 4),
                 ),
-              ),
-            ],
+              ],
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.edit_note, color: Colors.white, size: 24),
+                const SizedBox(height: 4),
+                Text(
+                  "Catatan",
+                  style: GoogleFonts.poppins(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }

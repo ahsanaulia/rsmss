@@ -11,6 +11,9 @@ import 'tables/announcements_table.dart';
 import '../../crud/roster/presentation/pages/roster_page.dart';
 import '../../crud/assets/presentation/pages/asset_list_page.dart';
 import '../../crud/stocks/presentation/pages/stock_list_page.dart';
+import '../../features/asset_assignment/views/admin/admin_asset_verification_page.dart';
+import '../../features/asset_report/views/asset_report_page.dart';
+import '../../features/stock_in_entry/presentations/stock_in_entry_list_screen.dart';
 
 class AdminDashboard extends ConsumerStatefulWidget {
   final VoidCallback onLogout;
@@ -44,6 +47,8 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
       icon: Icons.inventory,
       menus: [
         MenuItem("Daftar Asset", Icons.inventory_2, const AssetListPage()),
+         MenuItem("Persetujuan Pemakaian Aset", Icons.verified, const AdminAssetVerificationPage()),
+         MenuItem("Laporan Aset", Icons.receipt_long, const AssetReportPage()), // ← TAMBAHKAN
         // MenuItem("Kategori Asset", Icons.category, null), // Placeholder untuk nanti
         // MenuItem("Inspeksi Asset", Icons.assignment_turned_in, null), // Placeholder untuk nanti
         // MenuItem("Laporan Asset", Icons.assessment, null), // Placeholder untuk nanti
@@ -54,7 +59,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
       icon: Icons.inventory,
       menus: [
         MenuItem("Daftar Stok", Icons.inventory_2, const StockListPage()),
-        // MenuItem("Kategori Stok", Icons.category, null), // Placeholder untuk nanti
+        MenuItem("Stok Masuk", Icons.input, const StockInEntryListScreen()),
         // MenuItem("Inspeksi Stok", Icons.assignment_turned_in, null), // Placeholder untuk nanti
         // MenuItem("Laporan Asset", Icons.assessment, null), // Placeholder untuk nanti
       ],
