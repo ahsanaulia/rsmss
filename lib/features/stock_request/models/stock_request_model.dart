@@ -230,3 +230,47 @@ class StockRequestModel extends Equatable {
         fulfilledQuantity,
       ];
 }
+
+// lib/features/stock_request/models/stock_request_fulfillment_model.dart
+class StockRequestFulfillmentModel {
+  final String? id;
+  final String stockRequestId;
+  final String stockInBinsId;
+  final String binId;
+  final String stockId;
+  final String batchNumber;
+  final DateTime expiryDate;
+  final double quantity;
+  final String? takenBy;
+  final DateTime? takenAt;
+  final String? notes;
+
+  StockRequestFulfillmentModel({
+    this.id,
+    required this.stockRequestId,
+    required this.stockInBinsId,
+    required this.binId,
+    required this.stockId,
+    required this.batchNumber,
+    required this.expiryDate,
+    required this.quantity,
+    this.takenBy,
+    this.takenAt,
+    this.notes,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      if (id != null) 'id': id,
+      'stock_request_id': stockRequestId,
+      'stock_in_bins_id': stockInBinsId,
+      'bin_id': binId,
+      'stock_id': stockId,
+      'batch_number': batchNumber,
+      'expiry_date': expiryDate.toIso8601String().split('T').first,
+      'quantity': quantity,
+      if (takenBy != null) 'taken_by': takenBy,
+      if (notes != null) 'notes': notes,
+    };
+  }
+}

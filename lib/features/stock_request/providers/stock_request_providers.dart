@@ -197,7 +197,45 @@ class StockRequestController {
     ref.invalidate(allRequestsProvider);
     ref.invalidate(myRequestsProvider);
   }
+
+  Future<Map<String, dynamic>?> getAvailableStockInBins(String stockId, String barcode) async {
+    _debugProvider('getAvailableStockInBins', 'Mencari bin untuk stockId: $stockId, barcode: $barcode');
+    final service = ref.read(stockRequestServiceProvider);
+    if (barcode.isNotEmpty) {
+      return await service.getStockInBinsByBarcode(stockId, barcode);
+    }
+    return null;
+  }
+  
+  Future<void> createFulfillment(StockRequestFulfillmentModel fulfillment) async {
+    _debugProvider('createFulfillment', 'Membuat fulfillment...');
+    final service = ref.read(stockRequestServiceProvider);
+    await service.createFulfillment(fulfillment);
+    
+    // Refresh providers
+    ref.invalidate(approvedRequestsProvider);
+    ref.invalidate(allRequestsProvider);
+    ref.invalidate(myRequestsProvider);
+  }
+
 }
+
+final approvedRequestsProvider = FutureProvider<List<StockRequestModel>>((ref) async {
+  _debugProvider('approvedRequestsProvider', 'Fetching approved requests...');
+  final service = ref.read(stockRequestServiceProvider);
+  final result = await service.getApprovedRequests();
+  _debugProvider('approvedRequestsProvider', 'Fetched ${result.length} requests');
+  return result;
+});
+
+// Provider untuk stok yang tersedia di bin
+final availableStockInBinsProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, stockId) async {
+  _debugProvider('availableStockInBinsProvider', 'Fetching available stock for stockId: $stockId');
+  final service = ref.read(stockRequestServiceProvider);
+  final result = await service.getAvailableStockInBins(stockId);
+  _debugProvider('availableStockInBinsProvider', 'Fetched ${result.length} bins');
+  return result;
+});
 
 final stockRequestControllerProvider = Provider<StockRequestController>((ref) {
   return StockRequestController(ref);

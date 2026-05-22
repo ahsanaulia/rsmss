@@ -327,7 +327,179 @@ class StockRequestService {
       _debugError('getMyRequests', e, stackTrace);
       return [];
     }
+
+    
   }
+
+  // Get approved requests (APPROVED or PARTIALLY_FULFILLED)
+Future<List<StockRequestModel>> getApprovedRequests() async {
+  try {
+    _debugPrint('getApprovedRequests', 'Mengambil request yang sudah APPROVED...');
+    
+    final response = await _supabase
+        .from('stock_requests')
+        .select('''
+          *,
+          rooms!stock_requests_room_id_fkey (
+            room_name
+          )
+        ''')
+        .inFilter('status', ['APPROVED', 'PARTIALLY_FULFILLED'])
+        .order('created_at', ascending: true);
+    
+    _debugPrint('getApprovedRequests', '✅ Found ${response.length} requests');
+    return (response as List)
+        .map((json) => StockRequestModel.fromJson(json))
+        .toList();
+  } catch (e, stackTrace) {
+    _debugError('getApprovedRequests', e, stackTrace);
+    return [];
+  }
+}
+
+// Get available stock in bins (yang masih punya quantity > 0)
+// Di stock_request_service.dart - getAvailableStockInBins
+// lib/features/stock_request/services/stock_request_service.dart
+// Ganti method getAvailableStockInBins dengan yang ini:
+
+Future<List<Map<String, dynamic>>> getAvailableStockInBins(String stockId) async {
+  try {
+    _debugPrint('getAvailableStockInBins', 'Mencari stok tersedia untuk stock_id: $stockId');
+    
+    // Query dengan JOIN yang benar untuk Supabase
+    final response = await _supabase
+        .from('stock_in_bins')
+        .select('''
+          id,
+          bin_id,
+          quantity,
+          batch_number,
+          expiry_date,
+          stock_bins!inner (
+            code,
+            barcode
+          )
+        ''')
+        .eq('stock_id', stockId)
+        .gt('quantity', 0)
+        .order('expiry_date', ascending: true);
+    
+    _debugPrint('getAvailableStockInBins', 'Raw response: ${response.length} items');
+    
+    final result = <Map<String, dynamic>>[];
+    
+    for (var item in response) {
+      // Ekstrak data bin dari nested object
+      final binData = item['stock_bins'] as Map?;
+      final binCode = binData?['code'] as String? ?? 'Unknown';
+      
+      // Ambil full_location_name dari view stock_bins_full
+      String? fullLocation;
+      try {
+        final binFull = await _supabase
+            .from('stock_bins_full')
+            .select('full_location_name')
+            .eq('bin_id', item['bin_id'])
+            .maybeSingle();
+        
+        fullLocation = binFull?['full_location_name'] as String?;
+      } catch (e) {
+        _debugPrint('getAvailableStockInBins', 'Error getting location: $e');
+      }
+      
+      result.add({
+        'stock_in_bins_id': item['id'],
+        'bin_id': item['bin_id'],
+        'bin_code': binCode,
+        'full_location_name': fullLocation ?? binCode,
+        'quantity': (item['quantity'] as num?)?.toDouble() ?? 0,
+        'batch_number': item['batch_number'] ?? '',
+        'expiry_date': item['expiry_date'],
+      });
+    }
+    
+    _debugPrint('getAvailableStockInBins', '✅ Found ${result.length} bins with stock');
+    return result;
+  } catch (e, stackTrace) {
+    _debugError('getAvailableStockInBins', e, stackTrace);
+    return [];
+  }
+}
+
+// Get stock_in_bins by barcode
+Future<Map<String, dynamic>?> getStockInBinsByBarcode(String stockId, String barcode) async {
+  try {
+    _debugPrint('getStockInBinsByBarcode', 'Mencari barcode: $barcode untuk stock_id: $stockId');
+    
+    // Cari bin dari view stock_bins_full
+    final binFull = await _supabase
+        .from('stock_bins_full')
+        .select('bin_id, bin_code, full_location_name, current_quantity')
+        .eq('barcode', barcode)
+        .eq('bin_is_active', true)
+        .maybeSingle();
+    
+    if (binFull == null) {
+      _debugPrint('getStockInBinsByBarcode', '❌ Barcode tidak ditemukan');
+      return null;
+    }
+    
+    // Cari stock_in_bins untuk bin tersebut
+    final stockInBins = await _supabase
+        .from('stock_in_bins')
+        .select('id, quantity, batch_number, expiry_date')
+        .eq('bin_id', binFull['bin_id'])
+        .eq('stock_id', stockId)
+        .gt('quantity', 0)
+        .maybeSingle();
+    
+    if (stockInBins == null) {
+      _debugPrint('getStockInBinsByBarcode', '❌ Stok tidak tersedia di bin ini');
+      return null;
+    }
+    
+    return {
+      'stock_in_bins_id': stockInBins['id'],
+      'bin_id': binFull['bin_id'],
+      'bin_code': binFull['bin_code'],
+      'full_location_name': binFull['full_location_name'] ?? binFull['bin_code'],
+      'quantity': stockInBins['quantity'],
+      'batch_number': stockInBins['batch_number'],
+      'expiry_date': stockInBins['expiry_date'],
+    };
+  } catch (e, stackTrace) {
+    _debugError('getStockInBinsByBarcode', e, stackTrace);
+    return null;
+  }
+}
+
+// Create fulfillment
+Future<void> createFulfillment(StockRequestFulfillmentModel fulfillment) async {
+  try {
+    _debugPrint('createFulfillment', 'Membuat fulfillment untuk request: ${fulfillment.stockRequestId}');
+    
+    // Ambil batch_number dan expiry_date dari stock_in_bins
+    final stockInBins = await _supabase
+        .from('stock_in_bins')
+        .select('batch_number, expiry_date')
+        .eq('id', fulfillment.stockInBinsId)
+        .single();
+    
+    final data = fulfillment.toJson();
+    data['batch_number'] = stockInBins['batch_number'];
+    data['expiry_date'] = stockInBins['expiry_date'];
+    data['taken_by'] = _currentUserId;
+    
+    await _supabase
+        .from('stock_request_fulfillments')
+        .insert(data);
+    
+    _debugPrint('createFulfillment', '✅ Fulfillment created');
+  } catch (e, stackTrace) {
+    _debugError('createFulfillment', e, stackTrace);
+    rethrow;
+  }
+}
 
   // Get all requests (untuk admin)
   Future<List<StockRequestModel>> getAllRequests() async {

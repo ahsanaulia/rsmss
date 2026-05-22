@@ -16,7 +16,9 @@ import '../../services/announcement_service.dart';
 import '../../features/asset_initial/views/op_initial_asset.dart';
 import '../../features/asset_inspection/views/asset_inspection_view.dart';
 import '../../features/stock/views/stock_initial_view.dart';
-import '../../features/stock/views/stock_opname_view.dart';
+import '../../features/stock/views/stock_write_off_list_page.dart';
+import '../../features/stock/views/stock_bin_opname_view.dart';
+import '../../features/stock/views/stock_write_off_approval_page.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/roster/providers/roster_provider.dart';
@@ -37,6 +39,8 @@ import '../../features/stock_in_bins/presentations/pending_put_away_list.dart';
 
 import '../../features/stock_request/presentations/stock_request_list_page.dart';
 import '../../features/stock_request/presentations/stock_request_approval_page.dart';
+
+import '../../features/stock_request/presentations/stock_request_fulfillment_page.dart';
 
 class OperationDashboard extends ConsumerStatefulWidget {
   final String userName;
@@ -374,7 +378,7 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const StockOpnameView(),
+                      builder: (context) => const StockBinOpnameView(),
                     ),
                   );
                 },
@@ -426,6 +430,7 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                 );
               },
             ),
+            if (_profileData?['is_stock_opname'] == true)
             _menuItemSmall(
               "Persetujuan Permintaan Stok",
               Icons.approval_rounded,
@@ -435,6 +440,48 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => const StockRequestApprovalPage(),
+                  ),
+                );
+              },
+            ),
+            if (_profileData?['is_stock_opname'] == true)
+            _menuItemSmall(
+              "Pengeluaran Stok Atas Permintaan",
+              Icons.approval_rounded,
+              Colors.purple,
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const StockRequestFulfillmentPage(),
+                  ),
+                );
+              },
+            ),
+            if (_profileData?['is_stock_opname'] == true)
+            _menuItemSmall(
+              "Pengeluaran Stok Atas Kadaluarsa/Rusak",
+              Icons.broken_image_outlined,
+              Colors.purple,
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const StockWriteOffListPage(),
+                  ),
+                );
+              },
+            ),
+            if (_profileData?['is_stock_opname'] == true)
+            _menuItemSmall(
+              "Pengeluaran Stok Atas Kadaluarsa/Rusak",
+              Icons.approval_rounded,
+              Colors.purple,
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const StockWriteOffApprovalPage(),
                   ),
                 );
               },
