@@ -11,13 +11,29 @@ import 'tables/announcements_table.dart';
 import '../../crud/roster/presentation/pages/roster_page.dart';
 import '../../crud/assets/presentation/pages/asset_list_page.dart';
 import '../../crud/stocks/presentation/pages/stock_list_page.dart';
+import '../../crud/ref_asset_categories/views/ref_asset_category_list.dart';
+import '../../crud/ref_asset_sub_categories/views/ref_asset_sub_category_list.dart';
+import '../../crud/ref_asset_types/views/ref_asset_type_list.dart';
+import '../../crud/ref_stock_categories/views/ref_stock_category_list.dart';
+import '../../crud/ref_stock_sub_categories/views/ref_stock_sub_category_list.dart';
+import '../../crud/ref_stock_types/views/ref_stock_type_list.dart';
+import '../../crud/ref_building_functions/views/ref_building_function_list.dart';
+import '../../crud/buildings/views/building_list.dart';
+import '../../crud/floors/views/floor_list.dart';
+import '../../crud/rooms/views/room_list.dart';
+import '../../crud/ref_room_categories/views/ref_room_category_list.dart';
 import '../../features/asset_assignment/views/admin/admin_asset_verification_page.dart';
 import '../../features/asset_report/views/asset_report_page.dart';
 import '../../features/stock/views/stock_write_off_approval_page.dart';
-// import '../../features/stock_in/presentations/stock_in_form_admin.dart';
+import '../../features/stock/views/stock_mutation_view.dart';
 import '../../features/stock_in/presentations/stock_in_list_screen.dart';
 import '../../features/stock_in_bins/presentations/pending_put_away_admin_list.dart';
 
+import '../../crud/stock_warehouses/views/stock_warehouse_list.dart';
+import '../../crud/stock_zones/views/stock_zone_list.dart';
+import '../../crud/stock_racks/views/stock_rack_list.dart';
+import '../../crud/stock_shelves/views/stock_shelf_list.dart';
+import '../../crud/stock_bins/views/stock_bin_list.dart';
 
 class AdminDashboard extends ConsumerStatefulWidget {
   final VoidCallback onLogout;
@@ -36,38 +52,49 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
 
   String _selectedMenu = "Data Pegawai";
 
+  // Track expanded state untuk sub-menu
+  final Set<String> _expandedSubMenus = {};
+
   final List<MenuGroup> _menuGroups = [
     MenuGroup(
       title: "MASTER DATA",
       icon: Icons.storage,
-      menus: [
-        MenuItem("Data Pegawai", Icons.people, EmployeeTable()),
-        // ← Tambahkan menu Data Asset di sini
-        // MenuItem("Data Asset", Icons.inventory_2, const AssetPage()),
-      ],
+      menus: [MenuItem("Data Pegawai", Icons.people, EmployeeTable())],
     ),
     MenuGroup(
-      title: "MANAJEMEN ASSET",  // ← Group baru untuk Asset Management
+      title: "MANAJEMEN ASSET",
       icon: Icons.inventory,
       menus: [
         MenuItem("Daftar Asset", Icons.inventory_2, const AssetListPage()),
-         MenuItem("Persetujuan Pemakaian Aset", Icons.verified, const AdminAssetVerificationPage()),
-         MenuItem("Laporan Aset", Icons.receipt_long, const AssetReportPage()), // ← TAMBAHKAN
-        // MenuItem("Kategori Asset", Icons.category, null), // Placeholder untuk nanti
-        // MenuItem("Inspeksi Asset", Icons.assignment_turned_in, null), // Placeholder untuk nanti
-        // MenuItem("Laporan Asset", Icons.assessment, null), // Placeholder untuk nanti
+        MenuItem(
+          "Persetujuan Pemakaian Aset",
+          Icons.verified,
+          const AdminAssetVerificationPage(),
+        ),
+        MenuItem("Laporan Aset", Icons.receipt_long, const AssetReportPage()),
       ],
     ),
     MenuGroup(
-      title: "MANAJEMEN STOK/INVENTORI",  // ← Group baru untuk Asset Management
+      title: "MANAJEMEN STOK/INVENTORI",
       icon: Icons.inventory,
       menus: [
         MenuItem("Daftar Stok", Icons.inventory_2, const StockListPage()),
         MenuItem("Stok Masuk", Icons.input, const StockInListScreen()),
-        MenuItem("Stok Yang Belum DItempatkan", Icons.pending, const PendingPutAwayAdminList()),
-        MenuItem("Persetujuan Penghapusan Stok", Icons.check_circle, const StockWriteOffApprovalPage()),
-        // MenuItem("Inspeksi Stok", Icons.assignment_turned_in, null), // Placeholder untuk nanti
-        // MenuItem("Laporan Asset", Icons.assessment, null), // Placeholder untuk nanti
+        MenuItem(
+          "Stok Yang Belum DItempatkan",
+          Icons.pending,
+          const PendingPutAwayAdminList(),
+        ),
+        MenuItem(
+          "Persetujuan Penghapusan Stok",
+          Icons.check_circle,
+          const StockWriteOffApprovalPage(),
+        ),
+        MenuItem(
+          "Mutasi Stok",
+          Icons.assignment_turned_in,
+          const StockMutationView(),
+        ),
       ],
     ),
     MenuGroup(
@@ -80,15 +107,111 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
       ],
     ),
     MenuGroup(
+      title: "TABEL REFERENSI",
+      icon: Icons.table_chart,
+      subMenus: [
+        SubMenuGroup(
+          title: "ASSET REF",
+          icon: Icons.category,
+          menus: [
+            MenuItem(
+              "Kategori Aset",
+              Icons.category,
+              const RefAssetCategoryListPage(),
+            ),
+            MenuItem(
+              "Sub-Kategori Aset",
+              Icons.subdirectory_arrow_right,
+              const RefAssetSubCategoryListPage(),
+            ),
+            MenuItem("Tipe Aset", Icons.devices, const RefAssetTypeListPage()),
+          ],
+        ),
+        SubMenuGroup(
+          title: "STOK REF",
+          icon: Icons.inventory_2,
+          menus: [
+            MenuItem(
+              "Kategori Stok",
+              Icons.inventory_2,
+              const RefStockCategoryListPage(),
+            ),
+            MenuItem(
+              "Sub-Kategori Stok",
+              Icons.subdirectory_arrow_right,
+              const RefStockSubCategoryListPage(),
+            ),
+             MenuItem("Tipe Stok", Icons.label, const RefStockTypeListPage()),
+            // MenuItem("Sub-Kategori Stok", Icons.subdirectory_arrow_right, null),
+            // MenuItem("Tipe Stok", Icons.devices, null),
+          ],
+        ),
+        SubMenuGroup(
+          title: "HIRARKI LOKASI",
+          icon: Icons.broadcast_on_personal_sharp,
+          menus: [
+            MenuItem(
+              "Fungsi Khusus Gedung",
+              Icons.functions_rounded,
+              const RefBuildingFunctionListPage(),
+            ),
+            MenuItem(
+              "Kategori Ruangan/Kamar",
+              Icons.room_preferences,
+              const RefRoomCategoryListPage(),
+            ),
+           MenuItem("Gedung / Bangunan", Icons.business, const BuildingListPage()),
+           MenuItem("Lantai", Icons.format_list_numbered_rounded, const FloorListPage()),
+           MenuItem("Ruangan", Icons.room, const RoomListPage()),
+            // MenuItem("Sub-Kategori Stok", Icons.subdirectory_arrow_right, null),
+            // MenuItem("Tipe Stok", Icons.devices, null),
+          ],
+        ),
+        SubMenuGroup(
+          title: "HiIRARKI GUDANG PENYIMPANAN",
+          icon: Icons.broadcast_on_personal_sharp,
+          menus: [
+            
+           MenuItem("Gudang", Icons.warehouse, const StockWarehouseListPage()),
+           MenuItem("Zona Penyimpanan", Icons.zoom_out_map_rounded, const StockZoneListPage()),
+           MenuItem("Ruangan", Icons.room, const RoomListPage()),
+            MenuItem("Lemari Rak", Icons.archive_outlined, const StockRackListPage()),
+            MenuItem("Shelf / Rak Level", Icons.border_top_sharp, const StockShelfListPage()),
+            MenuItem("Bin / Box", Icons.inbox, const StockBinListPage()),
+
+          ],
+        ),
+        // Nanti bisa ditambah:
+        // SubMenuGroup(
+        //   title: "LOKASI REF",
+        //   icon: Icons.location_on,
+        //   menus: [
+        //     MenuItem("Gedung", Icons.business, null),
+        //     MenuItem("Ruang", Icons.meeting_room, null),
+        //   ],
+        // ),
+        // SubMenuGroup(
+        //   title: "SUPPLIER REF",
+        //   icon: Icons.local_shipping,
+        //   menus: [
+        //     MenuItem("Vendor", Icons.store, null),
+        //   ],
+        // ),
+      ],
+    ),
+    MenuGroup(
       title: "SYSTEM",
       icon: Icons.settings,
-      menus: [
-        MenuItem("Logout", Icons.logout, null, true),
-      ],
+      menus: [MenuItem("Logout", Icons.logout, null, true)],
     ),
   ];
 
-  final Set<String> _expandedGroups = {"MASTER DATA", "OPERASIONAL", "MANAJEMEN ASSET"}; // ← Tambahkan group baru
+  final Set<String> _expandedGroups = {
+    "MASTER DATA",
+    "OPERASIONAL",
+    "MANAJEMEN ASSET",
+    "TABEL REFERENSI", // ← tambahkan agar terbuka default
+  };
 
   @override
   void initState() {
@@ -128,7 +251,9 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
-              SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+              SystemChrome.setPreferredOrientations([
+                DeviceOrientation.portraitUp,
+              ]);
               widget.onLogout();
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -149,6 +274,16 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
     });
   }
 
+  void _toggleSubMenu(String subMenuTitle) {
+    setState(() {
+      if (_expandedSubMenus.contains(subMenuTitle)) {
+        _expandedSubMenus.remove(subMenuTitle);
+      } else {
+        _expandedSubMenus.add(subMenuTitle);
+      }
+    });
+  }
+
   @override
   void dispose() {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
@@ -161,26 +296,20 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
       resizeToAvoidBottomInset: false,
       body: Row(
         children: [
-          // ========== SIDEBAR ==========
           AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
             width: _isSidebarVisible ? 260 : 0,
-            child: _isSidebarVisible ? _buildSidebar() : const SizedBox.shrink(),
+            child: _isSidebarVisible
+                ? _buildSidebar()
+                : const SizedBox.shrink(),
           ),
-
-          // ========== MAIN CONTENT ==========
-          Expanded(
-            child: _buildMainCanvas(),
-          ),
+          Expanded(child: _buildMainCanvas()),
         ],
       ),
     );
   }
 
-  // ======================
-  // SIDEBAR
-  // ======================
   Widget _buildSidebar() {
     return ClipRRect(
       borderRadius: const BorderRadius.only(
@@ -282,7 +411,9 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
             decoration: BoxDecoration(
-              color: isExpanded ? deepBlue.withOpacity(0.08) : Colors.transparent,
+              color: isExpanded
+                  ? deepBlue.withOpacity(0.08)
+                  : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
@@ -308,16 +439,70 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
             ),
           ),
         ),
-        if (isExpanded)
-          Column(
-            children: group.menus.map((menu) => _buildMenuItem(menu)).toList(),
-          ),
+        if (isExpanded) ...[
+          // Untuk group dengan subMenus (nested)
+          if (group.subMenus.isNotEmpty)
+            ...group.subMenus.map((subMenu) => _buildSubMenuGroup(subMenu)),
+          // Untuk group dengan menus biasa
+          if (group.menus.isNotEmpty)
+            ...group.menus.map((menu) => _buildMenuItem(menu)),
+        ],
         const SizedBox(height: 4),
       ],
     );
   }
 
-  Widget _buildMenuItem(MenuItem menu) {
+  Widget _buildSubMenuGroup(SubMenuGroup subMenu) {
+    final isExpanded = _expandedSubMenus.contains(subMenu.title);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          onTap: () => _toggleSubMenu(subMenu.title),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            margin: const EdgeInsets.only(left: 16),
+            decoration: BoxDecoration(
+              color: isExpanded
+                  ? deepBlue.withOpacity(0.05)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(subMenu.icon, size: 16, color: deepBlue),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    subMenu.title,
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: deepBlue,
+                    ),
+                  ),
+                ),
+                Icon(
+                  isExpanded ? Icons.expand_less : Icons.expand_more,
+                  size: 16,
+                  color: deepBlue,
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (isExpanded)
+          Column(
+            children: subMenu.menus
+                .map((menu) => _buildMenuItem(menu, indent: 48))
+                .toList(),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildMenuItem(MenuItem menu, {double indent = 30}) {
     final isSelected = _selectedMenu == menu.title;
     final isLogout = menu.isLogout;
 
@@ -332,7 +517,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
         }
       },
       child: Container(
-        margin: const EdgeInsets.only(left: 30, bottom: 2),
+        margin: EdgeInsets.only(left: indent, bottom: 2),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected ? deepBlue.withOpacity(0.12) : Colors.transparent,
@@ -340,7 +525,13 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
         ),
         child: Row(
           children: [
-            Icon(menu.icon, size: 16, color: isLogout ? Colors.red : (isSelected ? deepBlue : Colors.grey.shade600)),
+            Icon(
+              menu.icon,
+              size: 16,
+              color: isLogout
+                  ? Colors.red
+                  : (isSelected ? deepBlue : Colors.grey.shade600),
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -348,7 +539,9 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
                 style: GoogleFonts.poppins(
                   fontSize: 11,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                  color: isLogout ? Colors.red : (isSelected ? deepBlue : Colors.grey.shade800),
+                  color: isLogout
+                      ? Colors.red
+                      : (isSelected ? deepBlue : Colors.grey.shade800),
                 ),
               ),
             ),
@@ -370,14 +563,20 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
               color: deepBlue.withOpacity(0.1),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: _hospitalProfile?.logoUrl != null && _hospitalProfile!.logoUrl!.isNotEmpty
+            child:
+                _hospitalProfile?.logoUrl != null &&
+                    _hospitalProfile!.logoUrl!.isNotEmpty
                 ? ClipRRect(
                     borderRadius: BorderRadius.circular(16),
                     child: Image.network(
                       _hospitalProfile!.logoUrl!,
                       fit: BoxFit.contain,
                       errorBuilder: (context, error, stackTrace) {
-                        return Icon(Icons.local_hospital, color: deepBlue, size: 32);
+                        return Icon(
+                          Icons.local_hospital,
+                          color: deepBlue,
+                          size: 32,
+                        );
                       },
                     ),
                   )
@@ -407,18 +606,28 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
           Text(
             "Developed By: PLATFORM PELAYANAN TERBAIK",
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(fontSize: 7, color: Colors.grey.shade500),
+            style: GoogleFonts.poppins(
+              fontSize: 7,
+              color: Colors.grey.shade500,
+            ),
           ),
           const SizedBox(height: 2),
           Text(
             "Distributed By: PT. REKAMITRA",
             textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(fontSize: 7, color: Colors.grey.shade500),
+            style: GoogleFonts.poppins(
+              fontSize: 7,
+              color: Colors.grey.shade500,
+            ),
           ),
           const SizedBox(height: 2),
           Text(
             "2026 - Indonesia",
-            style: GoogleFonts.poppins(fontSize: 7, fontWeight: FontWeight.bold, color: Colors.grey.shade600),
+            style: GoogleFonts.poppins(
+              fontSize: 7,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey.shade600,
+            ),
           ),
           const SizedBox(height: 16),
         ],
@@ -426,9 +635,6 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
     );
   }
 
-  // ======================
-  // MAIN CANVAS
-  // ======================
   Widget _buildMainCanvas() {
     return Container(
       decoration: const BoxDecoration(
@@ -440,13 +646,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
       ),
       child: Stack(
         children: [
-          // Konten Utama
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: _getBody(),
-          ),
-          
-          // Tombol Toggle Sidebar (hanya muncul saat sidebar tertutup)
+          Padding(padding: const EdgeInsets.all(16), child: _getBody()),
           if (!_isSidebarVisible)
             Positioned(
               top: 20,
@@ -480,38 +680,68 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
   }
 
   Widget _getBody() {
+    // Cari menu yang dipilih dari semua group dan subMenu
     for (var group in _menuGroups) {
+      // Cek di menus biasa
       for (var menu in group.menus) {
         if (menu.title == _selectedMenu && menu.widget != null) {
-          return Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: menu.widget!,
-            ),
-          );
+          return _buildContentContainer(menu.widget!);
+        }
+      }
+      // Cek di subMenus
+      for (var subMenu in group.subMenus) {
+        for (var menu in subMenu.menus) {
+          if (menu.title == _selectedMenu && menu.widget != null) {
+            return _buildContentContainer(menu.widget!);
+          }
         }
       }
     }
     return const Center(child: Text("Pilih menu dari sidebar"));
   }
+
+  Widget _buildContentContainer(Widget widget) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(borderRadius: BorderRadius.circular(20), child: widget),
+    );
+  }
 }
+
+// ======================
+// MODEL CLASSES
+// ======================
 
 class MenuGroup {
   final String title;
   final IconData icon;
   final List<MenuItem> menus;
-  MenuGroup({required this.title, required this.icon, required this.menus});
+  final List<SubMenuGroup> subMenus;
+
+  MenuGroup({
+    required this.title,
+    required this.icon,
+    this.menus = const [],
+    this.subMenus = const [],
+  });
+}
+
+class SubMenuGroup {
+  final String title;
+  final IconData icon;
+  final List<MenuItem> menus;
+
+  SubMenuGroup({required this.title, required this.icon, required this.menus});
 }
 
 class MenuItem {
@@ -519,5 +749,6 @@ class MenuItem {
   final IconData icon;
   final Widget? widget;
   final bool isLogout;
+
   MenuItem(this.title, this.icon, this.widget, [this.isLogout = false]);
 }
