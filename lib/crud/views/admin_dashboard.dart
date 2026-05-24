@@ -35,6 +35,16 @@ import '../../crud/stock_racks/views/stock_rack_list.dart';
 import '../../crud/stock_shelves/views/stock_shelf_list.dart';
 import '../../crud/stock_bins/views/stock_bin_list.dart';
 
+import '../../crud/employee_qualifications/views/employee_qualification_list.dart';
+import '../../crud/scoring_categories/views/scoring_category_list.dart';
+import '../../crud/leave_types/views/leave_type_list.dart';
+import '../../crud/ref_incident_categories/views/ref_incident_category_list.dart';
+
+import '../../crud/ref_people_categories/views/ref_people_category_list.dart';
+import '../../crud/ref_positions/views/ref_position_list.dart';
+import '../../crud/ref_reports_category/views/ref_reports_category_list.dart';
+import '../../crud/ref_shifts/views/ref_shift_list.dart';
+
 class AdminDashboard extends ConsumerStatefulWidget {
   final VoidCallback onLogout;
 
@@ -59,7 +69,45 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
     MenuGroup(
       title: "MASTER DATA",
       icon: Icons.storage,
-      menus: [MenuItem("Data Pegawai", Icons.people, EmployeeTable())],
+      menus: [
+        MenuItem("Data Pegawai", Icons.people, EmployeeTable()),
+        MenuItem(
+          "Daftar Kualifikasi Pegawai",
+          Icons.badge,
+          const EmployeeQualificationListPage(),
+        ),
+        MenuItem(
+          "Kategori Penilaian (Scoring)",
+          Icons.score,
+          const ScoringCategoryListPage(),
+        ),
+        MenuItem(
+          "Jenis-jenis Cuti",
+          Icons.calendar_today,
+          const LeaveTypeListPage(),
+        ),
+        MenuItem(
+          "Kategori Insiden",
+          Icons.warning,
+          const RefIncidentCategoryListPage(),
+        ),
+        MenuItem(
+          "Klasifikasi Orang/People Dalam Sistem",
+          Icons.people,
+          const RefPeopleCategoryListPage(),
+        ),
+        MenuItem("Posisi/Jabatan", Icons.work, const RefPositionListPage()),
+        MenuItem(
+          "Kategori Laporan Pegawai",
+          Icons.description,
+          const RefReportsCategoryListPage(),
+        ),
+        MenuItem(
+          "Daftar Shift Kerja",
+          Icons.schedule,
+          const RefShiftListPage(),
+        ),
+      ],
     ),
     MenuGroup(
       title: "MANAJEMEN ASSET",
@@ -141,7 +189,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
               Icons.subdirectory_arrow_right,
               const RefStockSubCategoryListPage(),
             ),
-             MenuItem("Tipe Stok", Icons.label, const RefStockTypeListPage()),
+            MenuItem("Tipe Stok", Icons.label, const RefStockTypeListPage()),
             // MenuItem("Sub-Kategori Stok", Icons.subdirectory_arrow_right, null),
             // MenuItem("Tipe Stok", Icons.devices, null),
           ],
@@ -160,9 +208,17 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
               Icons.room_preferences,
               const RefRoomCategoryListPage(),
             ),
-           MenuItem("Gedung / Bangunan", Icons.business, const BuildingListPage()),
-           MenuItem("Lantai", Icons.format_list_numbered_rounded, const FloorListPage()),
-           MenuItem("Ruangan", Icons.room, const RoomListPage()),
+            MenuItem(
+              "Gedung / Bangunan",
+              Icons.business,
+              const BuildingListPage(),
+            ),
+            MenuItem(
+              "Lantai",
+              Icons.format_list_numbered_rounded,
+              const FloorListPage(),
+            ),
+            MenuItem("Ruangan", Icons.room, const RoomListPage()),
             // MenuItem("Sub-Kategori Stok", Icons.subdirectory_arrow_right, null),
             // MenuItem("Tipe Stok", Icons.devices, null),
           ],
@@ -171,25 +227,69 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
           title: "HiIRARKI GUDANG PENYIMPANAN",
           icon: Icons.broadcast_on_personal_sharp,
           menus: [
-            
-           MenuItem("Gudang", Icons.warehouse, const StockWarehouseListPage()),
-           MenuItem("Zona Penyimpanan", Icons.zoom_out_map_rounded, const StockZoneListPage()),
-           MenuItem("Ruangan", Icons.room, const RoomListPage()),
-            MenuItem("Lemari Rak", Icons.archive_outlined, const StockRackListPage()),
-            MenuItem("Shelf / Rak Level", Icons.border_top_sharp, const StockShelfListPage()),
+            MenuItem("Gudang", Icons.warehouse, const StockWarehouseListPage()),
+            MenuItem(
+              "Zona Penyimpanan",
+              Icons.zoom_out_map_rounded,
+              const StockZoneListPage(),
+            ),
+            MenuItem("Ruangan", Icons.room, const RoomListPage()),
+            MenuItem(
+              "Lemari Rak",
+              Icons.archive_outlined,
+              const StockRackListPage(),
+            ),
+            MenuItem(
+              "Shelf / Rak Level",
+              Icons.border_top_sharp,
+              const StockShelfListPage(),
+            ),
             MenuItem("Bin / Box", Icons.inbox, const StockBinListPage()),
-
           ],
         ),
         // Nanti bisa ditambah:
-        // SubMenuGroup(
-        //   title: "LOKASI REF",
-        //   icon: Icons.location_on,
-        //   menus: [
-        //     MenuItem("Gedung", Icons.business, null),
-        //     MenuItem("Ruang", Icons.meeting_room, null),
-        //   ],
-        // ),
+        SubMenuGroup(
+          title: "REFERENSI KEPEGAWAIAN DAN UMUM",
+          icon: Icons.location_on,
+          menus: [
+            MenuItem(
+              "Daftar Kualifikasi Pegawai",
+              Icons.badge,
+              const EmployeeQualificationListPage(),
+            ),
+            MenuItem(
+              "Kategori Penilaian (Scoring)",
+              Icons.score,
+              const ScoringCategoryListPage(),
+            ),
+            MenuItem(
+              "Jenis-jenis Cuti",
+              Icons.calendar_today,
+              const LeaveTypeListPage(),
+            ),
+            MenuItem(
+              "Kategori Insiden",
+              Icons.warning,
+              const RefIncidentCategoryListPage(),
+            ),
+            MenuItem(
+              "Klasifikasi Orang/People Dalam Sistem",
+              Icons.people,
+              const RefPeopleCategoryListPage(),
+            ),
+            MenuItem("Posisi/Jabatan", Icons.work, const RefPositionListPage()),
+            MenuItem(
+              "Kategori Laporan Pegawai",
+              Icons.description,
+              const RefReportsCategoryListPage(),
+            ),
+            MenuItem(
+              "Daftar Shift Kerja",
+              Icons.schedule,
+              const RefShiftListPage(),
+            ),
+          ],
+        ),
         // SubMenuGroup(
         //   title: "SUPPLIER REF",
         //   icon: Icons.local_shipping,
