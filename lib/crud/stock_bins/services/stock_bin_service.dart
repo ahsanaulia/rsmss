@@ -1,9 +1,14 @@
+import 'dart:typed_data';
+import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:screenshot/screenshot.dart';
 
 class StockBinService {
   final SupabaseClient _supabase = Supabase.instance.client;
   final String _tableName = 'stock_bins';
+  final ScreenshotController _screenshotController = ScreenshotController();
 
   // ==================== CRUD UTAMA ====================
 
@@ -135,7 +140,6 @@ class StockBinService {
       data.remove('created_at');
       data.remove('created_by');
       
-      // Tambahkan updated_at
       data['updated_at'] = DateTime.now().toIso8601String();
       
       final response = await _supabase
@@ -323,5 +327,129 @@ class StockBinService {
       debugPrint('📚 [Service] StackTrace: $stackTrace');
       return [];
     }
+  }
+
+  // ==================== QR CODE ====================
+
+  Future<bool> updateQrCodeUrl(String binId, String qrUrl) async {
+    debugPrint('🔍 [Service] updateQrCodeUrl - BinID: $binId, URL: $qrUrl');
+    
+    try {
+      await _supabase
+          .from(_tableName)
+          .update({'qrcode_url': qrUrl, 'updated_at': DateTime.now().toIso8601String()})
+          .eq('id', binId);
+      
+      debugPrint('✅ [Service] updateQrCodeUrl - Success');
+      return true;
+    } catch (e, stackTrace) {
+      debugPrint('❌ [Service] updateQrCodeUrl - Error: $e');
+      debugPrint('📚 [Service] StackTrace: $stackTrace');
+      return false;
+    }
+  }
+
+  /// Generate QR Code image, upload to Supabase Storage, and return the public URL.
+  Future<String?> generateAndUploadQr({
+    required String binId,
+    required String binCode,
+    required String shelfCode,
+    required String rackCode,
+    required String warehouseName,
+  }) async {
+    debugPrint('🔍 [Service] generateAndUploadQr - Start');
+    
+    try {
+      // 1. Generate QR widget as image using ScreenshotController
+      final imageBytes = await _screenshotController.captureFromWidget(
+        Material(
+          child: Container(
+            width: 350,
+            color: Colors.white,
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "QR CODE STORAGE BIN",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF01579B)),
+                ),
+                const SizedBox(height: 20),
+                QrImageView(data: binId, size: 200, backgroundColor: Colors.white),
+                const SizedBox(height: 20),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildInfoRow("Kode Bin", binCode),
+                      const SizedBox(height: 6),
+                      _buildInfoRow("Rak", rackCode),
+                      const SizedBox(height: 6),
+                      _buildInfoRow("Shelf", shelfCode),
+                      const SizedBox(height: 6),
+                      _buildInfoRow("Gudang", warehouseName),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  "RSMSS IoT - Inventory Management System",
+                  style: TextStyle(fontSize: 10, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      
+      if (imageBytes == null) {
+        debugPrint('❌ [Service] generateAndUploadQr - Failed to capture QR image');
+        return null;
+      }
+      
+      // 2. Upload to Supabase Storage (bucket: stocks_images)
+      final fileName = 'qr_bin_${binId}_${DateTime.now().millisecondsSinceEpoch}.png';
+      final filePath = 'stock_bins/$fileName';
+      
+      await _supabase.storage.from('stocks_images').uploadBinary(
+        filePath,
+        imageBytes,
+      );
+      
+      final publicUrl = _supabase.storage.from('stocks_images').getPublicUrl(filePath);
+      
+      debugPrint('✅ [Service] generateAndUploadQr - Success: $publicUrl');
+      return publicUrl;
+    } catch (e, stackTrace) {
+      debugPrint('❌ [Service] generateAndUploadQr - Error: $e');
+      debugPrint('📚 [Service] StackTrace: $stackTrace');
+      return null;
+    }
+  }
+
+  /// Helper method to build info row in QR widget
+  Widget _buildInfoRow(String label, String value) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 70,
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey),
+          ),
+        ),
+        const Text(":", style: TextStyle(fontSize: 12)),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+        ),
+      ],
+    );
   }
 }

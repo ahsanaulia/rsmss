@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 
 class BuildingService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -190,6 +192,67 @@ class BuildingService {
       debugPrint('❌ [Service] getApps - Error: $e');
       debugPrint('📚 [Service] StackTrace: $stackTrace');
       return [];
+    }
+  }
+
+  // ==================== GPS / LOCATION ====================
+
+  Future<Map<String, dynamic>?> getCurrentLocation() async {
+    debugPrint('📍 [Service] getCurrentLocation - Start');
+    
+    try {
+      // Request permission
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          throw Exception('Izin lokasi ditolak');
+        }
+      }
+      
+      if (permission == LocationPermission.deniedForever) {
+        throw Exception('Izin lokasi ditolak permanen, silakan aktifkan di pengaturan');
+      }
+      
+      // Get current position
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 10),
+      );
+      
+      // Reverse geocoding to get address
+      List<Placemark> placemarks = [];
+      String address = '';
+      try {
+        placemarks = await placemarkFromCoordinates(
+          position.latitude,
+          position.longitude,
+        );
+        if (placemarks.isNotEmpty) {
+          final p = placemarks[0];
+          address = [
+            p.street,
+            p.subLocality,
+            p.locality,
+            p.administrativeArea,
+            p.postalCode,
+          ].where((e) => e != null && e.isNotEmpty).join(', ');
+        }
+      } catch (e) {
+        debugPrint('Geocoding error: $e');
+      }
+      
+      debugPrint('✅ [Service] getCurrentLocation - Success: ${position.latitude}, ${position.longitude}');
+      
+      return {
+        'latitude': position.latitude,
+        'longitude': position.longitude,
+        'address': address,
+      };
+    } catch (e, stackTrace) {
+      debugPrint('❌ [Service] getCurrentLocation - Error: $e');
+      debugPrint('📚 [Service] StackTrace: $stackTrace');
+      return null;
     }
   }
 }

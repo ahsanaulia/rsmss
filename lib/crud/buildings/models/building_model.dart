@@ -10,6 +10,8 @@ class BuildingModel extends Equatable {
   final int? totalFloors;
   final DateTime? createdAt;
   final String? createdBy;
+  final double? latitude;
+  final double? longitude;
   
   // Untuk display (join data)
   final String? hospitalName;
@@ -24,6 +26,8 @@ class BuildingModel extends Equatable {
     this.totalFloors,
     this.createdAt,
     this.createdBy,
+    this.latitude,
+    this.longitude,
     this.hospitalName,
     this.functionName,
   });
@@ -46,6 +50,8 @@ class BuildingModel extends Equatable {
           ? DateTime.tryParse(json['created_at'] as String)
           : null,
       createdBy: json['created_by'] as String?,
+      latitude: json['latitude'] != null ? (json['latitude'] as num).toDouble() : null,
+      longitude: json['longitude'] != null ? (json['longitude'] as num).toDouble() : null,
       hospitalName: json['hospital_profile'] != null 
           ? (json['hospital_profile'] as Map<String, dynamic>)['name'] as String?
           : null,
@@ -63,6 +69,8 @@ class BuildingModel extends Equatable {
       'building_name': buildingName.trim(),
       if (functionId != null) 'function_id': functionId,
       if (totalFloors != null) 'total_floors': totalFloors,
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
       if (createdBy != null) 'created_by': createdBy,
     };
   }
@@ -76,6 +84,8 @@ class BuildingModel extends Equatable {
     int? totalFloors,
     DateTime? createdAt,
     String? createdBy,
+    double? latitude,
+    double? longitude,
     String? hospitalName,
     String? functionName,
   }) {
@@ -88,6 +98,8 @@ class BuildingModel extends Equatable {
       totalFloors: totalFloors ?? this.totalFloors,
       createdAt: createdAt ?? this.createdAt,
       createdBy: createdBy ?? this.createdBy,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
       hospitalName: hospitalName ?? this.hospitalName,
       functionName: functionName ?? this.functionName,
     );
@@ -103,6 +115,8 @@ class BuildingModel extends Equatable {
         totalFloors,
         createdAt,
         createdBy,
+        latitude,
+        longitude,
         hospitalName,
         functionName,
       ];

@@ -41,6 +41,8 @@ import '../../features/stock_request/presentations/stock_request_list_page.dart'
 import '../../features/stock_request/presentations/stock_request_approval_page.dart';
 
 import '../../features/stock_request/presentations/stock_request_fulfillment_page.dart';
+import '../../crud/buildings/views/building_mobile.dart';
+import '../../crud/stock_bins/views/stock_bin_mobile.dart';
 
 class OperationDashboard extends ConsumerStatefulWidget {
   final String userName;
@@ -482,6 +484,34 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => const StockWriteOffApprovalPage(),
+                  ),
+                );
+              },
+            ),
+              if (_profileData?['is_stock_opname'] == true)
+            _menuItemSmall(
+              "Tabel Refferensi Bangunan",
+              Icons.warehouse_outlined,
+              Colors.purple,
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const BuildingMobilePage(),
+                  ),
+                );
+              },
+            ),
+   if (_profileData?['is_stock_opname'] == true)
+            _menuItemSmall(
+              "Tabel Refferensi Bins",
+              Icons.outbox,
+              Colors.purple,
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const StockBinMobilePage(),
                   ),
                 );
               },
