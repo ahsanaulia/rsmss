@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:rsmss/core/di/service_locator.dart';
 import 'package:rsmss/core/services/auth_service.dart';
+import '../../widgets/pending_approval_overlay.dart';
 import 'task_list_view.dart';
 import 'attendance_view.dart';
 // import '../../features/attendance/views/attendance_view.dart';
@@ -12,6 +13,7 @@ import 'task_history_view.dart';
 import 'report_history_view.dart';
 import 'attendance_history_view.dart';
 import '../../services/announcement_service.dart';
+import '../../services/sound_notification_service.dart';
 // import 'op_initial_asset.dart';
 import '../../features/asset_initial/views/op_initial_asset.dart';
 import '../../features/asset_inspection/views/asset_inspection_view.dart';
@@ -60,6 +62,9 @@ class OperationDashboard extends ConsumerStatefulWidget {
 
 class _OperationDashboardState extends ConsumerState<OperationDashboard> {
   late final AuthService _authService;
+
+  Set<String> _previousAnnouncementIds = {};  // ← TAMBAHKAN
+  final SoundNotificationService _soundService = SoundNotificationService();  
 
   int _currentNavbarIndex = 0;
 
@@ -184,6 +189,33 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    // Cek approval status
+    final isApproved = _authService.isApproved;
+
+    // Jika loading, tampilkan loading indicator
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF01579B)),
+        ),
+      );
+    }
+
+    // Jika belum approved, tampilkan overlay
+    if (!isApproved) {
+      return PendingApprovalOverlay(
+        child: _buildFullDashboard(context),
+        onLogout: widget.onLogout,
+      );
+    }
+
+    // User approved -> normal dashboard
+    return _buildFullDashboard(context);
+  }
+
+  // ========== TAMBAHKAN METHOD INI ==========
+  Widget _buildFullDashboard(BuildContext context) {
     final double topSpacing = MediaQuery.of(context).size.height * 0.12;
 
     final List<Widget> pages = [
@@ -237,7 +269,7 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Management Support System IOT",
+                  "Hospital Operational Intelligence Platform",
                   style: GoogleFonts.poppins(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -246,7 +278,8 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  _hospitalData?['name']?.toUpperCase() ?? "RUMAH SAKIT",
+                  _hospitalData?['name']?.toUpperCase() ??
+                      "Hospital Operational Intelligence Platform",
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -255,7 +288,7 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                   ),
                 ),
                 Text(
-                  _hospitalData?['address'] ?? "Alamat belum tersedia",
+                  _hospitalData?['address'] ?? "Indonesia",
                   style: GoogleFonts.poppins(
                     fontSize: 10,
                     color: Colors.black54,
@@ -433,89 +466,89 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
               },
             ),
             if (_profileData?['is_stock_opname'] == true)
-            _menuItemSmall(
-              "Persetujuan Permintaan Stok",
-              Icons.approval_rounded,
-              Colors.purple,
-              () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const StockRequestApprovalPage(),
-                  ),
-                );
-              },
-            ),
+              _menuItemSmall(
+                "Persetujuan Permintaan Stok",
+                Icons.approval_rounded,
+                Colors.purple,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const StockRequestApprovalPage(),
+                    ),
+                  );
+                },
+              ),
             if (_profileData?['is_stock_opname'] == true)
-            _menuItemSmall(
-              "Pengeluaran Stok Atas Permintaan",
-              Icons.approval_rounded,
-              Colors.purple,
-              () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const StockRequestFulfillmentPage(),
-                  ),
-                );
-              },
-            ),
+              _menuItemSmall(
+                "Pengeluaran Stok Atas Permintaan",
+                Icons.approval_rounded,
+                Colors.purple,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const StockRequestFulfillmentPage(),
+                    ),
+                  );
+                },
+              ),
             if (_profileData?['is_stock_opname'] == true)
-            _menuItemSmall(
-              "Pengeluaran Stok Atas Kadaluarsa/Rusak",
-              Icons.broken_image_outlined,
-              Colors.purple,
-              () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const StockWriteOffListPage(),
-                  ),
-                );
-              },
-            ),
+              _menuItemSmall(
+                "Pengeluaran Stok Atas Kadaluarsa/Rusak",
+                Icons.broken_image_outlined,
+                Colors.purple,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const StockWriteOffListPage(),
+                    ),
+                  );
+                },
+              ),
             if (_profileData?['is_stock_opname'] == true)
-            _menuItemSmall(
-              "Pengeluaran Stok Atas Kadaluarsa/Rusak",
-              Icons.approval_rounded,
-              Colors.purple,
-              () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const StockWriteOffApprovalPage(),
-                  ),
-                );
-              },
-            ),
-              if (_profileData?['is_stock_opname'] == true)
-            _menuItemSmall(
-              "Tabel Refferensi Bangunan",
-              Icons.warehouse_outlined,
-              Colors.purple,
-              () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const BuildingMobilePage(),
-                  ),
-                );
-              },
-            ),
-   if (_profileData?['is_stock_opname'] == true)
-            _menuItemSmall(
-              "Tabel Refferensi Bins",
-              Icons.outbox,
-              Colors.purple,
-              () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const StockBinMobilePage(),
-                  ),
-                );
-              },
-            ),
+              _menuItemSmall(
+                "Persetujuan Pengeluaran Stok Atas Kadaluarsa/Rusak",
+                Icons.approval_rounded,
+                Colors.purple,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const StockWriteOffApprovalPage(),
+                    ),
+                  );
+                },
+              ),
+            if (_profileData?['is_stock_opname'] == true)
+              _menuItemSmall(
+                "Tabel Refferensi Bangunan",
+                Icons.warehouse_outlined,
+                Colors.purple,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const BuildingMobilePage(),
+                    ),
+                  );
+                },
+              ),
+            if (_profileData?['is_stock_opname'] == true)
+              _menuItemSmall(
+                "Tabel Refferensi Bins",
+                Icons.outbox,
+                Colors.purple,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const StockBinMobilePage(),
+                    ),
+                  );
+                },
+              ),
           ]),
           const SizedBox(height: 16),
 
@@ -916,24 +949,29 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
   }
 
   Widget _buildControlRoomSection() {
-    final userId = _authService.currentUserId;
-    if (userId == null || _profileData == null) return const SizedBox();
+  final userId = _authService.currentUserId;
+  if (userId == null || _profileData == null) return const SizedBox();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(30, 15, 25, 8),
-          child: Text(
-            "LATEST ANNOUNCEMENTS",
-            style: GoogleFonts.poppins(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: Colors.redAccent,
-            ),
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(30, 15, 25, 8),
+        child: Text(
+          "LATEST ANNOUNCEMENTS",
+          style: GoogleFonts.poppins(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: Colors.redAccent,
           ),
         ),
-        StreamBuilder<List<Map<String, dynamic>>>(
+      ),
+      
+      ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.2,
+        ),
+        child: StreamBuilder<List<Map<String, dynamic>>>(
           stream: AnnouncementService().getFilteredAnnouncements(
             userId,
             _profileData?['position_id'],
@@ -951,9 +989,29 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
 
             final announcements = snapshot.data!;
 
+            // ==========================================================
+            // 🔴 TAMBAHKAN KODE INI UNTUK DETEKSI ANNOUNCEMENT BARU
+            // ==========================================================
+            final currentIds = announcements.map((a) => a['id'].toString()).toSet();
+            
+            // Cari announcement baru (ada di current tapi tidak di previous)
+            final newAnnouncements = currentIds.difference(_previousAnnouncementIds);
+            
+            // Mainkan suara untuk setiap announcement baru
+            for (final newId in newAnnouncements) {
+              final newAnn = announcements.firstWhere((a) => a['id'].toString() == newId);
+              // Hanya mainkan suara untuk priority urgent/emergency
+              final priority = newAnn['priority'] ?? 'normal';
+              if (priority == 'urgent' || priority == 'emergency') {
+                _soundService.playNotificationSound(newId);
+              }
+            }
+            
+            // Update tracking
+            _previousAnnouncementIds = currentIds;
+            // ==========================================================
+
             return ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
               padding: EdgeInsets.zero,
               itemCount: announcements.length,
               separatorBuilder: (context, index) => const SizedBox(height: 12),
@@ -963,20 +1021,22 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                   title: ann['title'] ?? "INFO",
                   content: ann['content'] ?? "",
                   priority: ann['priority'] ?? "normal",
+                  time: _formatTime(ann['created_at']),
                 );
               },
             );
           },
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
 
   Widget _buildAnnouncementBox({
     required String title,
     required String content,
     required String priority,
-    String time = "Just now",
+    String time = "Baru saja",
   }) {
     bool isUrgent = priority == 'urgent' || priority == 'emergency';
     bool isInfo = priority == 'info' || priority == 'normal';
@@ -1208,5 +1268,30 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
         ),
       ),
     );
+  }
+
+  String _formatTime(dynamic timestamp) {
+    if (timestamp == null) return "Baru saja";
+
+    DateTime date;
+    if (timestamp is DateTime) {
+      date = timestamp;
+    } else if (timestamp is String) {
+      date = DateTime.parse(timestamp);
+    } else {
+      return "Baru saja";
+    }
+
+    final now = DateTime.now();
+    final diff = now.difference(date);
+
+    if (diff.inMinutes < 1) return "Baru saja";
+    if (diff.inMinutes < 60) return "${diff.inMinutes} menit lalu";
+    if (diff.inHours < 24) return "${diff.inHours} jam lalu";
+    if (diff.inDays == 1) return "Kemarin";
+    if (diff.inDays < 7) return "${diff.inDays} hari lalu";
+    if (diff.inDays < 30) return "${(diff.inDays / 7).floor()} minggu lalu";
+    if (diff.inDays < 365) return "${(diff.inDays / 30).floor()} bulan lalu";
+    return "${(diff.inDays / 365).floor()} tahun lalu";
   }
 }

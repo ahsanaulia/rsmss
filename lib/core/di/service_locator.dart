@@ -5,16 +5,12 @@ import '../services/tracking_service.dart';
 final getIt = GetIt.instance;
 
 /// Setup semua dependency injection untuk aplikasi.
-/// Panggil method ini sekali di main() sebelum runApp.
 Future<void> setupServiceLocator() async {
   // Register AuthService sebagai singleton
   getIt.registerLazySingleton<AuthService>(() => AuthService());
-  // getIt.registerLazySingleton<AuthService>(() => AuthService());
-  getIt.registerSingleton<TrackingService>(trackingService);
   
-  // Nanti tambahkan service lain di sini:
-  // getIt.registerLazySingleton<StorageService>(() => StorageService());
-  // getIt.registerLazySingleton<PrintService>(() => PrintService());
+  // ✅ PERBAIKAN: Register TrackingService sebagai lazy singleton
+  getIt.registerLazySingleton<TrackingService>(() => TrackingService());
 }
 
 // Shortcut getter untuk memudahkan akses

@@ -26,6 +26,8 @@ class _EmployeeTableState extends ConsumerState<EmployeeTable> {
   bool _localIsAssetInspection = false;
   bool _localIsStockInitial = false;
   bool _localIsStockOpname = false;
+  bool _localIsApproved = false; // ← TAMBAHKAN INI
+  String? _localJoinDate;
 
   // Controllers
   final Map<String, TextEditingController> _controllers = {};
@@ -59,6 +61,8 @@ class _EmployeeTableState extends ConsumerState<EmployeeTable> {
     _localIsAssetInspection = employee.isAssetInspection;
     _localIsStockInitial = employee.isStockInitial;
     _localIsStockOpname = employee.isStockOpname;
+    _localIsApproved = employee.isApproved;
+     _localJoinDate = employee.joinDate;  // ← TAMBAHKAN
 
     _controllers['name'] = TextEditingController(text: employee.fullName);
     _controllers['employeeId'] = TextEditingController(
@@ -78,15 +82,14 @@ class _EmployeeTableState extends ConsumerState<EmployeeTable> {
       controller.dispose();
     }
     _controllers.clear();
+    _localIsApproved = false;
+    _localJoinDate = null;
   }
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(employeeProvider);
     final notifier = ref.read(employeeProvider.notifier);
-    print(
-      '🔴 BUILD - editingId: ${state.editingId}, isAddingNew: ${state.isAddingNew}',
-    );
 
     // Handle messages
     if (state.errorMessage != null) {
@@ -330,530 +333,601 @@ class _EmployeeTableState extends ConsumerState<EmployeeTable> {
   }
 
   Widget _buildEditRow(
-  EmployeeModel employee,
-  EmployeeNotifier notifier,
-  EmployeeState state,
-) {
-  return Container(
-    margin: const EdgeInsets.only(bottom: 12),
-    decoration: BoxDecoration(
-      color: const Color.fromARGB(255, 30, 74, 139), // Biru tua gelap
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: const Color(0xFF42A5F5), width: 2),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.3),
-          blurRadius: 12,
-          offset: const Offset(0, 4),
-        ),
-      ],
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            children: [
-              Icon(Icons.edit_note, size: 16, color: Colors.white),
-              const SizedBox(width: 8),
-              Text(
-                'EDIT PEGAWAI',
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  color: Colors.white,
-                ),
-              ),
-              const Spacer(),
-              TextButton.icon(
-                onPressed: () {
-                  print('🔴 TUTUP BUTTON PRESSED');
-                  _clearLocalState();
-                  notifier.cancelEdit();
-                },
-                icon: const Icon(Icons.close, size: 16, color: Colors.white70),
-                label: const Text('Tutup', style: TextStyle(color: Colors.white70)),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.white70,
-                ),
-              ),
-            ],
+    EmployeeModel employee,
+    EmployeeNotifier notifier,
+    EmployeeState state,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: const Color.fromARGB(255, 30, 74, 139), // Biru tua gelap
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF42A5F5), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
           ),
-          const SizedBox(height: 16),
-
-          // Foto Avatar
-          Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            child: Row(
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
               children: [
-                CircleAvatar(
-                  radius: 40,
-                  backgroundColor: Colors.blue.shade800,
-                  backgroundImage: employee.avatarUrl != null &&
-                          employee.avatarUrl!.isNotEmpty
-                      ? NetworkImage(employee.avatarUrl!)
-                      : null,
-                  child: (employee.avatarUrl == null ||
-                          employee.avatarUrl!.isEmpty)
-                      ? Icon(Icons.person, size: 40, color: Colors.white70)
-                      : null,
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(
-                    'Foto profil dari sistem',
-                    style: GoogleFonts.poppins(
-                      fontSize: 11,
-                      color: Colors.white70,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Form Fields dengan label putih
-          Row(
-            children: [
-              Expanded(
-                child: _buildTextFieldDark(
-                  controller: _controllers['name']!,
-                  label: 'Nama Lengkap',
-                  hint: 'Nama lengkap pegawai',
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildTextFieldDark(
-                  controller: _controllers['employeeId']!,
-                  label: 'ID Pegawai',
-                  hint: 'Nomor induk pegawai',
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          Row(
-            children: [
-              Expanded(
-                child: _buildDropdownDark(
-                  label: 'Role',
-                  value: _localSelectedRole,
-                  items: const [
-                    'operation',
-                    'management',
-                    'admin',
-                    'monitor',
-                    'control_room',
-                  ],
-                  onChanged: (v) => setState(() => _localSelectedRole = v!),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildDropdownWithDataDark(
-                  label: 'Unit',
-                  value: _localSelectedUnitId,
-                  items: state.units,
-                  itemId: (e) => e['id'].toString(),
-                  itemLabel: (e) => e['unit_name'] ?? '-',
-                  onChanged: (v) => setState(() => _localSelectedUnitId = v),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          Row(
-            children: [
-              Expanded(
-                child: _buildDropdownWithDataDark(
-                  label: 'Posisi',
-                  value: _localSelectedPositionId,
-                  items: state.positions,
-                  itemId: (e) => e['id'].toString(),
-                  itemLabel: (e) => e['position_name'] ?? '-',
-                  onChanged: (v) => setState(() => _localSelectedPositionId = v),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildDropdownWithDataDark(
-                  label: 'Shift Default',
-                  value: _localSelectedShiftId,
-                  items: state.shifts,
-                  itemId: (e) => e['id'].toString(),
-                  itemLabel: (e) => '${e['shift_name']} (${e['shift_code'] ?? '-'})',
-                  onChanged: (v) => setState(() => _localSelectedShiftId = v),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          Row(
-            children: [
-              Expanded(
-                child: _buildTextFieldDark(
-                  controller: _controllers['nik']!,
-                  label: 'NIK',
-                  hint: 'Nomor Induk Kependudukan',
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildTextFieldDark(
-                  controller: _controllers['phone']!,
-                  label: 'No Telepon',
-                  hint: 'Nomor HP aktif',
-                  keyboardType: TextInputType.phone,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          _buildTextFieldDark(
-            controller: _controllers['address']!,
-            label: 'Alamat',
-            hint: 'Alamat lengkap',
-            maxLines: 2,
-          ),
-          const SizedBox(height: 12),
-
-          // Akses Fitur Card
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+                Icon(Icons.edit_note, size: 16, color: Colors.white),
+                const SizedBox(width: 8),
                 Text(
-                  'Akses Fitur',
+                  'EDIT PEGAWAI',
                   style: GoogleFonts.poppins(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.bold,
                     fontSize: 12,
                     color: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 16,
-                  runSpacing: 8,
-                  children: [
-                    _buildCheckboxDark(
-                      label: 'Asset Initial',
-                      value: _localIsAssetInitial,
-                      onChanged: (v) => setState(() => _localIsAssetInitial = v),
-                    ),
-                    _buildCheckboxDark(
-                      label: 'Asset Inspection',
-                      value: _localIsAssetInspection,
-                      onChanged: (v) => setState(() => _localIsAssetInspection = v),
-                    ),
-                    _buildCheckboxDark(
-                      label: 'Stock Initial',
-                      value: _localIsStockInitial,
-                      onChanged: (v) => setState(() => _localIsStockInitial = v),
-                    ),
-                    _buildCheckboxDark(
-                      label: 'Stock Opname',
-                      value: _localIsStockOpname,
-                      onChanged: (v) => setState(() => _localIsStockOpname = v),
-                    ),
-                  ],
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: () {
+
+                    _clearLocalState();
+                    notifier.cancelEdit();
+                  },
+                  icon: const Icon(
+                    Icons.close,
+                    size: 16,
+                    color: Colors.white70,
+                  ),
+                  label: const Text(
+                    'Tutup',
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                  style: TextButton.styleFrom(foregroundColor: Colors.white70),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
-          Row(
-            children: [
-              Expanded(
-                child: _buildDropdownDark(
-                  label: 'Status',
-                  value: _localSelectedSituation,
-                  items: const ['ACTIVE', 'INACTIVE', 'ON_LEAVE', 'SICK'],
-                  onChanged: (v) => setState(() => _localSelectedSituation = v!),
-                ),
+            // Foto Avatar
+            Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundColor: Colors.blue.shade800,
+                    backgroundImage:
+                        employee.avatarUrl != null &&
+                            employee.avatarUrl!.isNotEmpty
+                        ? NetworkImage(employee.avatarUrl!)
+                        : null,
+                    child:
+                        (employee.avatarUrl == null ||
+                            employee.avatarUrl!.isEmpty)
+                        ? Icon(Icons.person, size: 40, color: Colors.white70)
+                        : null,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      'Foto profil dari sistem',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildDateFieldDark(
-                  label: 'Tanggal Bergabung',
-                  value: employee.joinDate,
-                  onChanged: (date) {},
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
+            ),
 
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(
-                onPressed: () {
-                  _clearLocalState();
-                  notifier.cancelEdit();
-                },
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.white70,
+            // Form Fields dengan label putih
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextFieldDark(
+                    controller: _controllers['name']!,
+                    label: 'Nama Lengkap',
+                    hint: 'Nama lengkap pegawai',
+                  ),
                 ),
-                child: const Text('Batal'),
-              ),
-              const SizedBox(width: 12),
-              ElevatedButton(
-                onPressed: () async {
-                  final updatedEmployee = employee.copyWith(
-                    fullName: _controllers['name']!.text.trim(),
-                    role: _localSelectedRole,
-                    employeeId: _controllers['employeeId']!.text.trim().isEmpty
-                        ? null
-                        : _controllers['employeeId']!.text.trim(),
-                    employeeNik: _controllers['nik']!.text.trim().isEmpty
-                        ? null
-                        : _controllers['nik']!.text.trim(),
-                    phone: _controllers['phone']!.text.trim().isEmpty
-                        ? null
-                        : _controllers['phone']!.text.trim(),
-                    address: _controllers['address']!.text.trim().isEmpty
-                        ? null
-                        : _controllers['address']!.text.trim(),
-                    unitId: _localSelectedUnitId,
-                    positionId: _localSelectedPositionId,
-                    defaultShiftId: _localSelectedShiftId,
-                    currentSituation: _localSelectedSituation,
-                    isAssetInitial: _localIsAssetInitial,
-                    isAssetInspection: _localIsAssetInspection,
-                    isStockInitial: _localIsStockInitial,
-                    isStockOpname: _localIsStockOpname,
-                  );
-                  await notifier.saveEmployee(updatedEmployee);
-                  _clearLocalState();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF42A5F5),
-                  foregroundColor: Colors.white,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildTextFieldDark(
+                    controller: _controllers['employeeId']!,
+                    label: 'ID Pegawai',
+                    hint: 'Nomor induk pegawai',
+                  ),
                 ),
-                child: const Text('Simpan'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    ),
-  );
-}
+              ],
+            ),
+            const SizedBox(height: 12),
 
-// Helper widgets untuk dark mode
-Widget _buildTextFieldDark({
-  required TextEditingController controller,
-  required String label,
-  required String hint,
-  int maxLines = 1,
-  TextInputType keyboardType = TextInputType.text,
-}) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(label, style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.white70)),
-      const SizedBox(height: 4),
-      TextFormField(
-        controller: controller,
-        maxLines: maxLines,
-        keyboardType: keyboardType,
-        style: GoogleFonts.poppins(fontSize: 13, color: Colors.white),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: TextStyle(color: Colors.white38),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          isDense: true,
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: Colors.white38),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Colors.white, width: 1.5),
-          ),
-          fillColor: Colors.white.withValues(alpha: 0.1),
-          filled: true,
+            Row(
+              children: [
+                Expanded(
+                  child: _buildDropdownDark(
+                    label: 'Role',
+                    value: _localSelectedRole,
+                    items: const [
+                      'operation',
+                      'management',
+                      'admin',
+                      'monitor',
+                      'control_room',
+                    ],
+                    onChanged: (v) => setState(() => _localSelectedRole = v!),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildDropdownWithDataDark(
+                    label: 'Unit',
+                    value: _localSelectedUnitId,
+                    items: state.units,
+                    itemId: (e) => e['id'].toString(),
+                    itemLabel: (e) => e['unit_name'] ?? '-',
+                    onChanged: (v) => setState(() => _localSelectedUnitId = v),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            Row(
+              children: [
+                Expanded(
+                  child: _buildDropdownWithDataDark(
+                    label: 'Posisi',
+                    value: _localSelectedPositionId,
+                    items: state.positions,
+                    itemId: (e) => e['id'].toString(),
+                    itemLabel: (e) => e['position_name'] ?? '-',
+                    onChanged: (v) =>
+                        setState(() => _localSelectedPositionId = v),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildDropdownWithDataDark(
+                    label: 'Shift Default',
+                    value: _localSelectedShiftId,
+                    items: state.shifts,
+                    itemId: (e) => e['id'].toString(),
+                    itemLabel: (e) =>
+                        '${e['shift_name']} (${e['shift_code'] ?? '-'})',
+                    onChanged: (v) => setState(() => _localSelectedShiftId = v),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            Row(
+              children: [
+                Expanded(
+                  child: _buildTextFieldDark(
+                    controller: _controllers['nik']!,
+                    label: 'NIK',
+                    hint: 'Nomor Induk Kependudukan',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildTextFieldDark(
+                    controller: _controllers['phone']!,
+                    label: 'No Telepon',
+                    hint: 'Nomor HP aktif',
+                    keyboardType: TextInputType.phone,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            _buildTextFieldDark(
+              controller: _controllers['address']!,
+              label: 'Alamat',
+              hint: 'Alamat lengkap',
+              maxLines: 2,
+            ),
+            const SizedBox(height: 12),
+
+            // Akses Fitur Card
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Akses Fitur',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 16,
+                    runSpacing: 8,
+                    children: [
+                      _buildCheckboxDark(
+                        label: 'Asset Initial',
+                        value: _localIsAssetInitial,
+                        onChanged: (v) =>
+                            setState(() => _localIsAssetInitial = v),
+                      ),
+                      _buildCheckboxDark(
+                        label: 'Asset Inspection',
+                        value: _localIsAssetInspection,
+                        onChanged: (v) =>
+                            setState(() => _localIsAssetInspection = v),
+                      ),
+                      _buildCheckboxDark(
+                        label: 'Stock Initial',
+                        value: _localIsStockInitial,
+                        onChanged: (v) =>
+                            setState(() => _localIsStockInitial = v),
+                      ),
+                      _buildCheckboxDark(
+                        label: 'Stock Opname',
+                        value: _localIsStockOpname,
+                        onChanged: (v) =>
+                            setState(() => _localIsStockOpname = v),
+                      ),
+                      _buildCheckboxDark(
+                        label: 'Akun Aktif (Approved)',
+                        value: _localIsApproved, // ← BENAR! pakai local state
+                        onChanged: (v) => setState(() => _localIsApproved = v),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            Row(
+              children: [
+                Expanded(
+                  child: _buildDropdownDark(
+                    label: 'Status',
+                    value: _localSelectedSituation,
+                    items: const ['ACTIVE', 'INACTIVE', 'ON_LEAVE', 'SICK'],
+                    onChanged: (v) =>
+                        setState(() => _localSelectedSituation = v!),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildDateFieldDark(
+                    label: 'Tanggal Bergabung',
+                    value: _localJoinDate,
+                    onChanged: (date) => setState(() => _localJoinDate = date),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    _clearLocalState();
+                    notifier.cancelEdit();
+                  },
+                  style: TextButton.styleFrom(foregroundColor: Colors.white70),
+                  child: const Text('Batal'),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton(
+                  onPressed: () async {
+                    final updatedEmployee = employee.copyWith(
+                      fullName: _controllers['name']!.text.trim(),
+                      role: _localSelectedRole,
+                      employeeId:
+                          _controllers['employeeId']!.text.trim().isEmpty
+                          ? null
+                          : _controllers['employeeId']!.text.trim(),
+                      employeeNik: _controllers['nik']!.text.trim().isEmpty
+                          ? null
+                          : _controllers['nik']!.text.trim(),
+                      phone: _controllers['phone']!.text.trim().isEmpty
+                          ? null
+                          : _controllers['phone']!.text.trim(),
+                      address: _controllers['address']!.text.trim().isEmpty
+                          ? null
+                          : _controllers['address']!.text.trim(),
+                      unitId: _localSelectedUnitId,
+                      positionId: _localSelectedPositionId,
+                      defaultShiftId: _localSelectedShiftId,
+                      currentSituation: _localSelectedSituation,
+                      isAssetInitial: _localIsAssetInitial,
+                      isAssetInspection: _localIsAssetInspection,
+                      isStockInitial: _localIsStockInitial,
+                      isStockOpname: _localIsStockOpname,
+                      isApproved: _localIsApproved,
+                      joinDate: _localJoinDate,
+                    );
+                    await notifier.saveEmployee(updatedEmployee);
+                    _clearLocalState();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF42A5F5),
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('Simpan'),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
-    ],
-  );
-}
+    );
+  }
 
-Widget _buildDropdownDark({
-  required String label,
-  required String value,
-  required List<String> items,
-  required Function(String?) onChanged,
-}) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(label, style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.white70)),
-      const SizedBox(height: 4),
-      DropdownButtonFormField<String>(
-        value: value,
-        dropdownColor: const Color(0xFF0D47A1),
-        style: GoogleFonts.poppins(fontSize: 13, color: Colors.white),
-        items: items.map((item) {
-          return DropdownMenuItem(
-            value: item,
-            child: Text(item),
-          );
-        }).toList(),
-        onChanged: onChanged,
-        decoration: InputDecoration(
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          isDense: true,
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: Colors.white38),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Colors.white, width: 1.5),
-          ),
-          fillColor: Colors.white.withValues(alpha: 0.1),
-          filled: true,
-        ),
-      ),
-    ],
-  );
-}
-
-Widget _buildDropdownWithDataDark({
-  required String label,
-  required String? value,
-  required List<Map<String, dynamic>> items,
-  required String Function(Map<String, dynamic>) itemId,
-  required String Function(Map<String, dynamic>) itemLabel,
-  required Function(String?) onChanged,
-  bool optional = true,
-}) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(label, style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.white70)),
-      const SizedBox(height: 4),
-      DropdownButtonFormField<String>(
-        value: value,
-        hint: Text(optional ? 'Pilih (Opsional)' : 'Pilih', style: TextStyle(color: Colors.white54)),
-        dropdownColor: const Color(0xFF0D47A1),
-        style: GoogleFonts.poppins(fontSize: 13, color: Colors.white),
-        items: [
-          if (optional) const DropdownMenuItem(value: null, child: Text('-', style: TextStyle(color: Colors.white70))),
-          ...items.map((item) {
-            return DropdownMenuItem(
-              value: itemId(item),
-              child: Text(itemLabel(item), style: TextStyle(color: Colors.white)),
-            );
-          }),
-        ],
-        onChanged: onChanged,
-        decoration: InputDecoration(
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          isDense: true,
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide(color: Colors.white38),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: const BorderSide(color: Colors.white, width: 1.5),
-          ),
-          fillColor: Colors.white.withValues(alpha: 0.1),
-          filled: true,
-        ),
-      ),
-    ],
-  );
-}
-
-Widget _buildDateFieldDark({
-  required String label,
-  required String? value,
-  required Function(String?) onChanged,
-}) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(label, style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.white70)),
-      const SizedBox(height: 4),
-      InkWell(
-        onTap: () async {
-          final date = await showDatePicker(
-            context: context,
-            initialDate: DateTime.now(),
-            firstDate: DateTime(2000),
-            lastDate: DateTime(2030),
-          );
-          if (date != null) {
-            onChanged(date.toIso8601String().split('T')[0]);
-          }
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.white38),
-            borderRadius: BorderRadius.circular(8),
-            color: Colors.white.withValues(alpha: 0.1),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  value ?? 'Pilih tanggal',
-                  style: GoogleFonts.poppins(fontSize: 13, color: value == null ? Colors.white54 : Colors.white),
-                ),
-              ),
-              Icon(Icons.calendar_today, size: 18, color: Colors.white70),
-            ],
+  // Helper widgets untuk dark mode
+  Widget _buildTextFieldDark({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    int maxLines = 1,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: Colors.white70,
           ),
         ),
-      ),
-    ],
-  );
-}
+        const SizedBox(height: 4),
+        TextFormField(
+          controller: controller,
+          maxLines: maxLines,
+          keyboardType: keyboardType,
+          style: GoogleFonts.poppins(fontSize: 13, color: Colors.white),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(color: Colors.white38),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
+            isDense: true,
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.white38),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Colors.white, width: 1.5),
+            ),
+            fillColor: Colors.white.withValues(alpha: 0.1),
+            filled: true,
+          ),
+        ),
+      ],
+    );
+  }
 
-Widget _buildCheckboxDark({
-  required String label,
-  required bool value,
-  required Function(bool) onChanged,
-}) {
-  return Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      SizedBox(
-        width: 18,
-        height: 18,
-        child: Checkbox(
+  Widget _buildDropdownDark({
+    required String label,
+    required String value,
+    required List<String> items,
+    required Function(String?) onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: Colors.white70,
+          ),
+        ),
+        const SizedBox(height: 4),
+        DropdownButtonFormField<String>(
           value: value,
-          onChanged: (v) => onChanged(v ?? false),
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          activeColor: Colors.white,
-          checkColor: const Color(0xFF0D47A1),
+          dropdownColor: const Color(0xFF0D47A1),
+          style: GoogleFonts.poppins(fontSize: 13, color: Colors.white),
+          items: items.map((item) {
+            return DropdownMenuItem(value: item, child: Text(item));
+          }).toList(),
+          onChanged: onChanged,
+          decoration: InputDecoration(
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
+            isDense: true,
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.white38),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Colors.white, width: 1.5),
+            ),
+            fillColor: Colors.white.withValues(alpha: 0.1),
+            filled: true,
+          ),
         ),
-      ),
-      const SizedBox(width: 6),
-      Text(label, style: GoogleFonts.poppins(fontSize: 11, color: Colors.white70)),
-    ],
-  );
-}
+      ],
+    );
+  }
+
+  Widget _buildDropdownWithDataDark({
+    required String label,
+    required String? value,
+    required List<Map<String, dynamic>> items,
+    required String Function(Map<String, dynamic>) itemId,
+    required String Function(Map<String, dynamic>) itemLabel,
+    required Function(String?) onChanged,
+    bool optional = true,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: Colors.white70,
+          ),
+        ),
+        const SizedBox(height: 4),
+        DropdownButtonFormField<String>(
+          value: value,
+          hint: Text(
+            optional ? 'Pilih (Opsional)' : 'Pilih',
+            style: TextStyle(color: Colors.white54),
+          ),
+          dropdownColor: const Color(0xFF0D47A1),
+          style: GoogleFonts.poppins(fontSize: 13, color: Colors.white),
+          items: [
+            if (optional)
+              const DropdownMenuItem(
+                value: null,
+                child: Text('-', style: TextStyle(color: Colors.white70)),
+              ),
+            ...items.map((item) {
+              return DropdownMenuItem(
+                value: itemId(item),
+                child: Text(
+                  itemLabel(item),
+                  style: TextStyle(color: Colors.white),
+                ),
+              );
+            }),
+          ],
+          onChanged: onChanged,
+          decoration: InputDecoration(
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
+            isDense: true,
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: BorderSide(color: Colors.white38),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(8),
+              borderSide: const BorderSide(color: Colors.white, width: 1.5),
+            ),
+            fillColor: Colors.white.withValues(alpha: 0.1),
+            filled: true,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDateFieldDark({
+    required String label,
+    required String? value,
+    required Function(String?) onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: Colors.white70,
+          ),
+        ),
+        const SizedBox(height: 4),
+        InkWell(
+          onTap: () async {
+            final date = await showDatePicker(
+              context: context,
+              initialDate: DateTime.now(),
+              firstDate: DateTime(2000),
+              lastDate: DateTime(2030),
+            );
+            if (date != null) {
+              onChanged(date.toIso8601String().split('T')[0]);
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.white38),
+              borderRadius: BorderRadius.circular(8),
+              color: Colors.white.withValues(alpha: 0.1),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    value ?? 'Pilih tanggal',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: value == null ? Colors.white54 : Colors.white,
+                    ),
+                  ),
+                ),
+                Icon(Icons.calendar_today, size: 18, color: Colors.white70),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCheckboxDark({
+    required String label,
+    required bool value,
+    required Function(bool) onChanged,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 18,
+          height: 18,
+          child: Checkbox(
+            value: value,
+            onChanged: (v) => onChanged(v ?? false),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            activeColor: Colors.white,
+            checkColor: const Color(0xFF0D47A1),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: GoogleFonts.poppins(fontSize: 11, color: Colors.white70),
+        ),
+      ],
+    );
+  }
+
   Widget _buildAddNewRow(EmployeeState state, EmployeeNotifier notifier) {
     final nameController = TextEditingController();
     String selectedRole = 'operation';

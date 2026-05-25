@@ -18,11 +18,14 @@ class AttendanceView extends ConsumerStatefulWidget {
 }
 
 class _AttendanceViewState extends ConsumerState<AttendanceView> {
+  // ✅ AMBIL TRACKING SERVICE DARI GET IT
+  TrackingService get _trackingService => getIt<TrackingService>();
+
   @override
   void dispose() {
-    // Stop tracking jika masih aktif
-    if (trackingService.isTracking) {
-      trackingService.stopTracking();
+    // ✅ PERBAIKAN: Pakai getIt
+    if (_trackingService.isTracking) {
+      _trackingService.stopTracking();
     }
     super.dispose();
   }
@@ -30,10 +33,10 @@ class _AttendanceViewState extends ConsumerState<AttendanceView> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(attendanceStateProvider);
-    
     final notifier = ref.read(attendanceStateProvider.notifier);
-
     
+    // ✅ AMBIL TRACKING SERVICE UNTUK UI
+    final tracking = _trackingService;
 
     // Handle error
     if (state.errorMessage != null) {
@@ -97,7 +100,8 @@ class _AttendanceViewState extends ConsumerState<AttendanceView> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        if (isWorking && trackingService.isTracking)
+                        // ✅ PERBAIKAN: Pakai tracking.isTracking
+                        if (isWorking && tracking.isTracking)
                           Container(
                             width: 10,
                             height: 10,
@@ -108,7 +112,7 @@ class _AttendanceViewState extends ConsumerState<AttendanceView> {
                           ),
                         const SizedBox(width: 8),
                         Text(
-                          isWorking ? "STATUS: ON DUTY" : "ABSENSI MANDIRI",
+                          isWorking ? "STATUS: DALAM SHIFT" : "ABSENSI MANDIRI",
                           style: GoogleFonts.poppins(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -119,11 +123,12 @@ class _AttendanceViewState extends ConsumerState<AttendanceView> {
                         ),
                       ],
                     ),
-                    if (isWorking && trackingService.isTracking)
+                    // ✅ PERBAIKAN: Pakai tracking.isTracking
+                    if (isWorking && tracking.isTracking)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
-                          "📍 Tracking lokasi aktif",
+                          "📍 Lokasi akan tercatat untuk keperluan koordinasi tim",
                           style: GoogleFonts.poppins(
                             fontSize: 10,
                             color: Colors.green.shade800,
@@ -248,9 +253,7 @@ class _AttendanceViewState extends ConsumerState<AttendanceView> {
                         onPressed: (state.isProcessing || state.isInitializing)
                             ? null
                             : () async {
-                                print("🔴 BUTTON PRESSED - SUBMIT ATTENDANCE");
                                 await notifier.submitAttendance();
-                                // Refresh setelah submit
                                 ref.invalidate(attendanceStateProvider);
                               },
                         style: ElevatedButton.styleFrom(
@@ -272,8 +275,8 @@ class _AttendanceViewState extends ConsumerState<AttendanceView> {
                               )
                             : Text(
                                 isWorking
-                                    ? "CHECK OUT SEKARANG"
-                                    : "CHECK IN SEKARANG",
+                                    ? "AKHIRI SHIFT"
+                                    : "MULAI SHIFT",
                                 style: GoogleFonts.poppins(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
@@ -281,60 +284,6 @@ class _AttendanceViewState extends ConsumerState<AttendanceView> {
                               ),
                       ),
                     ),
-
-                    // Debug button - TEST TRACKING (only show when not working)
-                    if (!isWorking)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 16),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            print("🔴 TEST TRACKING BUTTON PRESSED");
-                            final userId = getIt<AuthService>().currentUserId;
-                            if (userId != null) {
-                              final tracking = getIt<TrackingService>();
-                              tracking.startTracking(
-                                profileId: userId,
-                                sessionId: 'test-session-${DateTime.now().millisecondsSinceEpoch}',
-                                immediate: true,
-                              );
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    "Test tracking started! Check terminal.",
-                                    style: GoogleFonts.poppins(),
-                                  ),
-                                  backgroundColor: Colors.orange,
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    "User not logged in",
-                                    style: GoogleFonts.poppins(),
-                                  ),
-                                  backgroundColor: Colors.red,
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.orange,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: Text(
-                            "TEST TRACKING (Debug)",
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
                   ],
                 ),
               ),

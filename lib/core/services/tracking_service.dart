@@ -31,14 +31,14 @@ class TrackingService {
     _currentSessionId = sessionId;
     _isTracking = true;
 
-    print("📍 START TRACKING: profile=$profileId, session=$sessionId");
+    // print("📍 START TRACKING: profile=$profileId, session=$sessionId");
 
     if (immediate) {
       _sendLocationUpdate();
     }
 
     _trackingTimer = Timer.periodic(
-      const Duration(minutes: 10),
+      const Duration(minutes: 30),
       (timer) => _sendLocationUpdate(),
     );
   }
@@ -46,7 +46,7 @@ class TrackingService {
   void stopTracking() {
     if (!_isTracking) return;
 
-    print("🛑 STOP TRACKING");
+    // print("🛑 STOP TRACKING");
     _trackingTimer?.cancel();
     _trackingTimer = null;
     _isTracking = false;
@@ -82,7 +82,7 @@ class TrackingService {
         'device_info': deviceInfo,
       });
 
-      print("📍 LOCATION SENT: ${position.latitude}, ${position.longitude}");
+      // print("📍 LOCATION SENT: ${position.latitude}, ${position.longitude}");
     } catch (e) {
       print("Error sending location: $e");
     }
@@ -139,4 +139,4 @@ class TrackingService {
   }
 }
 
-final trackingService = TrackingService();
+// final trackingService = TrackingService();

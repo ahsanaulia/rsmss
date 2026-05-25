@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:ui';
 import 'register_screen.dart';
 import 'main_screen.dart';
+import '../widgets/adaptive_logo.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -31,11 +32,15 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } on AuthException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message), backgroundColor: Colors.redAccent),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.redAccent),
+        );
+      }
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -44,6 +49,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: Container(
         width: double.infinity,
+        height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -53,31 +59,59 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 30),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  "RSMSS CONTROL",
-                  style: GoogleFonts.poppins(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xFF01579B),
-                    letterSpacing: 2,
-                  ),
+          child: SafeArea(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 30),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 80),
+                    
+                    // Logo
+                    AdaptiveLogo(
+                      height: 100,
+                      imagePath: 'assets/images/logo.png',
+                      lottiePath: 'assets/images/logo.json',
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Title
+                    Text(
+                      "Hospital Organizational Intelligence Platform",
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF01579B),
+                        letterSpacing: 2,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 40),
+                    
+                    // Email Field
+                    _buildGlassTextField(_emailController, "Email Operator", Icons.email_outlined, false),
+                    const SizedBox(height: 15),
+                    
+                    // Password Field
+                    _buildGlassTextField(_passwordController, "Password", Icons.lock_outline, true),
+                    const SizedBox(height: 25),
+                    
+                    // Login Button
+                    _buildLoginButton(),
+                    const SizedBox(height: 20),
+                    
+                    // Register Link
+                    _buildRegisterLink(),
+                    const SizedBox(height: 30),
+                    
+                    // Footer
+                    _buildFooter(),
+                    const SizedBox(height: 40),
+                  ],
                 ),
-                const SizedBox(height: 40),
-                _buildGlassTextField(_emailController, "Email Operator", Icons.email_outlined, false),
-                const SizedBox(height: 15),
-                _buildGlassTextField(_passwordController, "Password", Icons.lock_outline, true),
-                const SizedBox(height: 25),
-                _buildLoginButton(),
-                const SizedBox(height: 20),
-                _buildRegisterLink(),
-                const SizedBox(height: 30), // Spasi sebelum footer
-                _buildFooter(),
-              ],
+              ),
             ),
           ),
         ),
@@ -169,4 +203,4 @@ class _LoginScreenState extends State<LoginScreen> {
       ],
     );
   }
-} // <--- Penutup class ini harus ada di paling bawah.
+}

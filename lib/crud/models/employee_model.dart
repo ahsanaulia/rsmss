@@ -34,6 +34,7 @@ class EmployeeModel {
   final bool isStockInitial;
   final bool isStockOpname;
   final bool isFlexibleRoster;
+  final bool isApproved;
 
   EmployeeModel({
     required this.id,
@@ -71,6 +72,7 @@ class EmployeeModel {
     this.isStockInitial = false,
     this.isStockOpname = false,
     this.isFlexibleRoster = false,
+    this.isApproved = false,
   });
 
   factory EmployeeModel.fromJson(Map<String, dynamic> json) {
@@ -116,6 +118,7 @@ class EmployeeModel {
       isStockInitial: json['is_stock_initial'] ?? false,
       isStockOpname: json['is_stock_opname'] ?? false,
       isFlexibleRoster: json['is_flexible_roster'] ?? false,
+      isApproved: json['is_approved'] ?? false,
     );
   }
 
@@ -153,6 +156,7 @@ class EmployeeModel {
       'is_stock_initial': isStockInitial,
       'is_stock_opname': isStockOpname,
       'is_flexible_roster': isFlexibleRoster,
+      'is_approved': isApproved,
     };
   }
 
@@ -192,6 +196,7 @@ class EmployeeModel {
     bool? isStockInitial,
     bool? isStockOpname,
     bool? isFlexibleRoster,
+    bool? isApproved,
   }) {
     return EmployeeModel(
       id: id ?? this.id,
@@ -229,6 +234,7 @@ class EmployeeModel {
       isStockInitial: isStockInitial ?? this.isStockInitial,
       isStockOpname: isStockOpname ?? this.isStockOpname,
       isFlexibleRoster: isFlexibleRoster ?? this.isFlexibleRoster,
+      isApproved: isApproved ?? this.isApproved,
     );
   }
 }

@@ -46,7 +46,7 @@ class EmployeeState {
       units: units ?? this.units,
       positions: positions ?? this.positions,
       shifts: shifts ?? this.shifts,
-      editingId: editingId,  // ← PERBAIKAN: langsung assign, tanpa ?? this.editingId
+      editingId: editingId ?? this.editingId,
       isAddingNew: isAddingNew ?? this.isAddingNew,
     );
   }

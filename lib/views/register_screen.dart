@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:ui';
+import '../widgets/adaptive_logo.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -15,14 +16,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  
+  // Untuk validasi password
+  String _passwordError = '';
 
   Future<void> _handleRegister() async {
+    // Validasi password minimal 8 karakter
+    final password = _passwordController.text.trim();
+    if (password.length < 8) {
+      setState(() {
+        _passwordError = 'Password minimal 8 karakter';
+      });
+      return;
+    }
+    
+    // Reset error jika valid
+    setState(() {
+      _passwordError = '';
+    });
+    
     setState(() => _isLoading = true);
     try {
       await Supabase.instance.client.auth.signUp(
         email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-        data: {'full_name': _nameController.text.trim()}, // DITANGKAP TRIGGER SQL
+        password: password,
+        data: {'full_name': _nameController.text.trim()},
       );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -31,9 +49,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Navigator.pop(context);
       }
     } on AuthException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message), backgroundColor: Colors.redAccent),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.redAccent),
+        );
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -44,6 +64,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       body: Container(
         width: double.infinity,
+        height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -53,14 +74,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 30),
-            child: SingleChildScrollView( // Menggunakan scroll agar tidak error saat keyboard muncul
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height,
+          child: SafeArea(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 30),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    // Logo
+                    const AdaptiveLogo(
+                      height: 80,
+                      imagePath: 'assets/images/logo.png',
+                      lottiePath: 'assets/images/logo.json',
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Title
                     Text(
                       "REGISTER OPERATOR",
                       style: GoogleFonts.poppins(
@@ -70,14 +101,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                     const SizedBox(height: 30),
+                    
+                    // Name Field
                     _buildField(_nameController, "Nama Lengkap", Icons.person_outline, false),
                     const SizedBox(height: 15),
+                    
+                    // Email Field
                     _buildField(_emailController, "Email", Icons.email_outlined, false),
                     const SizedBox(height: 15),
-                    _buildField(_passwordController, "Password", Icons.lock_outline, true),
+                    
+                    // Password Field
+                    _buildPasswordField(),
                     const SizedBox(height: 25),
+                    
+                    // Register Button
                     _buildRegisterButton(),
                     const SizedBox(height: 20),
+                    
+                    // Back to Login Link
                     TextButton(
                       onPressed: () => Navigator.pop(context),
                       child: Text(
@@ -88,7 +129,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                     const SizedBox(height: 30),
-                    _buildFooter(), // Penambahan Footer
+                    
+                    // Footer
+                    _buildFooter(),
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -116,6 +160,70 @@ class _RegisterScreenState extends State<RegisterScreen> {
           contentPadding: const EdgeInsets.symmetric(vertical: 15),
         ),
       ),
+    );
+  }
+
+  // Widget khusus untuk password dengan error message
+  Widget _buildPasswordField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.4),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: _passwordError.isNotEmpty 
+                  ? Colors.redAccent 
+                  : Colors.white.withValues(alpha: 0.5),
+            ),
+          ),
+          child: TextField(
+            controller: _passwordController,
+            obscureText: true,
+            onChanged: (_) {
+              // Hapus error saat user mulai mengetik
+              if (_passwordError.isNotEmpty) {
+                setState(() {
+                  _passwordError = '';
+                });
+              }
+            },
+            decoration: InputDecoration(
+              prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFF01579B)),
+              hintText: "Password",
+              border: InputBorder.none,
+              contentPadding: const EdgeInsets.symmetric(vertical: 15),
+              errorText: null, // Error ditampilkan di luar agar UI tetap rapi
+            ),
+          ),
+        ),
+        if (_passwordError.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(left: 12, top: 8),
+            child: Row(
+              children: [
+                const Icon(Icons.error_outline, size: 14, color: Colors.redAccent),
+                const SizedBox(width: 4),
+                Text(
+                  _passwordError,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Colors.redAccent,
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          const Padding(
+            padding: EdgeInsets.only(left: 12, top: 6),
+            child: Text(
+              'Minimal 8 karakter',
+              style: TextStyle(fontSize: 11, color: Colors.grey),
+            ),
+          ),
+      ],
     );
   }
 
