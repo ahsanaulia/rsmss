@@ -6,6 +6,24 @@ class TaskService {
   final SupabaseClient _supabase = Supabase.instance.client;
   final Uuid _uuid = const Uuid();
 
+  // 🔴 REALTIME STREAM UNTUK TASKS (Filter di client-side)
+  Stream<List<TaskModel>> streamTasks({String? filterByAssigneeId}) {
+    return _supabase
+        .from('tasks')
+        .stream(primaryKey: ['id'])
+        .order('created_at', ascending: false)
+        .map((data) {
+          var tasks = data.map((json) => TaskModel.fromJson(json)).toList();
+          
+          // Filter di client-side
+          if (filterByAssigneeId != null && filterByAssigneeId.isNotEmpty) {
+            tasks = tasks.where((task) => task.assigneeId == filterByAssigneeId).toList();
+          }
+          
+          return tasks;
+        });
+  }
+
   Future<List<TaskModel>> loadTasks({String? filterByAssigneeId}) async {
     try {
       var query = _supabase.from('tasks').select('''
@@ -114,32 +132,18 @@ class TaskService {
     try {
       final json = task.toJson();
       
-      print('🔴 DATA TO INSERT:');
-      print('  type_id: ${json['type_id']}');
-      print('  assignee_id: ${json['assignee_id']}');
-      print('  from_room_id: ${json['from_room_id']}');
-      print('  to_room_id: ${json['to_room_id']}');
-      print('  created_by: ${json['created_by']}');
-      print('  asset_id: ${json['asset_id']} (${json['asset_id'].runtimeType})');
-      print('  stock_id: ${json['stock_id']} (${json['stock_id'].runtimeType})');
-      
       if (task.id.isEmpty || task.id == 'new') {
-        // Insert new task - generate UUID valid
-        json['id'] = _uuid.v4();  // ← PERBAIKAN: UUID valid
+        json['id'] = _uuid.v4();
         json['created_at'] = DateTime.now().toIso8601String();
         await _supabase.from('tasks').insert(json);
-        print('✅ TASK INSERTED SUCCESSFULLY');
       } else {
-        // Update existing task
         json['updated_at'] = DateTime.now().toIso8601String();
         await _supabase
             .from('tasks')
             .update(json)
             .eq('id', task.id);
-        print('✅ TASK UPDATED SUCCESSFULLY');
       }
     } catch (e) {
-      print('❌ ERROR SAVING TASK: $e');
       rethrow;
     }
   }

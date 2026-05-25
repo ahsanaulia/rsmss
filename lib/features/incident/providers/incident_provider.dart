@@ -76,6 +76,24 @@ class IncidentNotifier extends StateNotifier<IncidentState> {
     state = state.copyWith(selectedRoomId: id, selectedRoomName: name);
   }
 
+  // 🔴 TAMBAHKAN: Method untuk update lokasi GPS
+  void updateGpsLocation({
+    required double lat,
+    required double long,
+    required String address,
+  }) {
+    state = state.copyWith(
+      lat: lat,
+      long: long,
+      address: address,
+    );
+  }
+
+  // 🔴 TAMBAHKAN: Method untuk clear lokasi GPS
+  void clearGpsLocation() {
+    state = state.copyWith(lat: null, long: null, address: null);
+  }
+
   void addPhoto(File photo) {
     final newPhotos = List<File>.from(state.photos);
     newPhotos.add(photo);
@@ -102,22 +120,12 @@ class IncidentNotifier extends StateNotifier<IncidentState> {
   }
 
   Future<bool> saveIncident() async {
-    print('=== SAVE INCIDENT START ===');
-    print('isValid: ${state.isValid}');
-    print('title: ${state.title}');
-    print('description: ${state.description}');
-    print('selectedCategoryId: ${state.selectedCategoryId}');
-    print('selectedCategoryCode: ${state.selectedCategoryCode}');
-    print('severity: ${state.severity}');
-    print('occurredAt: ${state.occurredAt}');
-
     if (!state.isValid) {
       state = state.copyWith(errorMessage: 'Lengkapi semua data wajib');
       return false;
     }
 
     final userId = _authService.currentUserId;
-    print('userId: $userId');
 
     if (userId == null) {
       state = state.copyWith(
@@ -140,9 +148,11 @@ class IncidentNotifier extends StateNotifier<IncidentState> {
         locationText: state.locationText.isEmpty ? null : state.locationText,
         severity: state.severity,
         photos: state.photos.isEmpty ? null : state.photos,
+        // 🔴 TAMBAHKAN: Kirim lokasi GPS
+        lat: state.lat,
+        long: state.long,
+        address: state.address,
       );
-
-      print('SAVE SUCCESS: $result');
 
       state = state.copyWith(
         isSaving: false,
@@ -153,8 +163,6 @@ class IncidentNotifier extends StateNotifier<IncidentState> {
 
       return true;
     } catch (e, stack) {
-      print('SAVE ERROR: $e');
-      print('STACK: $stack');
       state = state.copyWith(
         isSaving: false,
         errorMessage: 'Gagal menyimpan insiden: $e',

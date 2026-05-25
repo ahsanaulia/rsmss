@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import '../providers/incident_provider.dart';
 import '../providers/incident_state.dart';
 import '../../../../core/di/service_locator.dart';
@@ -19,6 +21,12 @@ class IncidentReportBottomSheet extends ConsumerStatefulWidget {
 class _IncidentReportBottomSheetState
     extends ConsumerState<IncidentReportBottomSheet> {
   final ImagePicker _picker = ImagePicker();
+  
+  // GPS State
+  bool _isGettingLocation = false;
+  double? _currentLat;
+  double? _currentLong;
+  String? _currentAddress;
 
   @override
   void initState() {
@@ -27,6 +35,70 @@ class _IncidentReportBottomSheetState
       final notifier = ref.read(incidentStateProvider.notifier);
       notifier.updateOccurredAt(DateTime.now());
     });
+  }
+
+  Future<void> _getCurrentLocation() async {
+    setState(() => _isGettingLocation = true);
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          _showError("Izin lokasi diperlukan untuk mengambil lokasi");
+          return;
+        }
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 15),
+      );
+
+      String address = "";
+      try {
+        List<Placemark> placemarks = await placemarkFromCoordinates(
+          position.latitude,
+          position.longitude,
+        );
+        if (placemarks.isNotEmpty) {
+          final p = placemarks[0];
+          address = "${p.street != null ? '${p.street}, ' : ''}${p.subLocality != null ? '${p.subLocality}, ' : ''}${p.locality ?? ''}";
+        }
+      } catch (_) {
+        address = "Lat: ${position.latitude}, Lng: ${position.longitude}";
+      }
+
+      setState(() {
+        _currentLat = position.latitude;
+        _currentLong = position.longitude;
+        _currentAddress = address;
+      });
+
+      // Update ke notifier
+      final notifier = ref.read(incidentStateProvider.notifier);
+      notifier.updateGpsLocation(
+        lat: position.latitude,
+        long: position.longitude,
+        address: address,
+      );
+
+      _showSuccess("Lokasi berhasil diambil: $address");
+    } catch (e) {
+      _showError("Gagal mengambil lokasi: $e");
+    } finally {
+      if (mounted) setState(() => _isGettingLocation = false);
+    }
+  }
+
+  void _clearLocation() {
+    setState(() {
+      _currentLat = null;
+      _currentLong = null;
+      _currentAddress = null;
+    });
+    final notifier = ref.read(incidentStateProvider.notifier);
+    notifier.clearGpsLocation();
+    _showSuccess("Lokasi dibersihkan");
   }
 
   Future<void> _pickImage() async {
@@ -118,9 +190,9 @@ class _IncidentReportBottomSheetState
         top: 20,
         bottom: bottomPadding + 20,
       ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.95),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
@@ -133,10 +205,10 @@ class _IncidentReportBottomSheetState
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "Lapor Insiden",
+                  "Lapor",
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.bold,
-                    fontSize: 20,
+                    fontSize: 22,
                     color: const Color(0xFF01579B),
                   ),
                 ),
@@ -149,7 +221,6 @@ class _IncidentReportBottomSheetState
             ),
             const SizedBox(height: 20),
 
-            // 🔴 PERBAIKAN: Loading state yang lebih aman
             if (state.isLoading)
               const Center(child: CircularProgressIndicator())
             else if (state.categories.isEmpty)
@@ -159,7 +230,7 @@ class _IncidentReportBottomSheetState
                   children: [
                     CircularProgressIndicator(),
                     SizedBox(height: 16),
-                    Text("Memuat data kategori..."),
+                    Text("Memuat data..."),
                   ],
                 ),
               )
@@ -167,7 +238,7 @@ class _IncidentReportBottomSheetState
               // Title
               TextField(
                 onChanged: notifier.updateTitle,
-                decoration: _inputDecoration("Judul Insiden", Icons.title),
+                decoration: _inputDecoration("Judul Laporan", Icons.title),
                 style: GoogleFonts.poppins(fontSize: 14),
               ),
               const SizedBox(height: 16),
@@ -184,13 +255,17 @@ class _IncidentReportBottomSheetState
               _buildRoomDropdown(notifier, state),
               const SizedBox(height: 16),
 
-              // Location Text
+              // Location Text (Manual)
               TextField(
                 onChanged: notifier.updateLocationText,
                 decoration: _inputDecoration(
-                    "Lokasi (Opsional)", Icons.location_on_outlined),
+                    "Lokasi Deskripsi (Opsional)", Icons.location_on_outlined),
                 style: GoogleFonts.poppins(fontSize: 14),
               ),
+              const SizedBox(height: 16),
+
+              // 🔴 GPS LOCATION SECTION (Glassmorphism Cerah)
+              _buildGpsLocationSection(),
               const SizedBox(height: 16),
 
               // Date & Time
@@ -257,7 +332,7 @@ class _IncidentReportBottomSheetState
                           ),
                         )
                       : Text(
-                          "Laporkan Insiden",
+                          "Kirim Laporan",
                           style: GoogleFonts.poppins(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -270,6 +345,105 @@ class _IncidentReportBottomSheetState
             const SizedBox(height: 30),
           ],
         ),
+      ),
+    );
+  }
+
+  // 🔴 GPS LOCATION SECTION dengan Glassmorphism Cerah
+  Widget _buildGpsLocationSection() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Icon(Icons.gps_fixed, size: 20, color: const Color(0xFF01579B)),
+                const SizedBox(width: 8),
+                Text(
+                  "Lokasi GPS",
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                    color: const Color(0xFF01579B),
+                  ),
+                ),
+                const Spacer(),
+                if (_currentAddress != null)
+                  TextButton.icon(
+                    onPressed: _clearLocation,
+                    icon: const Icon(Icons.clear, size: 16),
+                    label: const Text("Hapus"),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.red,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (_currentAddress != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.green.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.check_circle, size: 18, color: Colors.green.shade700),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _currentAddress!,
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: Colors.green.shade800,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _isGettingLocation ? null : _getCurrentLocation,
+                icon: _isGettingLocation
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.gps_fixed, size: 18),
+                label: Text(
+                  _isGettingLocation ? "MENGAMBIL LOKASI..." : "AMBIL LOKASI SAAT INI",
+                  style: GoogleFonts.poppins(fontSize: 13),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF01579B).withValues(alpha: 0.1),
+                  foregroundColor: const Color(0xFF01579B),
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    side: BorderSide(color: const Color(0xFF01579B).withValues(alpha: 0.3)),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -383,7 +557,6 @@ class _IncidentReportBottomSheetState
       IncidentNotifier notifier, IncidentState state) {
     final List<Map<String, dynamic>> items = state.categories;
 
-    // 🔴 PERBAIKAN: Jika items kosong, jangan render dropdown
     if (items.isEmpty) {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
@@ -399,7 +572,6 @@ class _IncidentReportBottomSheetState
       );
     }
 
-    // 🔴 PERBAIKAN: Cari selected item dengan aman
     Map<String, dynamic>? selectedItem;
     if (state.selectedCategoryId != null && state.selectedCategoryId!.isNotEmpty) {
       try {
@@ -412,10 +584,8 @@ class _IncidentReportBottomSheetState
       }
     }
 
-    // 🔴 PERBAIKAN: Jika tidak ada selected item, pilih item pertama
     if (selectedItem == null && items.isNotEmpty) {
       selectedItem = items.first;
-      // Update state dengan item pertama
       WidgetsBinding.instance.addPostFrameCallback((_) {
         notifier.selectCategory(
           selectedItem!['id'].toString(),
@@ -475,7 +645,6 @@ class _IncidentReportBottomSheetState
   Widget _buildRoomDropdown(IncidentNotifier notifier, IncidentState state) {
     final List<Map<String, dynamic>> items = state.rooms;
 
-    // 🔴 PERBAIKAN: Cari selected item dengan aman
     Map<String, dynamic>? selectedItem;
     if (state.selectedRoomId != null && state.selectedRoomId!.isNotEmpty) {
       try {
@@ -539,7 +708,6 @@ class _IncidentReportBottomSheetState
       {'value': 'CRITICAL', 'label': 'Kritis', 'color': Colors.red},
     ];
 
-    // 🔴 PERBAIKAN: Pastikan value ada di items
     String currentValue = state.severity;
     if (!severityItems.any((e) => e['value'] == currentValue)) {
       currentValue = 'MEDIUM';

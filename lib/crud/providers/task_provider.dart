@@ -16,6 +16,11 @@ class TaskNotifier extends StateNotifier<TaskState> {
 
   TaskNotifier(this._service) : super(TaskState());
 
+  // 🔴 TAMBAHKAN METHOD INI UNTUK REALTIME
+  Stream<List<TaskModel>> streamTasks({String? filterByAssigneeId}) {
+    return _service.streamTasks(filterByAssigneeId: filterByAssigneeId);
+  }
+
   Future<void> loadData({String? filterByAssigneeId}) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 

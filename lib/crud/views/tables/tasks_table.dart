@@ -33,11 +33,8 @@ class _TasksTableState extends ConsumerState<TasksTable> {
       });
     });
     _authService = getIt<AuthService>();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+    
+    // Load reference data (taskTypes, employees, rooms, etc) once
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final notifier = ref.read(taskProvider.notifier);
       notifier.loadData(filterByAssigneeId: widget.filterByAssigneeId);
@@ -53,7 +50,6 @@ class _TasksTableState extends ConsumerState<TasksTable> {
   String? get _currentUserId {
     final userId = _authService.currentUserId;
     if (userId == null || userId.isEmpty) {
-      print('🔴 WARNING: currentUserId is null or empty');
       return null;
     }
     return userId;
@@ -63,7 +59,11 @@ class _TasksTableState extends ConsumerState<TasksTable> {
   Widget build(BuildContext context) {
     final state = ref.watch(taskProvider);
     final notifier = ref.read(taskProvider.notifier);
+    
+    // 🔴 REALTIME STREAM UNTUK TASKS
+    final tasksStream = notifier.streamTasks(filterByAssigneeId: widget.filterByAssigneeId);
 
+    // Handle error messages (dari operasi CRUD)
     if (state.errorMessage != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -82,20 +82,9 @@ class _TasksTableState extends ConsumerState<TasksTable> {
       });
     }
 
-    final filteredTasks = state.tasks.where((task) {
-      if (_searchQuery.isNotEmpty) {
-        if (!task.objectName.toLowerCase().contains(_searchQuery) &&
-            !(task.assigneeName?.toLowerCase().contains(_searchQuery) ?? false)) {
-          return false;
-        }
-      }
-      if (_filterStatus != 'all' && task.status != _filterStatus) return false;
-      if (_filterPriority != 'all' && task.priority != _filterPriority) return false;
-      return true;
-    }).toList();
-
     return Column(
       children: [
+        // Toolbar (Filter & Search)
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -178,32 +167,112 @@ class _TasksTableState extends ConsumerState<TasksTable> {
           ),
         ),
 
-        if (state.isLoading)
-          const Expanded(
-            child: Center(child: CircularProgressIndicator(color: Color(0xFF01579B))),
+        // 🔴 REALTIME TASK LIST
+        Expanded(
+          child: StreamBuilder<List<TaskModel>>(
+            stream: tasksStream,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(color: Color(0xFF01579B)),
+                );
+              }
+              
+              if (snapshot.hasError) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                      const SizedBox(height: 8),
+                      Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.red)),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {});
+                        },
+                        child: const Text('Coba Lagi'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+              
+              final allTasks = snapshot.data ?? [];
+              
+              // Apply filters
+              final filteredTasks = allTasks.where((task) {
+                if (_searchQuery.isNotEmpty) {
+                  if (!task.objectName.toLowerCase().contains(_searchQuery) &&
+                      !(task.assigneeName?.toLowerCase().contains(_searchQuery) ?? false)) {
+                    return false;
+                  }
+                }
+                if (_filterStatus != 'all' && task.status != _filterStatus) return false;
+                if (_filterPriority != 'all' && task.priority != _filterPriority) return false;
+                return true;
+              }).toList();
+              
+              if (filteredTasks.isEmpty) {
+                return const Center(
+                  child: Text('Belum ada tugas', style: TextStyle(color: Colors.grey)),
+                );
+              }
+              
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: filteredTasks.length,
+                itemBuilder: (context, index) {
+                  final task = filteredTasks[index];
+                  return _buildTaskRow(task, notifier, state);
+                },
+              );
+            },
           ),
-
-        if (!state.isLoading && filteredTasks.isEmpty)
-          const Expanded(
-            child: Center(child: Text('Belum ada tugas', style: TextStyle(color: Colors.grey))),
-          ),
-
-        if (!state.isLoading && filteredTasks.isNotEmpty)
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: filteredTasks.length,
-              itemBuilder: (context, index) {
-                final task = filteredTasks[index];
-                return _buildTaskRow(task, notifier);
-              },
-            ),
-          ),
+        ),
       ],
     );
   }
 
-  Widget _buildTaskRow(TaskModel task, TaskNotifier notifier) {
+  Widget _buildTaskRow(TaskModel task, TaskNotifier notifier, TaskState state) {
+    // Cari nama assignee dari state.employees
+    String assigneeName = '-';
+    for (var emp in state.employees) {
+      if (emp['id'].toString() == task.assigneeId) {
+        assigneeName = emp['full_name'] ?? '-';
+        break;
+      }
+    }
+    
+    // Cari nama task type
+    String typeName = '-';
+    for (var type in state.taskTypes) {
+      if (type['id'].toString() == task.typeId) {
+        typeName = type['task_type_name'] ?? '-';
+        break;
+      }
+    }
+    
+    // Warna prioritas
+    Color priorityColor = task.priority == 'emergency' 
+        ? Colors.red 
+        : (task.priority == 'urgent' ? Colors.orange : Colors.blue);
+    
+    // Label prioritas
+    String priorityLabel = task.priority == 'emergency' 
+        ? 'Emergency' 
+        : (task.priority == 'urgent' ? 'Urgent' : 'Normal');
+    
+    // Warna status
+    Color statusColor = task.status == 'done' 
+        ? Colors.green 
+        : (task.status == 'accepted' ? Colors.blue : Colors.orange);
+    
+    // Label status
+    String statusLabel = task.status == 'done' 
+        ? 'Selesai' 
+        : (task.status == 'accepted' ? 'Diterima' : 'Menunggu');
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
@@ -219,12 +288,12 @@ class _TasksTableState extends ConsumerState<TasksTable> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: task.priorityColor.withValues(alpha: 0.1),
+                color: priorityColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
                 task.priority == 'emergency' ? Icons.warning_amber : Icons.assignment,
-                color: task.priorityColor,
+                color: priorityColor,
                 size: 20,
               ),
             ),
@@ -242,10 +311,10 @@ class _TasksTableState extends ConsumerState<TasksTable> {
                     spacing: 8,
                     runSpacing: 4,
                     children: [
-                      _buildChip('Pegawai: ${task.assigneeName ?? '-'}', Colors.blue),
-                      _buildChip(task.priorityLabel, task.priorityColor),
-                      _buildChip(task.statusLabel, task.statusColor),
-                      if (task.typeName != null) _buildChip(task.typeName!, Colors.teal),
+                      _buildChip('Pegawai: $assigneeName', Colors.blue),
+                      _buildChip(priorityLabel, priorityColor),
+                      _buildChip(statusLabel, statusColor),
+                      if (typeName != '-') _buildChip(typeName, Colors.teal),
                     ],
                   ),
                   Text(
@@ -263,7 +332,7 @@ class _TasksTableState extends ConsumerState<TasksTable> {
                   tooltip: 'Hapus',
                 ),
                 IconButton(
-                  onPressed: () => _showEditDialog(task, notifier),
+                  onPressed: () => _showEditDialog(task, notifier, state),
                   icon: const Icon(Icons.edit_outlined, size: 20, color: Color(0xFF01579B)),
                   tooltip: 'Edit',
                 ),
@@ -700,17 +769,11 @@ class _TasksTableState extends ConsumerState<TasksTable> {
     );
   }
 
-  void _showEditDialog(TaskModel task, TaskNotifier notifier) {
+  void _showEditDialog(TaskModel task, TaskNotifier notifier, TaskState state) {
     final _formKey = GlobalKey<FormState>();
     final _objectNameController = TextEditingController(text: task.objectName);
     final _slaMinutesController = TextEditingController(text: task.slaMinutes?.toString() ?? '');
     final _estimatedDurationController = TextEditingController(text: task.estimatedDurationMinutes?.toString() ?? '');
-    final _taskOutcomeController = TextEditingController(text: task.taskOutcome ?? '');
-    final _completionNotesController = TextEditingController(text: task.completionNotes ?? '');
-    final _employeeFeedbackController = TextEditingController(text: task.employeeFeedback ?? '');
-    final _employeeRatingController = TextEditingController(text: task.employeeRating?.toString() ?? '');
-    
-    final state = ref.read(taskProvider);
     
     String? _selectedTypeId = task.typeId;
     String? _selectedAssigneeId = task.assigneeId;
@@ -1037,50 +1100,6 @@ class _TasksTableState extends ConsumerState<TasksTable> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
-                      
-                      TextFormField(
-                        controller: _taskOutcomeController,
-                        maxLines: 2,
-                        decoration: const InputDecoration(
-                          labelText: 'Hasil Tugas',
-                          border: OutlineInputBorder(),
-                          isDense: true,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      
-                      TextFormField(
-                        controller: _completionNotesController,
-                        maxLines: 2,
-                        decoration: const InputDecoration(
-                          labelText: 'Catatan Penyelesaian',
-                          border: OutlineInputBorder(),
-                          isDense: true,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      
-                      TextFormField(
-                        controller: _employeeFeedbackController,
-                        maxLines: 2,
-                        decoration: const InputDecoration(
-                          labelText: 'Feedback Pegawai',
-                          border: OutlineInputBorder(),
-                          isDense: true,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      
-                      TextFormField(
-                        controller: _employeeRatingController,
-                        keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Rating Pegawai (1-5)',
-                          border: OutlineInputBorder(),
-                          isDense: true,
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -1121,7 +1140,8 @@ class _TasksTableState extends ConsumerState<TasksTable> {
                     
                     Navigator.pop(dialogContext);
                     
-                    final updatedTask = task.copyWith(
+                    final updatedTask = TaskModel(
+                      id: task.id,
                       typeId: _selectedTypeId!,
                       assigneeId: _selectedAssigneeId!,
                       objectName: _objectNameController.text.trim(),
@@ -1131,15 +1151,13 @@ class _TasksTableState extends ConsumerState<TasksTable> {
                       status: _selectedStatus,
                       assetId: (_selectedAssetId != null && _selectedAssetId!.isNotEmpty) ? _selectedAssetId : null,
                       stockId: (_selectedStockId != null && _selectedStockId!.isNotEmpty) ? _selectedStockId : null,
+                      createdAt: task.createdAt,
+                      createdById: task.createdById,
                       slaMinutes: int.tryParse(_slaMinutesController.text),
                       estimatedDurationMinutes: int.tryParse(_estimatedDurationController.text),
                       requiresConfirmation: _requiresConfirmation,
                       requiresPhotoProof: _requiresPhotoProof,
                       requiresQrValidation: _requiresQrValidation,
-                      taskOutcome: _taskOutcomeController.text.isEmpty ? null : _taskOutcomeController.text,
-                      completionNotes: _completionNotesController.text.isEmpty ? null : _completionNotesController.text,
-                      employeeFeedback: _employeeFeedbackController.text.isEmpty ? null : _employeeFeedbackController.text,
-                      employeeRating: int.tryParse(_employeeRatingController.text),
                     );
                     
                     await notifier.saveTask(updatedTask);
@@ -1147,10 +1165,6 @@ class _TasksTableState extends ConsumerState<TasksTable> {
                     _objectNameController.dispose();
                     _slaMinutesController.dispose();
                     _estimatedDurationController.dispose();
-                    _taskOutcomeController.dispose();
-                    _completionNotesController.dispose();
-                    _employeeFeedbackController.dispose();
-                    _employeeRatingController.dispose();
                   }
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),

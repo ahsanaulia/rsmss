@@ -59,61 +59,61 @@ class IncidentService {
 
   /// Simpan insiden
   Future<Map<String, String>> saveIncident({
-  required String categoryId,
-  required String categoryCode,
-  required String reportedBy,
-  required String title,
-  required String description,
-  required DateTime occurredAt,
-  String? roomId,
-  String? locationText,
-  String? severity,
-  List<File>? photos,
-}) async {
-  print('=== INCIDENT SERVICE SAVE ===');
-  print('categoryId: $categoryId');
-  print('reportedBy: $reportedBy');
-  print('title: $title');
-  
-  final incidentId = const Uuid().v4();
-  print('incidentId: $incidentId');
+    required String categoryId,
+    required String categoryCode,
+    required String reportedBy,
+    required String title,
+    required String description,
+    required DateTime occurredAt,
+    String? roomId,
+    String? locationText,
+    String? severity,
+    List<File>? photos,
+    // 🔴 TAMBAHKAN: GPS Location parameters
+    double? lat,
+    double? long,
+    String? address,
+  }) async {
+    final incidentId = const Uuid().v4();
 
-  // Upload foto jika ada
-  List<String> photoUrls = [];
-  if (photos != null && photos.isNotEmpty) {
-    print('Uploading ${photos.length} photos...');
-    photoUrls = await uploadIncidentPhotos(images: photos, incidentId: incidentId);
-    print('Photo URLs: $photoUrls');
+    // Upload foto jika ada
+    List<String> photoUrls = [];
+    if (photos != null && photos.isNotEmpty) {
+      photoUrls = await uploadIncidentPhotos(images: photos, incidentId: incidentId);
+    }
+
+    // 🔴 Siapkan data insert
+    final Map<String, dynamic> insertData = {
+      'id': incidentId,
+      'category_id': categoryId,
+      'reported_by': reportedBy,
+      'room_id': roomId,
+      'title': title,
+      'description': description,
+      'occurred_at': occurredAt.toIso8601String(),
+      'location_text': locationText,
+      'status': 'reported',
+      'severity': severity ?? 'MEDIUM',
+      'photo_urls': photoUrls.isEmpty ? null : photoUrls,
+      'created_at': DateTime.now().toIso8601String(),
+      // 🔴 TAMBAHKAN: GPS fields
+      'lat': lat,
+      'long': long,
+      'address': address,
+    };
+
+    // Insert incident
+    await _supabase.from('incidents').insert(insertData);
+
+    // Tambah poin scoring
+    final points = _getPointsByCategory(categoryCode);
+    await _addScoringPoint(reportedBy, incidentId, points, categoryCode);
+
+    return {
+      'incidentId': incidentId,
+      'points': points.toString(),
+    };
   }
-
-  // Insert incident
-  print('Inserting incident to Supabase...');
-  await _supabase.from('incidents').insert({
-    'id': incidentId,
-    'category_id': categoryId,
-    'reported_by': reportedBy,
-    'room_id': roomId,
-    'title': title,
-    'description': description,
-    'occurred_at': occurredAt.toIso8601String(),
-    'location_text': locationText,
-    'status': 'reported',
-    'severity': severity ?? 'MEDIUM',
-    'photo_urls': photoUrls.isEmpty ? null : photoUrls,
-    'created_at': DateTime.now().toIso8601String(),
-  });
-  print('Insert success!');
-
-  // Tambah poin scoring
-  final points = _getPointsByCategory(categoryCode);
-  print('Adding $points points for category $categoryCode');
-  await _addScoringPoint(reportedBy, incidentId, points, categoryCode);
-
-  return {
-    'incidentId': incidentId,
-    'points': points.toString(),
-  };
-}
 
   /// Tambahkan poin ke employee_scoring
   Future<void> _addScoringPoint(String profileId, String incidentId, int points, String categoryCode) async {
@@ -166,6 +166,9 @@ class IncidentService {
           severity,
           photo_urls,
           created_at,
+          lat,
+          long,
+          address,
           category_id,
           ref_incident_categories!category_id (
             id,

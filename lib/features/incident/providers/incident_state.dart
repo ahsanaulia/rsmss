@@ -21,8 +21,13 @@ class IncidentState {
   final String? selectedRoomName;
   final String severity;
   final String locationText;
-  final DateTime occurredAt;  // ← DateTime, bukan List
+  final DateTime occurredAt;
   final List<File> photos;
+
+  // 🔴 TAMBAHKAN: GPS Location fields
+  final double? lat;
+  final double? long;
+  final String? address;
 
   IncidentState({
     this.isLoading = false,
@@ -41,8 +46,11 @@ class IncidentState {
     this.selectedRoomName,
     this.severity = 'MEDIUM',
     this.locationText = '',
-      DateTime? occurredAt,
-      this.photos = const [],
+    DateTime? occurredAt,
+    this.photos = const [],
+    this.lat,
+    this.long,
+    this.address,
   }) : occurredAt = occurredAt ?? DateTime.now();
 
   bool get isValid {
@@ -50,6 +58,9 @@ class IncidentState {
         description.trim().isNotEmpty &&
         selectedCategoryId != null;
   }
+
+  /// Apakah lokasi GPS sudah diisi?
+  bool get hasGpsLocation => lat != null && long != null;
 
   IncidentState copyWith({
     bool? isLoading,
@@ -70,6 +81,9 @@ class IncidentState {
     String? locationText,
     DateTime? occurredAt,
     List<File>? photos,
+    double? lat,
+    double? long,
+    String? address,
   }) {
     return IncidentState(
       isLoading: isLoading ?? this.isLoading,
@@ -90,6 +104,9 @@ class IncidentState {
       locationText: locationText ?? this.locationText,
       occurredAt: occurredAt ?? this.occurredAt,
       photos: photos ?? this.photos,
+      lat: lat ?? this.lat,
+      long: long ?? this.long,
+      address: address ?? this.address,
     );
   }
 }

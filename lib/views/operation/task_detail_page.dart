@@ -148,6 +148,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
     if (media != null) setState(() => _selectedFile = File(media.path));
   }
 
+  // 🔴 METHOD INI TETAP ADA (tidak dihapus, biar tidak error)
   Future<void> _submitReport() async {
     if (_selectedFile == null || _selectedCategoryId == null || _reportController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -376,12 +377,12 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                           _buildGlassCard(
                             child: _buildCompletionSection(),
                           ),
-                          const SizedBox(height: 20),
                           
-                          // Laporan Kendala
-                          _buildGlassCard(
-                            child: _buildReportSection(),
-                          ),
+                          // 🔴 LAPORAN KENDALA DISEMBUNYIKAN (tapi method tetap ada)
+                          // const SizedBox(height: 20),
+                          // _buildGlassCard(
+                          //   child: _buildReportSection(),
+                          // ),
                         ],
                         
                         const SizedBox(height: 40),
@@ -575,6 +576,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
     );
   }
 
+  // 🔴 METHOD _BUILDREPORTSECTION TETAP ADA (tidak dipanggil di UI)
   Widget _buildReportSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
