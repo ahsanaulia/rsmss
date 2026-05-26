@@ -43,7 +43,10 @@ import '../../crud/ref_incident_categories/views/ref_incident_category_list.dart
 import '../../crud/ref_people_categories/views/ref_people_category_list.dart';
 import '../../crud/ref_positions/views/ref_position_list.dart';
 import '../../crud/ref_reports_category/views/ref_reports_category_list.dart';
+// import '../../crud/admin_accidents/views/accident_list.dart';
 import '../../crud/ref_shifts/views/ref_shift_list.dart';
+// import '../../crud/admin_incidents/views/incident_list_admin.dart';
+
 
 class AdminDashboard extends ConsumerStatefulWidget {
   final VoidCallback onLogout;
@@ -152,6 +155,8 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
         MenuItem("Penjadwalan", Icons.calendar_today, const RosterPage()),
         MenuItem("Pengumuman", Icons.assignment, AnnouncementsTable()),
         MenuItem("Penugasan", Icons.assignment, TasksTable()),
+        // MenuItem("Penanganan Atas Laporan ", Icons.assignment, IncidentListAdmin()),
+        // MenuItem("Daftar Penanganan Laporan ", Icons.assignment, AccidentList()),
       ],
     ),
     MenuGroup(
