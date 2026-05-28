@@ -39,14 +39,14 @@ import '../../crud/employee_qualifications/views/employee_qualification_list.dar
 import '../../crud/scoring_categories/views/scoring_category_list.dart';
 import '../../crud/leave_types/views/leave_type_list.dart';
 import '../../crud/ref_incident_categories/views/ref_incident_category_list.dart';
-
+import '../../crud/employee_units/views/employee_unit_list.dart';
 import '../../crud/ref_people_categories/views/ref_people_category_list.dart';
 import '../../crud/ref_positions/views/ref_position_list.dart';
 import '../../crud/ref_reports_category/views/ref_reports_category_list.dart';
 // import '../../crud/admin_accidents/views/accident_list.dart';
 import '../../crud/ref_shifts/views/ref_shift_list.dart';
 // import '../../crud/admin_incidents/views/incident_list_admin.dart';
-
+import '../../crud/todos/views/todo_list.dart';
 
 class AdminDashboard extends ConsumerStatefulWidget {
   final VoidCallback onLogout;
@@ -155,6 +155,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
         MenuItem("Penjadwalan", Icons.calendar_today, const RosterPage()),
         MenuItem("Pengumuman", Icons.assignment, AnnouncementsTable()),
         MenuItem("Penugasan", Icons.assignment, TasksTable()),
+        MenuItem("To Do", Icons.checklist, const TodoListPage()),
         // MenuItem("Penanganan Atas Laporan ", Icons.assignment, IncidentListAdmin()),
         // MenuItem("Daftar Penanganan Laporan ", Icons.assignment, AccidentList()),
       ],
@@ -257,6 +258,11 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
           title: "REFERENSI KEPEGAWAIAN DAN UMUM",
           icon: Icons.location_on,
           menus: [
+            MenuItem(
+              "Unit / Departemen",
+              Icons.business_center,
+              const EmployeeUnitListPage(),
+            ),
             MenuItem(
               "Daftar Kualifikasi Pegawai",
               Icons.badge,

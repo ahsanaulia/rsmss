@@ -46,6 +46,12 @@ import '../../features/stock_request/presentations/stock_request_fulfillment_pag
 import '../../crud/buildings/views/building_mobile.dart';
 import '../../crud/stock_bins/views/stock_bin_mobile.dart';
 
+// ========== TAMBAHKAN IMPORT UNTUK TODO ==========
+// import '../../crud/todos/views/todo_mobile_card.dart';
+import '../../crud/todos/services/todo_service.dart';
+import '../../crud/todos/models/todo_model.dart';
+import '../../crud/todos/views/todo_mobile_stream.dart';
+
 class OperationDashboard extends ConsumerStatefulWidget {
   final String userName;
   final VoidCallback onLogout;
@@ -63,8 +69,8 @@ class OperationDashboard extends ConsumerStatefulWidget {
 class _OperationDashboardState extends ConsumerState<OperationDashboard> {
   late final AuthService _authService;
 
-  Set<String> _previousAnnouncementIds = {};  // ← TAMBAHKAN
-  final SoundNotificationService _soundService = SoundNotificationService();  
+  Set<String> _previousAnnouncementIds = {};
+  final SoundNotificationService _soundService = SoundNotificationService();
 
   int _currentNavbarIndex = 0;
 
@@ -82,6 +88,10 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
   String _fatigueRiskLevel = 'normal';
   String _pointsPeriod = '';
 
+  // ========== TAMBAHKAN STATE UNTUK TODO ==========
+  List<TodoModel> _todayTodos = [];
+  bool _isLoadingTodos = true;
+
   @override
   void initState() {
     super.initState();
@@ -89,6 +99,7 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
     _loadStaticData();
     _loadTaskStats();
     _loadEmployeeStats();
+    _loadTodos(); // Panggil load To Do
   }
 
   /// AMBIL DATA STATIS (Hospital & Profile)
@@ -187,6 +198,30 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
     }
   }
 
+  // ========== TAMBAHKAN METHOD UNTUK LOAD TO DO ==========
+  Future<void> _loadTodos() async {
+    final userId = _authService.currentUserId;
+    if (userId == null) return;
+
+    setState(() => _isLoadingTodos = true);
+    try {
+      final service = TodoService();
+      final todos = await service.getTodosForEmployee(
+        profileId: userId,
+        date: DateTime.now(),
+      );
+      if (mounted) {
+        setState(() {
+          _todayTodos = todos;
+          _isLoadingTodos = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading todos: $e');
+      if (mounted) setState(() => _isLoadingTodos = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Cek approval status
@@ -255,6 +290,7 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
         await _loadStaticData();
         await _loadTaskStats();
         await _loadEmployeeStats();
+        await _loadTodos(); // refresh To Do juga
       },
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -615,10 +651,20 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
           // 6. ROSTER REMINDER CARD
           // =====================================================
           _buildRosterReminderCard(),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
 
           // =====================================================
-          // 7. KINERJA BULAN INI (Employee Stats Card)
+          // 7. TO DO SECTION (TAMBAHAN)
+          // =====================================================
+          TodoMobileStreamView(
+            profileId: _authService.currentUserId!,
+            date: DateTime.now(),
+          ),
+          const SizedBox(height: 16),
+          // const SizedBox(height: 16),
+
+          // =====================================================
+          // 8. KINERJA BULAN INI (Employee Stats Card)
           // =====================================================
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -790,8 +836,8 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                                             const SizedBox(width: 8),
                                             Text(
                                               isPresent
-                                                  ? "ON DUTY"
-                                                  : "OFF DUTY",
+                                                  ? "BERTUGAS"
+                                                  : "TIDAK BERTUGAS",
                                               style: GoogleFonts.poppins(
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.w700,
@@ -903,7 +949,7 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
           padding: const EdgeInsets.symmetric(horizontal: 25),
           crossAxisSpacing: 15,
           mainAxisSpacing: 15,
-          childAspectRatio: 0.9, // ← Kotak lebih tinggi untuk teks 2 baris
+          childAspectRatio: 0.9,
           children: items,
         ),
       ],
@@ -949,88 +995,85 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
   }
 
   Widget _buildControlRoomSection() {
-  final userId = _authService.currentUserId;
-  if (userId == null || _profileData == null) return const SizedBox();
+    final userId = _authService.currentUserId;
+    if (userId == null || _profileData == null) return const SizedBox();
 
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Padding(
-        padding: const EdgeInsets.fromLTRB(30, 15, 25, 8),
-        child: Text(
-          "LATEST ANNOUNCEMENTS",
-          style: GoogleFonts.poppins(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: Colors.redAccent,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(30, 15, 25, 8),
+          child: Text(
+            "LATEST ANNOUNCEMENTS",
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: Colors.redAccent,
+            ),
           ),
         ),
-      ),
-      
-      ConstrainedBox(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.2,
-        ),
-        child: StreamBuilder<List<Map<String, dynamic>>>(
-          stream: AnnouncementService().getFilteredAnnouncements(
-            userId,
-            _profileData?['position_id'],
+        ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.2,
           ),
-          builder: (context, snapshot) {
-            if (snapshot.hasError) return const SizedBox();
+          child: StreamBuilder<List<Map<String, dynamic>>>(
+            stream: AnnouncementService().getFilteredAnnouncements(
+              userId,
+              _profileData?['position_id'],
+            ),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) return const SizedBox();
 
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return _buildAnnouncementBox(
-                title: "INFO",
-                content: "Belum ada pesan baru dari pusat kontrol.",
-                priority: "normal",
-              );
-            }
-
-            final announcements = snapshot.data!;
-
-            // ==========================================================
-            // 🔴 TAMBAHKAN KODE INI UNTUK DETEKSI ANNOUNCEMENT BARU
-            // ==========================================================
-            final currentIds = announcements.map((a) => a['id'].toString()).toSet();
-            
-            // Cari announcement baru (ada di current tapi tidak di previous)
-            final newAnnouncements = currentIds.difference(_previousAnnouncementIds);
-            
-            // Mainkan suara untuk setiap announcement baru
-            for (final newId in newAnnouncements) {
-              final newAnn = announcements.firstWhere((a) => a['id'].toString() == newId);
-              // Hanya mainkan suara untuk priority urgent/emergency
-              final priority = newAnn['priority'] ?? 'normal';
-              if (priority == 'urgent' || priority == 'emergency') {
-                _soundService.playNotificationSound(newId);
-              }
-            }
-            
-            // Update tracking
-            _previousAnnouncementIds = currentIds;
-            // ==========================================================
-
-            return ListView.separated(
-              padding: EdgeInsets.zero,
-              itemCount: announcements.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final ann = announcements[index];
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
                 return _buildAnnouncementBox(
-                  title: ann['title'] ?? "INFO",
-                  content: ann['content'] ?? "",
-                  priority: ann['priority'] ?? "normal",
-                  time: _formatTime(ann['created_at']),
+                  title: "INFO",
+                  content: "Belum ada pesan baru dari pusat kontrol.",
+                  priority: "normal",
                 );
-              },
-            );
-          },
+              }
+
+              final announcements = snapshot.data!;
+
+              final currentIds = announcements
+                  .map((a) => a['id'].toString())
+                  .toSet();
+              final newAnnouncements = currentIds.difference(
+                _previousAnnouncementIds,
+              );
+
+              for (final newId in newAnnouncements) {
+                final newAnn = announcements.firstWhere(
+                  (a) => a['id'].toString() == newId,
+                );
+                final priority = newAnn['priority'] ?? 'normal';
+                if (priority == 'urgent' || priority == 'emergency') {
+                  _soundService.playNotificationSound(newId);
+                }
+              }
+
+              _previousAnnouncementIds = currentIds;
+
+              return ListView.separated(
+                padding: EdgeInsets.zero,
+                itemCount: announcements.length,
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final ann = announcements[index];
+                  return _buildAnnouncementBox(
+                    title: ann['title'] ?? "INFO",
+                    content: ann['content'] ?? "",
+                    priority: ann['priority'] ?? "normal",
+                    time: _formatTime(ann['created_at']),
+                  );
+                },
+              );
+            },
+          ),
         ),
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
 
   Widget _buildAnnouncementBox({
     required String title,

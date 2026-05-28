@@ -67,6 +67,9 @@ class TrackingService {
         position.longitude,
       );
 
+      // Gunakan address untuk sesuatu, misalnya:
+      print('Address: $address');
+
       final deviceInfo = await _getDeviceInfo();
 
       await _supabase.from('employee_location_tracking').insert({
@@ -116,7 +119,8 @@ class TrackingService {
       List<Placemark> placemarks = await placemarkFromCoordinates(lat, lng);
       if (placemarks.isNotEmpty) {
         final p = placemarks[0];
-        return "${p.street != null ? '${p.street}, ' : ''}${p.subLocality != null ? '${p.subLocality}, ' : ''}${p.locality ?? ''}".trim();
+        return "${p.street != null ? '${p.street}, ' : ''}${p.subLocality != null ? '${p.subLocality}, ' : ''}${p.locality ?? ''}"
+            .trim();
       }
       return null;
     } catch (e) {

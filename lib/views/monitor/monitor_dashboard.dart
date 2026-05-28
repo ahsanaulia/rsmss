@@ -5,7 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:ui';
 import 'people_watch_list.dart';
 import 'asset_overview_screen.dart';
-import 'asset_watch_list.dart';
+// import 'asset_watch_list.dart';
 import 'general_people_map.dart';
 import 'general_asset_map.dart';
 import 'asset_intelligence_screen.dart';
@@ -14,6 +14,14 @@ import 'stock_overview_screen.dart';
 import 'stocks_intelligence_screen.dart';
 import 'stock_report_screen.dart';
 import '../../models/hospital_profile_model.dart';
+
+// 🔥 IMPORT SUB-MENU PROFILES INSIGHTS
+import '../../../insights/profiles/views/submenu1_ringkasan.dart';
+import '../../../insights/profiles/views/submenu2_wellbeing.dart';
+import '../../../insights/profiles/views/submenu3_lokasi_kehadiran.dart';
+import '../../../insights/profiles/views/submenu4_sertifikasi_penilaian.dart';
+import '../../../insights/profiles/views/submenu5_insight_pegawai.dart';
+import '../../../insights/assets/views/asset_utilization_screen.dart';
 
 class MonitorDashboard extends StatefulWidget {
   final String userName;
@@ -185,15 +193,28 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // =========================
+                      // PEOPLE INSIGHTS (BARU)
+                      // =========================
+                      _sectionTitle("PEOPLE INSIGHTS"),
+                      _menu("Ringkasan Pegawai", Icons.people_alt),
+                      _menu("Wellbeing & Kinerja", Icons.favorite_outline),
+                      _menu("Lokasi & Kehadiran", Icons.location_on_outlined),
+                      _menu("Sertifikasi & Penilaian", Icons.verified_outlined),
+                      _menu("Insight Pegawai", Icons.people_outline_outlined),
+                      const SizedBox(height: 24),
+
+                      // =========================
                       // ASSET
                       // =========================
                       _sectionTitle("ASSET"),
-                      _menu("Asset Overview", Icons.assessment_outlined),
+                      _menu("Live Asset Tracking", Icons.inventory),
+                      _menu("Asset Utilization", Icons.speed),
+                      // _menu("Asset Overview", Icons.assessment_outlined),
                       _menu("Asset Intelligence", Icons.bar_chart),
                       _menu("Asset Report", Icons.description),
-                      _menu("Live Asset Tracking", Icons.inventory),
                       // _menu("Asset Watch List", Icons.watch_later),
                       const SizedBox(height: 24),
+
                       // =========================
                       // STOCK & INVENTORY
                       // =========================
@@ -202,58 +223,60 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
                       _menu("Stock Intelligence", Icons.watch_later),
                       _menu("Stock Report", Icons.description),
                       const SizedBox(height: 24),
+
                       // =========================
-                      // PEOPLE
+                      // PEOPLE (LIVE TRACKING)
                       // =========================
-                      _sectionTitle("PEOPLE"),
+                      _sectionTitle("PEOPLE TRACKING"),
                       _menu("Live People Tracking", Icons.language),
                       _menu("People Watch List", Icons.person),
                       const SizedBox(height: 24),
-                      
+
                       // =========================
                       // SYSTEM
                       // =========================
                       _sectionTitle("SYSTEM"),
                       _menu("Logout", Icons.logout, isLogout: true),
+
                       // =========================
-// FOOTER INFORMATION
-// =========================
-const SizedBox(height: 32),
-Center(
-  child: Column(
-    children: [
-      Text(
-        "Developed By : PLATFORM PELAYANAN TERBAIK",
-        textAlign: TextAlign.center,
-        style: GoogleFonts.plusJakartaSans(
-          fontSize: 8, // Ukuran disesuaikan untuk sidebar landscape
-          fontWeight: FontWeight.w500,
-          color: Colors.green.shade800.withOpacity(0.7),
-        ),
-      ),
-      const SizedBox(height: 2),
-      Text(
-        "Distributed By : PT. REKAMITRA",
-        textAlign: TextAlign.center,
-        style: GoogleFonts.plusJakartaSans(
-          fontSize: 8,
-          fontWeight: FontWeight.w500,
-          color: Colors.green.shade800.withOpacity(0.7),
-        ),
-      ),
-      const SizedBox(height: 6),
-      Text(
-        "2026 - Indonesia",
-        style: GoogleFonts.plusJakartaSans(
-          fontSize: 8,
-          fontWeight: FontWeight.bold,
-          color: Colors.green.shade900.withOpacity(0.8),
-        ),
-      ),
-      const SizedBox(height: 20),
-    ],
-  ),
-),
+                      // FOOTER INFORMATION
+                      // =========================
+                      const SizedBox(height: 32),
+                      Center(
+                        child: Column(
+                          children: [
+                            Text(
+                              "Developed By : PLATFORM PELAYANAN TERBAIK",
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 8,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.green.shade800.withOpacity(0.7),
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              "Distributed By : PT. REKAMITRA",
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 8,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.green.shade800.withOpacity(0.7),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              "2026 - Indonesia",
+                              style: GoogleFonts.plusJakartaSans(
+                                fontSize: 8,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green.shade900.withOpacity(0.8),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -320,7 +343,7 @@ Center(
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.plusJakartaSans(
-                  fontSize: 11, // 🔥 lebih kecil & padat
+                  fontSize: 11,
                   fontWeight: active ? FontWeight.w600 : FontWeight.w400,
                   color: isLogout
                       ? Colors.red
@@ -336,88 +359,63 @@ Center(
   }
 
   Widget _buildHospitalBrand() {
-  return Padding(
-    padding: const EdgeInsets.all(16),
-    child: Column(
-      children: [
-        SizedBox(
-          width: 74,
-          height: 74,
-          child:
-              _hospitalProfile?.logoUrl != null &&
-                      _hospitalProfile!
-                          .logoUrl!
-                          .isNotEmpty
-                  ? Image.network(
-                    _hospitalProfile!
-                        .logoUrl!,
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          SizedBox(
+            width: 74,
+            height: 74,
+            child:
+                _hospitalProfile?.logoUrl != null &&
+                    _hospitalProfile!.logoUrl!.isNotEmpty
+                ? Image.network(
+                    _hospitalProfile!.logoUrl!,
                     fit: BoxFit.contain,
-                    errorBuilder:
-                        (
-                          context,
-                          error,
-                          stackTrace,
-                        ) {
-                          return Icon(
-                            Icons.local_hospital,
-                            color: deepBlue,
-                            size: 42,
-                          );
-                        },
+                    errorBuilder: (context, error, stackTrace) {
+                      return Icon(
+                        Icons.local_hospital,
+                        color: deepBlue,
+                        size: 42,
+                      );
+                    },
                   )
-                  : Icon(
-                    Icons.local_hospital,
-                    color: deepBlue,
-                    size: 42,
-                  ),
-        ),
-
-        const SizedBox(height: 14),
-
-        Text(
-          _hospitalProfile?.name ??
-              'HOSPITAL HUMAN ASSET TRACKING SYSTEM',
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style:
-              GoogleFonts.plusJakartaSans(
-                fontWeight:
-                    FontWeight.w800,
-                fontSize: 13,
-                height: 1.35,
-                letterSpacing: 0.2,
-                color: deepBlue,
-              ),
-        ),
-
-        if (_hospitalProfile?.address !=
-                null &&
-            _hospitalProfile!
-                .address!
-                .isNotEmpty) ...[
-          const SizedBox(height: 6),
-
+                : Icon(Icons.local_hospital, color: deepBlue, size: 42),
+          ),
+          const SizedBox(height: 14),
           Text(
-            _hospitalProfile!.address!,
+            _hospitalProfile?.name ?? 'HOSPITAL HUMAN ASSET TRACKING SYSTEM',
             textAlign: TextAlign.center,
             maxLines: 2,
-            overflow:
-                TextOverflow.ellipsis,
-            style:
-                GoogleFonts.plusJakartaSans(
-                  fontSize: 10,
-                  fontWeight:
-                      FontWeight.w500,
-                  height: 1.4,
-                  color: Colors.black54,
-                ),
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.plusJakartaSans(
+              fontWeight: FontWeight.w800,
+              fontSize: 13,
+              height: 1.35,
+              letterSpacing: 0.2,
+              color: deepBlue,
+            ),
           ),
+          if (_hospitalProfile?.address != null &&
+              _hospitalProfile!.address!.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              _hospitalProfile!.address!,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                height: 1.4,
+                color: Colors.black54,
+              ),
+            ),
+          ],
         ],
-      ],
-    ),
-  );
-}
+      ),
+    );
+  }
 
   // ======================
   // MAIN CANVAS
@@ -434,23 +432,48 @@ Center(
     );
   }
 
+  // ======================
+  // GET BODY BASED ON SELECTED MENU
+  // ======================
   Widget _getBody() {
+    // 🔥 PEOPLE INSIGHTS - SUB MENU 1
+    if (_selectedMenu == "Ringkasan Pegawai") {
+      return const Submenu1Ringkasan();
+    }
+
+    // 🔥 PEOPLE INSIGHTS - SUB MENU 2
+    if (_selectedMenu == "Wellbeing & Kinerja") {
+      return const Submenu2Wellbeing();
+    }
+
+    if (_selectedMenu == "Lokasi & Kehadiran") {
+      return const Submenu3LokasiKehadiran();
+    }
+
+    if (_selectedMenu == "Sertifikasi & Penilaian") {
+      return const Submenu4SertifikasiPenilaian();
+    }
+
+    if (_selectedMenu == "Insight Pegawai") {
+      return const Submenu5InsightPegawai();
+    }
+
+    // LIVE PEOPLE TRACKING
     if (_selectedMenu == "Live People Tracking") {
       return _peopleMapView;
     }
 
+    // LIVE ASSET TRACKING
     if (_selectedMenu == "Live Asset Tracking") {
       return _assetMapView;
     }
 
+    // PEOPLE WATCH LIST
     if (_selectedMenu == "People Watch List") {
       return const PeopleWatchList();
     }
 
-    // if (_selectedMenu == "Asset Watch List") {
-    //   return const AssetWatchList();
-    // }
-
+    // ASSET MENU
     if (_selectedMenu == "Asset Overview") {
       return const AssetOverviewScreen();
     }
@@ -459,10 +482,15 @@ Center(
       return const AssetIntelligenceScreen();
     }
 
+    if (_selectedMenu == "Asset Utilization") {
+  return const AssetUtilizationScreen();
+}
+
     if (_selectedMenu == "Asset Report") {
       return const AssetReportScreen();
     }
 
+    // STOCK MENU
     if (_selectedMenu == "Stock Overview") {
       return const StockOverviewScreen();
     }
@@ -475,6 +503,7 @@ Center(
       return const StockReportScreen();
     }
 
+    // DEFAULT
     return const Center(child: Text("EMPTY"));
   }
 }
