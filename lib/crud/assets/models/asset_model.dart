@@ -63,6 +63,12 @@ class Asset {
   final String? updatedByName;
   final DateTime updatedAt;
 
+  // === Tingkat Bahaya (Danger Level) ===
+  final String? dangerLevelId;
+  final String? dangerLevelName;
+  final String? dangerLevelCode;
+  final String? dangerColor;
+
   const Asset({
     required this.id,
     required this.rfidTagId,
@@ -102,8 +108,10 @@ class Asset {
     this.updatedBy,
     this.updatedByName,
     required this.updatedAt,
-
-    
+    this.dangerLevelId,
+    this.dangerLevelName,
+    this.dangerLevelCode,
+    this.dangerColor,
   });
 
   /// Empty asset untuk initial form (create new asset)
@@ -114,10 +122,12 @@ class Asset {
       assetName: '',
       registeredAt: DateTime.now(),
       updatedAt: DateTime.now(),
+      dangerLevelId: null,
+      dangerLevelName: null,
+      dangerLevelCode: null,
+      dangerColor: null,
     );
   }
-
-  
 
   factory Asset.fromJson(Map<String, dynamic> json) {
     return Asset(
@@ -167,6 +177,11 @@ class Asset {
       updatedBy: json['updated_by'] as String?,
       updatedByName: json['updated_by_name'] as String?,
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      // Danger Level
+      dangerLevelId: json['danger_level_id'] as String?,
+      dangerLevelName: json['danger_level_name'] as String?,
+      dangerLevelCode: json['danger_level_code'] as String?,
+      dangerColor: json['danger_color'] as String?,
     );
   }
 
@@ -185,6 +200,7 @@ class Asset {
       'is_active': isActive,
       if (description != null) 'description': description,
       if (lastRoomId != null) 'last_room_id': lastRoomId,
+      if (dangerLevelId != null) 'danger_level_id': dangerLevelId,
       if (updatedBy != null) 'updated_by': updatedBy,
       'updated_at': DateTime.now().toIso8601String(),
     };
@@ -205,6 +221,7 @@ class Asset {
       'is_active': isActive,
       if (description != null) 'description': description,
       if (lastRoomId != null) 'last_room_id': lastRoomId,
+      if (dangerLevelId != null) 'danger_level_id': dangerLevelId,
       'registered_by': userId,
       'registered_at': DateTime.now().toIso8601String(),
       'created_at': DateTime.now().toIso8601String(),
@@ -250,6 +267,10 @@ class Asset {
     String? updatedBy,
     String? updatedByName,
     DateTime? updatedAt,
+    String? dangerLevelId,
+    String? dangerLevelName,
+    String? dangerLevelCode,
+    String? dangerColor,
   }) {
     return Asset(
       id: id ?? this.id,
@@ -290,6 +311,10 @@ class Asset {
       updatedBy: updatedBy ?? this.updatedBy,
       updatedByName: updatedByName ?? this.updatedByName,
       updatedAt: updatedAt ?? this.updatedAt,
+      dangerLevelId: dangerLevelId ?? this.dangerLevelId,
+      dangerLevelName: dangerLevelName ?? this.dangerLevelName,
+      dangerLevelCode: dangerLevelCode ?? this.dangerLevelCode,
+      dangerColor: dangerColor ?? this.dangerColor,
     );
   }
 

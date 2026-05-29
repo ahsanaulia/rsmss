@@ -134,6 +134,30 @@ class AssetTypeDropdownData {
   }
 }
 
+/// Data untuk dropdown danger level
+class DangerLevelDropdownData {
+  final String id;
+  final String levelCode;
+  final String levelName;
+  final String? colorHex;
+
+  const DangerLevelDropdownData({
+    required this.id,
+    required this.levelCode,
+    required this.levelName,
+    this.colorHex,
+  });
+
+  factory DangerLevelDropdownData.fromJson(Map<String, dynamic> json) {
+    return DangerLevelDropdownData(
+      id: json['id'] as String,
+      levelCode: json['level_code'] as String,
+      levelName: json['level_name'] as String,
+      colorHex: json['color_hex'] as String?,
+    );
+  }
+}
+
 /// State untuk form aset (create/edit)
 class AssetFormState {
   final Asset asset;
@@ -145,11 +169,16 @@ class AssetFormState {
   final List<RoomDropdownData> rooms;
   final List<AssetTypeDropdownData> assetTypes;
   final List<String> maintenancePatterns;
+  final List<DangerLevelDropdownData> dangerLevels;
+  
+  // Selected values
+  final String? selectedDangerLevelId;
   
   // Loading status untuk masing-masing dropdown
   final bool isLoadingRooms;
   final bool isLoadingTypes;
   final bool isLoadingPatterns;
+  final bool isLoadingDangerLevels;
 
   const AssetFormState({
     required this.asset,
@@ -159,9 +188,12 @@ class AssetFormState {
     this.rooms = const [],
     this.assetTypes = const [],
     this.maintenancePatterns = const [],
+    this.dangerLevels = const [],
+    this.selectedDangerLevelId,
     this.isLoadingRooms = false,
     this.isLoadingTypes = false,
     this.isLoadingPatterns = false,
+    this.isLoadingDangerLevels = false,
   });
 
   AssetFormState copyWith({
@@ -172,9 +204,12 @@ class AssetFormState {
     List<RoomDropdownData>? rooms,
     List<AssetTypeDropdownData>? assetTypes,
     List<String>? maintenancePatterns,
+    List<DangerLevelDropdownData>? dangerLevels,
+    String? selectedDangerLevelId,
     bool? isLoadingRooms,
     bool? isLoadingTypes,
     bool? isLoadingPatterns,
+    bool? isLoadingDangerLevels,
   }) {
     return AssetFormState(
       asset: asset ?? this.asset,
@@ -184,9 +219,12 @@ class AssetFormState {
       rooms: rooms ?? this.rooms,
       assetTypes: assetTypes ?? this.assetTypes,
       maintenancePatterns: maintenancePatterns ?? this.maintenancePatterns,
+      dangerLevels: dangerLevels ?? this.dangerLevels,
+      selectedDangerLevelId: selectedDangerLevelId ?? this.selectedDangerLevelId,
       isLoadingRooms: isLoadingRooms ?? this.isLoadingRooms,
       isLoadingTypes: isLoadingTypes ?? this.isLoadingTypes,
       isLoadingPatterns: isLoadingPatterns ?? this.isLoadingPatterns,
+      isLoadingDangerLevels: isLoadingDangerLevels ?? this.isLoadingDangerLevels,
     );
   }
 

@@ -10,7 +10,7 @@ import 'general_people_map.dart';
 import 'general_asset_map.dart';
 import 'asset_intelligence_screen.dart';
 import 'asset_report_screen.dart';
-import 'stock_overview_screen.dart';
+// import 'stock_overview_screen.dart';
 import 'stocks_intelligence_screen.dart';
 import 'stock_report_screen.dart';
 import '../../models/hospital_profile_model.dart';
@@ -22,6 +22,13 @@ import '../../../insights/profiles/views/submenu3_lokasi_kehadiran.dart';
 import '../../../insights/profiles/views/submenu4_sertifikasi_penilaian.dart';
 import '../../../insights/profiles/views/submenu5_insight_pegawai.dart';
 import '../../../insights/assets/views/asset_utilization_screen.dart';
+// Import
+import '../../../insights/assets/views/asset_tree_screen.dart';
+import '../../../insights/stocks/views/stock_tree_view.dart';
+import '../../../insights/stocks/views/stock_overview_screen.dart';
+import '../../../insights/stocks/views/stock_requests_screen.dart';
+import '../../../insights/stocks/views/stock_opname_screen.dart';
+import '../../../insights/stocks/views/storage_distribution_screen.dart';
 
 class MonitorDashboard extends StatefulWidget {
   final String userName;
@@ -208,6 +215,7 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
                       // =========================
                       _sectionTitle("ASSET"),
                       _menu("Live Asset Tracking", Icons.inventory),
+                      _menu("Asset by Taxonomy", Icons.account_tree), 
                       _menu("Asset Utilization", Icons.speed),
                       // _menu("Asset Overview", Icons.assessment_outlined),
                       _menu("Asset Intelligence", Icons.bar_chart),
@@ -220,6 +228,10 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
                       // =========================
                       _sectionTitle("STOCK & INVENTORY"),
                       _menu("Stock Overview", Icons.inventory),
+                      _menu("Stock Tree View", Icons.account_tree),
+                      _menu("Stock Requests", Icons.request_page), // 👈 TAMBAHKAN INI 
+                       _menu("Stock Opname", Icons.medical_information_outlined),
+                       _menu("Storage Distribution", Icons.inventory_2_outlined), 
                       _menu("Stock Intelligence", Icons.watch_later),
                       _menu("Stock Report", Icons.description),
                       const SizedBox(height: 24),
@@ -478,6 +490,10 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
       return const AssetOverviewScreen();
     }
 
+    if (_selectedMenu == "Asset by Taxonomy") {
+  return const AssetTreeScreen();
+}
+
     if (_selectedMenu == "Asset Intelligence") {
       return const AssetIntelligenceScreen();
     }
@@ -495,6 +511,21 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
       return const StockOverviewScreen();
     }
 
+    if (_selectedMenu == "Stock Tree View") {  // 👈 TAMBAHKAN INI
+  return const StockTreeView();
+}
+
+if (_selectedMenu == "Stock Opname") {  // 👈 TAMBAHKAN INI
+  return const StockOpnameScreen();
+}
+
+if (_selectedMenu == "Storage Distribution") {  // 👈 TAMBAHKAN INI
+  return const StorageDistributionScreen();
+}
+
+if (_selectedMenu == "Stock Requests") {
+  return const StockRequestsScreen();
+}
     if (_selectedMenu == "Stock Intelligence") {
       return const StocksIntelligenceScreen();
     }

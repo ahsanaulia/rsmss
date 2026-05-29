@@ -1,4 +1,4 @@
-import 'dart:io';
+// import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -27,14 +27,14 @@ class AssetFormDialog extends StatefulWidget {
 
 class _AssetFormDialogState extends State<AssetFormDialog> {
   final _formKey = GlobalKey<FormState>();
-  
+
   // Controllers
   final _rfidTagController = TextEditingController();
   final _assetNameController = TextEditingController();
   final _inspectionDayController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _otherMaintenanceController = TextEditingController();
-  
+
   // Dropdown & Selection Values
   String? _selectedTypeId;
   String _selectedStatus = 'Good';
@@ -43,18 +43,22 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
   String? _selectedRoomId;
   String? _selectedMaintenancePattern;
   bool _useOtherMaintenance = false;
-  
+
+  // 🔥 DANGER LEVEL
+  String? _selectedDangerLevelId;
+  List<Map<String, dynamic>> _dangerLevels = [];
+
   // Photo Upload - Gunakan XFile (compatible Web & Mobile)
   XFile? _selectedImageXFile;
   String? _existingFotoUrl;
   bool _isUploading = false;
-  
+
   // Dropdown Data
   List<Map<String, dynamic>> _rooms = [];
   List<Map<String, dynamic>> _assetTypes = [];
   List<String> _maintenancePatterns = [];
   bool _isLoadingData = true;
-  
+
   // Validation
   bool _isRfidUnique = true;
   String? _originalRfidTag;
@@ -63,7 +67,8 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
   void initState() {
     super.initState();
     _loadDropdownData();
-    
+    _loadDangerLevels();
+
     if (widget.isEditing && widget.existingAsset != null) {
       _populateFormWithExistingAsset();
     }
@@ -83,12 +88,13 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
     setState(() {
       _isLoadingData = true;
     });
-    
+
     try {
       final rooms = await widget.assetService.fetchAllRooms();
       final assetTypes = await widget.assetService.fetchAllAssetTypes();
-      final maintenancePatterns = await widget.assetService.fetchMaintenancePatterns();
-      
+      final maintenancePatterns = await widget.assetService
+          .fetchMaintenancePatterns();
+
       setState(() {
         _rooms = rooms;
         _assetTypes = assetTypes;
@@ -103,9 +109,21 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
     }
   }
 
+  // 🔥 LOAD DANGER LEVELS
+  Future<void> _loadDangerLevels() async {
+    try {
+      final levels = await widget.assetService.fetchAllDangerLevels();
+      setState(() {
+        _dangerLevels = levels;
+      });
+    } catch (e) {
+      print('Error loading danger levels: $e');
+    }
+  }
+
   void _populateFormWithExistingAsset() {
     final asset = widget.existingAsset!;
-    
+
     _rfidTagController.text = asset.rfidTagId;
     _originalRfidTag = asset.rfidTagId;
     _assetNameController.text = asset.assetName;
@@ -116,7 +134,8 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
     _selectedRoomId = asset.lastRoomId;
     _selectedMaintenancePattern = asset.maintenancePattern;
     _existingFotoUrl = asset.fotoUrl;
-    
+    _selectedDangerLevelId = asset.dangerLevelId; // 🔥 TAMBAHKAN
+
     if (asset.inspectionDayOfMonth != null) {
       _inspectionDayController.text = asset.inspectionDayOfMonth.toString();
     }
@@ -127,14 +146,14 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
 
   Future<void> _validateRfidUnique(String value) async {
     if (value.isEmpty) return;
-    
+
     if (widget.isEditing && _originalRfidTag == value) {
       setState(() {
         _isRfidUnique = true;
       });
       return;
     }
-    
+
     setState(() {
       _isRfidUnique = true;
     });
@@ -151,22 +170,27 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
       maxHeight: 1024,
       imageQuality: 80,
     );
-    
+
     if (pickedFile == null) return;
-    
+
     setState(() {
       _isUploading = true;
     });
-    
+
     try {
       // If editing and has existing photo, delete old one
-      if (widget.isEditing && _existingFotoUrl != null && _existingFotoUrl!.isNotEmpty) {
+      if (widget.isEditing &&
+          _existingFotoUrl != null &&
+          _existingFotoUrl!.isNotEmpty) {
         await widget.assetService.deleteAssetPhoto(_existingFotoUrl!);
       }
-      
+
       // Upload photo (XFile langsung, tanpa konversi ke File)
       if (widget.isEditing && widget.existingAsset != null) {
-        final photoUrl = await widget.assetService.uploadAssetPhoto(pickedFile, widget.existingAsset!.id);
+        final photoUrl = await widget.assetService.uploadAssetPhoto(
+          pickedFile,
+          widget.existingAsset!.id,
+        );
         setState(() {
           _selectedImageXFile = null;
           _existingFotoUrl = photoUrl;
@@ -177,7 +201,7 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
           _selectedImageXFile = pickedFile;
         });
       }
-      
+
       if (mounted) {
         _showSuccessSnackbar('Foto berhasil diupload');
       }
@@ -199,12 +223,14 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
   // ==========================================================
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     if (!_isRfidUnique) {
-      _showErrorSnackbar('RFID Tag ID sudah digunakan, silakan gunakan yang lain');
+      _showErrorSnackbar(
+        'RFID Tag ID sudah digunakan, silakan gunakan yang lain',
+      );
       return;
     }
-    
+
     if (_rfidTagController.text.isEmpty) {
       _showErrorSnackbar('RFID Tag ID wajib diisi');
       return;
@@ -213,20 +239,20 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
       _showErrorSnackbar('Nama aset wajib diisi');
       return;
     }
-    
+
     setState(() {
       _isUploading = true;
     });
-    
+
     try {
       final maintenancePattern = _useOtherMaintenance
           ? _otherMaintenanceController.text.trim()
           : _selectedMaintenancePattern;
-      
+
       final inspectionDay = _inspectionDayController.text.isNotEmpty
           ? int.tryParse(_inspectionDayController.text)
           : null;
-      
+
       final asset = Asset(
         id: widget.isEditing ? widget.existingAsset!.id : '',
         rfidTagId: _rfidTagController.text.trim(),
@@ -240,40 +266,58 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
             ? null
             : _descriptionController.text.trim(),
         lastRoomId: _selectedRoomId,
-        maintenancePattern: maintenancePattern?.isEmpty ?? true ? null : maintenancePattern,
+        maintenancePattern: maintenancePattern?.isEmpty ?? true
+            ? null
+            : maintenancePattern,
         inspectionDayOfMonth: inspectionDay,
         isActive: true,
         registeredAt: widget.isEditing
             ? widget.existingAsset!.registeredAt
             : DateTime.now(),
         updatedAt: DateTime.now(),
+        // 🔥 TAMBAHKAN DANGER LEVEL
+        dangerLevelId: _selectedDangerLevelId,
       );
-      
+
       if (widget.currentUserId == null) {
         throw Exception('User tidak ditemukan, silakan login ulang');
       }
-      
+
       String? finalFotoUrl = _existingFotoUrl;
-      
+
       // Handle photo upload for create mode
       if (!widget.isEditing && _selectedImageXFile != null) {
-        final createdAsset = await widget.assetService.createAsset(asset, widget.currentUserId!);
-        
-        final photoUrl = await widget.assetService.uploadAssetPhoto(_selectedImageXFile!, createdAsset.id);
+        final createdAsset = await widget.assetService.createAsset(
+          asset,
+          widget.currentUserId!,
+        );
+
+        final photoUrl = await widget.assetService.uploadAssetPhoto(
+          _selectedImageXFile!,
+          createdAsset.id,
+        );
         finalFotoUrl = photoUrl;
-        
+
         final updatedAsset = createdAsset.copyWith(fotoUrl: photoUrl);
-        await widget.assetService.updateAsset(updatedAsset, widget.currentUserId!);
+        await widget.assetService.updateAsset(
+          updatedAsset,
+          widget.currentUserId!,
+        );
       } else if (widget.isEditing) {
         final updatedAsset = asset.copyWith(fotoUrl: _existingFotoUrl);
-        await widget.assetService.updateAsset(updatedAsset, widget.currentUserId!);
+        await widget.assetService.updateAsset(
+          updatedAsset,
+          widget.currentUserId!,
+        );
       } else {
         await widget.assetService.createAsset(asset, widget.currentUserId!);
       }
-      
+
       if (mounted) {
         _showSuccessSnackbar(
-          widget.isEditing ? 'Aset berhasil diperbarui' : 'Aset berhasil ditambahkan'
+          widget.isEditing
+              ? 'Aset berhasil diperbarui'
+              : 'Aset berhasil ditambahkan',
         );
         widget.onSuccess();
       }
@@ -287,6 +331,14 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
           _isUploading = false;
         });
       }
+    }
+  }
+
+  Color _getColorFromHex(String hexColor) {
+    try {
+      return Color(int.parse('0xFF${hexColor.replaceAll('#', '')}'));
+    } catch (e) {
+      return Colors.orange;
     }
   }
 
@@ -309,7 +361,9 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
         children: [
           Icon(
             widget.isEditing ? Icons.edit : Icons.add_box,
-            color: widget.isEditing ? Colors.blue.shade700 : Colors.green.shade700,
+            color: widget.isEditing
+                ? Colors.blue.shade700
+                : Colors.green.shade700,
           ),
           const SizedBox(width: 8),
           Text(widget.isEditing ? 'Edit Aset' : 'Tambah Aset Baru'),
@@ -370,7 +424,7 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      
+
                       // ROW 2: Tipe Aset & Status Kondisi
                       Row(
                         children: [
@@ -384,16 +438,24 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
                                 isDense: true,
                               ),
                               items: [
-                                const DropdownMenuItem(value: null, child: Text('Pilih Tipe')),
-                                ..._assetTypes.map((type) => DropdownMenuItem(
-                                  value: type['id'].toString(),
-                                  child: Text(
-                                    type['display_name'] ?? type['type_name'] ?? '-',
-                                    overflow: TextOverflow.ellipsis,
+                                const DropdownMenuItem(
+                                  value: null,
+                                  child: Text('Pilih Tipe'),
+                                ),
+                                ..._assetTypes.map(
+                                  (type) => DropdownMenuItem(
+                                    value: type['id'].toString(),
+                                    child: Text(
+                                      type['display_name'] ??
+                                          type['type_name'] ??
+                                          '-',
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
-                                )),
+                                ),
                               ],
-                              onChanged: (value) => setState(() => _selectedTypeId = value),
+                              onChanged: (value) =>
+                                  setState(() => _selectedTypeId = value),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -407,19 +469,32 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
                                 isDense: true,
                               ),
                               items: const [
-                                DropdownMenuItem(value: 'Good', child: Text('Good (Baik)')),
-                                DropdownMenuItem(value: 'Fair', child: Text('Fair (Cukup)')),
-                                DropdownMenuItem(value: 'Damage', child: Text('Damage (Rusak)')),
-                                DropdownMenuItem(value: 'Critical', child: Text('Critical (Kritis)')),
+                                DropdownMenuItem(
+                                  value: 'Good',
+                                  child: Text('Good (Baik)'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'Fair',
+                                  child: Text('Fair (Cukup)'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'Damage',
+                                  child: Text('Damage (Rusak)'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'Critical',
+                                  child: Text('Critical (Kritis)'),
+                                ),
                               ],
-                              onChanged: (value) => setState(() => _selectedStatus = value!),
+                              onChanged: (value) =>
+                                  setState(() => _selectedStatus = value!),
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 12),
-                      
-                      // ROW 3: Level Kontaminasi & Berbahaya
+
+                      // ROW 3: Level Kontaminasi & Berbahaya & Tingkat Bahaya
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -429,20 +504,29 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
                               children: [
                                 Text(
                                   'Level Kontaminasi (0-5)',
-                                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey.shade700),
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    color: Colors.grey.shade700,
+                                  ),
                                 ),
                                 Row(
                                   children: [
                                     Expanded(
                                       child: Slider(
-                                        value: _selectedContamination.toDouble(),
+                                        value: _selectedContamination
+                                            .toDouble(),
                                         min: 0,
                                         max: 5,
                                         divisions: 5,
-                                        label: _selectedContamination.toString(),
-                                        activeColor: ContaminationLevel.getColor(_selectedContamination),
+                                        label: _selectedContamination
+                                            .toString(),
+                                        activeColor:
+                                            ContaminationLevel.getColor(
+                                              _selectedContamination,
+                                            ),
                                         onChanged: (value) => setState(() {
-                                          _selectedContamination = value.round();
+                                          _selectedContamination = value
+                                              .round();
                                         }),
                                       ),
                                     ),
@@ -450,16 +534,24 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
                                       width: 40,
                                       height: 40,
                                       decoration: BoxDecoration(
-                                        color: ContaminationLevel.getColor(_selectedContamination).withValues(alpha: 0.1),
+                                        color: ContaminationLevel.getColor(
+                                          _selectedContamination,
+                                        ).withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(color: ContaminationLevel.getColor(_selectedContamination)),
+                                        border: Border.all(
+                                          color: ContaminationLevel.getColor(
+                                            _selectedContamination,
+                                          ),
+                                        ),
                                       ),
                                       child: Center(
                                         child: Text(
                                           _selectedContamination.toString(),
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
-                                            color: ContaminationLevel.getColor(_selectedContamination),
+                                            color: ContaminationLevel.getColor(
+                                              _selectedContamination,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -475,7 +567,9 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
                               children: [
                                 Checkbox(
                                   value: _isDangerous,
-                                  onChanged: (value) => setState(() => _isDangerous = value ?? false),
+                                  onChanged: (value) => setState(
+                                    () => _isDangerous = value ?? false,
+                                  ),
                                 ),
                                 const Text('Berbahaya'),
                               ],
@@ -484,8 +578,51 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      
-                      // ROW 4: Ruangan
+
+                      // 🔥 ROW 4: Tingkat Bahaya (Danger Level)
+                      DropdownButtonFormField<String?>(
+                        isExpanded: true,
+                        value: _selectedDangerLevelId,
+                        decoration: const InputDecoration(
+                          labelText: 'Tingkat Bahaya',
+                          border: OutlineInputBorder(),
+                          isDense: true,
+                        ),
+                        items: [
+                          const DropdownMenuItem<String?>(
+                            value: null,
+                            child: Text('Tidak Ada'),
+                          ),
+                          ..._dangerLevels.map((level) {
+                            final colorHex = level['color_hex'] ?? '#F59E0B';
+                            return DropdownMenuItem<String?>(
+                              value: level['id'] as String?,
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 16,
+                                    height: 16,
+                                    decoration: BoxDecoration(
+                                      color: _getColorFromHex(colorHex),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '${level['level_code']} - ${level['level_name']}',
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        ],
+                        onChanged: (value) => setState(() {
+                          _selectedDangerLevelId = value;
+                        }),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // ROW 5: Ruangan
                       DropdownButtonFormField<String?>(
                         isExpanded: true,
                         value: _selectedRoomId,
@@ -495,20 +632,26 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
                           isDense: true,
                         ),
                         items: [
-                          const DropdownMenuItem(value: null, child: Text('Pilih Ruangan')),
-                          ..._rooms.map((room) => DropdownMenuItem(
-                            value: room['id'].toString(),
-                            child: Text(
-                              room['room_name'] ?? '-',
-                              overflow: TextOverflow.ellipsis,
+                          const DropdownMenuItem(
+                            value: null,
+                            child: Text('Pilih Ruangan'),
+                          ),
+                          ..._rooms.map(
+                            (room) => DropdownMenuItem(
+                              value: room['id'].toString(),
+                              child: Text(
+                                room['room_name'] ?? '-',
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          )),
+                          ),
                         ],
-                        onChanged: (value) => setState(() => _selectedRoomId = value),
+                        onChanged: (value) =>
+                            setState(() => _selectedRoomId = value),
                       ),
                       const SizedBox(height: 12),
-                      
-                      // ROW 5: Maintenance Pattern
+
+                      // ROW 6: Maintenance Pattern
                       if (!_useOtherMaintenance)
                         DropdownButtonFormField<String?>(
                           isExpanded: true,
@@ -519,12 +662,23 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
                             isDense: true,
                           ),
                           items: [
-                            const DropdownMenuItem(value: null, child: Text('Pilih Pola')),
-                            ..._maintenancePatterns.map((pattern) => DropdownMenuItem(
-                              value: pattern,
-                              child: Text(pattern, overflow: TextOverflow.ellipsis),
-                            )),
-                            const DropdownMenuItem(value: '__other__', child: Text('Lainnya...')),
+                            const DropdownMenuItem(
+                              value: null,
+                              child: Text('Pilih Pola'),
+                            ),
+                            ..._maintenancePatterns.map(
+                              (pattern) => DropdownMenuItem(
+                                value: pattern,
+                                child: Text(
+                                  pattern,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ),
+                            const DropdownMenuItem(
+                              value: '__other__',
+                              child: Text('Lainnya...'),
+                            ),
                           ],
                           onChanged: (value) {
                             if (value == '__other__') {
@@ -533,11 +687,13 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
                                 _selectedMaintenancePattern = null;
                               });
                             } else {
-                              setState(() => _selectedMaintenancePattern = value);
+                              setState(
+                                () => _selectedMaintenancePattern = value,
+                              );
                             }
                           },
                         ),
-                      
+
                       if (_useOtherMaintenance)
                         Row(
                           children: [
@@ -564,18 +720,12 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
                           ],
                         ),
                       const SizedBox(height: 12),
-                      
-                      // ROW 6: Hari Inspeksi & Upload Foto
-                                            // ==================================================
-                      // ROW 6: Hari Inspeksi & Upload Foto (2 KOLOM)
-                      // ==================================================
-                                            // ==================================================
-                      // ROW 6: Hari Inspeksi & Upload Foto (2 KOLOM)
-                      // ==================================================
+
+                      // ROW 7: Hari Inspeksi & Upload Foto
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Kolom kiri - Hari Inspeksi (tetap pakai Expanded)
+                          // Kolom kiri - Hari Inspeksi
                           Expanded(
                             child: TextFormField(
                               controller: _inspectionDayController,
@@ -598,20 +748,24 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          
-                          // Kolom kanan - Upload Foto (TANPA Expanded)
+
+                          // Kolom kanan - Upload Foto
                           Container(
-                            width: 180,  // Fixed width
+                            width: 180,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 GestureDetector(
-                                  onTap: _isUploading ? null : _pickAndUploadImage,
+                                  onTap: _isUploading
+                                      ? null
+                                      : _pickAndUploadImage,
                                   child: Container(
                                     width: 180,
                                     height: 180,
                                     decoration: BoxDecoration(
-                                      border: Border.all(color: Colors.grey.shade300),
+                                      border: Border.all(
+                                        color: Colors.grey.shade300,
+                                      ),
                                       borderRadius: BorderRadius.circular(8),
                                       color: Colors.grey.shade50,
                                     ),
@@ -620,29 +774,38 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
                                             child: SizedBox(
                                               width: 124,
                                               height: 124,
-                                              child: CircularProgressIndicator(strokeWidth: 2),
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
                                             ),
                                           )
-                                        : (_existingFotoUrl != null && _existingFotoUrl!.isNotEmpty)
-                                            ? ClipRRect(
-                                                borderRadius: BorderRadius.circular(8),
-                                                child: Image.network(
-                                                  _existingFotoUrl!,
-                                                  width: 180,
-                                                  height: 180,
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder: (context, error, stackTrace) {
+                                        : (_existingFotoUrl != null &&
+                                              _existingFotoUrl!.isNotEmpty)
+                                        ? ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                            child: Image.network(
+                                              _existingFotoUrl!,
+                                              width: 180,
+                                              height: 180,
+                                              fit: BoxFit.cover,
+                                              errorBuilder:
+                                                  (context, error, stackTrace) {
                                                     return _buildUploadPlaceholder();
                                                   },
-                                                ),
-                                              )
-                                            : _buildUploadPlaceholder(),
+                                            ),
+                                          )
+                                        : _buildUploadPlaceholder(),
                                   ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
                                   'Tap untuk upload foto',
-                                  style: GoogleFonts.poppins(fontSize: 10, color: Colors.grey.shade500),
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 10,
+                                    color: Colors.grey.shade500,
+                                  ),
                                   textAlign: TextAlign.center,
                                 ),
                               ],
@@ -651,8 +814,8 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
                         ],
                       ),
                       const SizedBox(height: 12),
-                      
-                      // ROW 7: Deskripsi
+
+                      // ROW 8: Deskripsi
                       TextFormField(
                         controller: _descriptionController,
                         maxLines: 3,

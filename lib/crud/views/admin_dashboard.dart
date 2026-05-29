@@ -47,6 +47,7 @@ import '../../crud/ref_reports_category/views/ref_reports_category_list.dart';
 import '../../crud/ref_shifts/views/ref_shift_list.dart';
 // import '../../crud/admin_incidents/views/incident_list_admin.dart';
 import '../../crud/todos/views/todo_list.dart';
+import '../../crud/ref_asset_danger_levels/views/ref_asset_danger_level_list.dart';
 
 class AdminDashboard extends ConsumerStatefulWidget {
   final VoidCallback onLogout;
@@ -179,6 +180,7 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
               const RefAssetSubCategoryListPage(),
             ),
             MenuItem("Tipe Aset", Icons.devices, const RefAssetTypeListPage()),
+            MenuItem("Tingkat Bahaya Aset", Icons.warning_amber, const RefAssetDangerLevelListPage()),
           ],
         ),
         SubMenuGroup(

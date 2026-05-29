@@ -24,7 +24,6 @@ final assetServiceProvider = Provider<AssetService>((ref) {
 
 /// Provider untuk AuthService (mengambil dari core/services yang sudah ada)
 final authServiceProvider = Provider<AuthService>((ref) {
-  // Menggunakan AuthService yang sudah ada di project
   return AuthService();
 });
 
@@ -74,7 +73,6 @@ class AssetListNotifier extends StateNotifier<AssetListState> {
 
   /// Load semua aset
   Future<void> loadAssets() async {
-    // Set loading state
     state = state.copyWith(isLoading: true, error: null);
     
     try {
@@ -150,7 +148,6 @@ class AssetListNotifier extends StateNotifier<AssetListState> {
       
       final success = await _assetService.deleteAsset(assetId, userId);
       if (success) {
-        // Reload list setelah delete
         await loadAssets();
       }
       return success;
@@ -230,7 +227,6 @@ class AssetDetailNotifier extends StateNotifier<AssetDetailState> {
 final assetDetailProvider = StateNotifierProviderFamily<AssetDetailNotifier, AssetDetailState, String>((ref, assetId) {
   final assetService = ref.read(assetServiceProvider);
   final notifier = AssetDetailNotifier(assetService);
-  // Load otomatis saat provider dipanggil
   notifier.loadAsset(assetId);
   return notifier;
 });
@@ -239,7 +235,76 @@ final assetDetailProvider = StateNotifierProviderFamily<AssetDetailNotifier, Ass
 // SECTION 4: FORM ASET PROVIDER
 // ============================================================
 
-/// State untuk form (create/edit)
+/// Data untuk dropdown room
+class RoomDropdownData {
+  final String id;
+  final String roomName;
+
+  const RoomDropdownData({
+    required this.id,
+    required this.roomName,
+  });
+
+  factory RoomDropdownData.fromJson(Map<String, dynamic> json) {
+    return RoomDropdownData(
+      id: json['id'] as String,
+      roomName: json['room_name'] as String,
+    );
+  }
+}
+
+/// Data untuk dropdown asset type (dengan hierarki kategori)
+class AssetTypeDropdownData {
+  final String id;
+  final String typeName;
+  final String displayName;
+  final String categoryName;
+  final String subCategoryName;
+
+  const AssetTypeDropdownData({
+    required this.id,
+    required this.typeName,
+    required this.displayName,
+    required this.categoryName,
+    required this.subCategoryName,
+  });
+
+  factory AssetTypeDropdownData.fromJson(Map<String, dynamic> json) {
+    return AssetTypeDropdownData(
+      id: json['id'] as String,
+      typeName: json['type_name'] as String,
+      displayName: json['display_name'] as String,
+      categoryName: json['category_name'] as String,
+      subCategoryName: json['sub_category_name'] as String,
+    );
+  }
+}
+
+/// Data untuk dropdown danger level
+class DangerLevelDropdownData {
+  final String id;
+  final String levelCode;
+  final String levelName;
+  final String? colorHex;
+
+  const DangerLevelDropdownData({
+    required this.id,
+    required this.levelCode,
+    required this.levelName,
+    this.colorHex,
+  });
+
+  factory DangerLevelDropdownData.fromJson(Map<String, dynamic> json) {
+    return DangerLevelDropdownData(
+      id: json['id'] as String,
+      levelCode: json['level_code'] as String,
+      levelName: json['level_name'] as String,
+      colorHex: json['color_hex'] as String?,
+    );
+  }
+}
+
+/// State untuk form aset (create/edit)
 class AssetFormState {
   final Asset asset;
   final bool isLoading;
@@ -247,12 +312,19 @@ class AssetFormState {
   final bool isEditing;
   
   // Data untuk dropdown
-  final List<Map<String, dynamic>> rooms;
-  final List<Map<String, dynamic>> assetTypes;
+  final List<RoomDropdownData> rooms;
+  final List<AssetTypeDropdownData> assetTypes;
   final List<String> maintenancePatterns;
+  final List<DangerLevelDropdownData> dangerLevels;
+  
+  // Selected values
+  final String? selectedDangerLevelId;
+  
+  // Loading status untuk masing-masing dropdown
   final bool isLoadingRooms;
   final bool isLoadingTypes;
   final bool isLoadingPatterns;
+  final bool isLoadingDangerLevels;
 
   const AssetFormState({
     required this.asset,
@@ -262,9 +334,12 @@ class AssetFormState {
     this.rooms = const [],
     this.assetTypes = const [],
     this.maintenancePatterns = const [],
+    this.dangerLevels = const [],
+    this.selectedDangerLevelId,
     this.isLoadingRooms = false,
     this.isLoadingTypes = false,
     this.isLoadingPatterns = false,
+    this.isLoadingDangerLevels = false,
   });
 
   AssetFormState copyWith({
@@ -272,12 +347,15 @@ class AssetFormState {
     bool? isLoading,
     String? error,
     bool? isEditing,
-    List<Map<String, dynamic>>? rooms,
-    List<Map<String, dynamic>>? assetTypes,
+    List<RoomDropdownData>? rooms,
+    List<AssetTypeDropdownData>? assetTypes,
     List<String>? maintenancePatterns,
+    List<DangerLevelDropdownData>? dangerLevels,
+    String? selectedDangerLevelId,
     bool? isLoadingRooms,
     bool? isLoadingTypes,
     bool? isLoadingPatterns,
+    bool? isLoadingDangerLevels,
   }) {
     return AssetFormState(
       asset: asset ?? this.asset,
@@ -287,9 +365,12 @@ class AssetFormState {
       rooms: rooms ?? this.rooms,
       assetTypes: assetTypes ?? this.assetTypes,
       maintenancePatterns: maintenancePatterns ?? this.maintenancePatterns,
+      dangerLevels: dangerLevels ?? this.dangerLevels,
+      selectedDangerLevelId: selectedDangerLevelId ?? this.selectedDangerLevelId,
       isLoadingRooms: isLoadingRooms ?? this.isLoadingRooms,
       isLoadingTypes: isLoadingTypes ?? this.isLoadingTypes,
       isLoadingPatterns: isLoadingPatterns ?? this.isLoadingPatterns,
+      isLoadingDangerLevels: isLoadingDangerLevels ?? this.isLoadingDangerLevels,
     );
   }
 }
@@ -301,16 +382,16 @@ class AssetFormNotifier extends StateNotifier<AssetFormState> {
 
   AssetFormNotifier(this._ref, this._assetService)
       : super(AssetFormState(asset: Asset.empty())) {
-    // Load data dropdown saat form dibuat
     loadDropdownData();
   }
 
-  /// Load data untuk dropdown (rooms, types, maintenance patterns)
+  /// Load data untuk dropdown
   Future<void> loadDropdownData() async {
     // Load rooms
     state = state.copyWith(isLoadingRooms: true);
     try {
-      final rooms = await _assetService.fetchAllRooms();
+      final roomsData = await _assetService.fetchAllRooms();
+      final rooms = roomsData.map((json) => RoomDropdownData.fromJson(json)).toList();
       state = state.copyWith(rooms: rooms, isLoadingRooms: false);
     } catch (e) {
       state = state.copyWith(isLoadingRooms: false);
@@ -319,8 +400,9 @@ class AssetFormNotifier extends StateNotifier<AssetFormState> {
     // Load asset types
     state = state.copyWith(isLoadingTypes: true);
     try {
-      final types = await _assetService.fetchAllAssetTypes();
-      state = state.copyWith(assetTypes: types, isLoadingTypes: false);
+      final typesData = await _assetService.fetchAllAssetTypes();
+      final assetTypes = typesData.map((json) => AssetTypeDropdownData.fromJson(json)).toList();
+      state = state.copyWith(assetTypes: assetTypes, isLoadingTypes: false);
     } catch (e) {
       state = state.copyWith(isLoadingTypes: false);
     }
@@ -333,6 +415,16 @@ class AssetFormNotifier extends StateNotifier<AssetFormState> {
     } catch (e) {
       state = state.copyWith(isLoadingPatterns: false);
     }
+
+    // Load danger levels
+    state = state.copyWith(isLoadingDangerLevels: true);
+    try {
+      final dangerLevelsData = await _assetService.fetchAllDangerLevels();
+      final dangerLevels = dangerLevelsData.map((json) => DangerLevelDropdownData.fromJson(json)).toList();
+      state = state.copyWith(dangerLevels: dangerLevels, isLoadingDangerLevels: false);
+    } catch (e) {
+      state = state.copyWith(isLoadingDangerLevels: false);
+    }
   }
 
   /// Set data untuk edit mode
@@ -340,6 +432,7 @@ class AssetFormNotifier extends StateNotifier<AssetFormState> {
     state = state.copyWith(
       asset: asset,
       isEditing: true,
+      selectedDangerLevelId: asset.dangerLevelId,
     );
   }
 
@@ -376,6 +469,16 @@ class AssetFormNotifier extends StateNotifier<AssetFormState> {
     );
     
     state = state.copyWith(asset: updatedAsset, error: null);
+  }
+
+  /// Update danger level
+  void updateDangerLevel(String? dangerLevelId) {
+    final updatedAsset = state.asset.copyWith(dangerLevelId: dangerLevelId);
+    state = state.copyWith(
+      asset: updatedAsset,
+      selectedDangerLevelId: dangerLevelId,
+      error: null,
+    );
   }
 
   /// Update foto URL setelah upload

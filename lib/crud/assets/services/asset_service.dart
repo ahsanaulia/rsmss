@@ -1,4 +1,3 @@
-
 // ============================================================
 // SERVICE: Asset Service
 // ============================================================
@@ -6,17 +5,7 @@
 // 1. Semua operasi CRUD ke tabel 'assets'
 // 2. Upload/download foto ke Supabase Storage bucket 'asset_images'
 // 3. Menggunakan VIEW v_asset_details untuk mengambil data dengan relasi
-// 4. Fetch data untuk dropdown (rooms, asset_types, maintenance_patterns, profiles)
-// ============================================================
-
-// ============================================================
-// SERVICE: Asset Service
-// ============================================================
-// TANGGUNG JAWAB:
-// 1. Semua operasi CRUD ke tabel 'assets'
-// 2. Upload/download foto ke Supabase Storage bucket 'asset_images'
-// 3. Menggunakan VIEW v_asset_details untuk mengambil data dengan relasi
-// 4. Fetch data untuk dropdown (rooms, asset_types, maintenance_patterns, profiles)
+// 4. Fetch data untuk dropdown (rooms, asset_types, maintenance_patterns, profiles, danger_levels)
 // 5. SUPPORT WEB & MOBILE - menggunakan XFile dari image_picker
 // ============================================================
 
@@ -122,6 +111,11 @@ class AssetService {
       updatedBy: response['updated_by'] as String?,
       updatedByName: response['updated_by_name'] as String?,
       updatedAt: _parseDateTime(response['updated_at']) ?? DateTime.now(),
+      // 🔥 DANGER LEVEL
+      dangerLevelId: response['danger_level_id'] as String?,
+      dangerLevelName: response['danger_level_name'] as String?,
+      dangerLevelCode: response['danger_level_code'] as String?,
+      dangerColor: response['danger_color'] as String?,
     );
   }
 
@@ -239,6 +233,21 @@ class AssetService {
       return response;
     } catch (e) {
       throw Exception('Gagal memuat data profil: $e');
+    }
+  }
+
+  // 🔥 FETCH DANGER LEVELS UNTUK DROPDOWN
+  Future<List<Map<String, dynamic>>> fetchAllDangerLevels() async {
+    try {
+      final response = await _supabase
+          .from('ref_asset_danger_levels')
+          .select('id, level_code, level_name, color_hex')
+          .eq('is_active', true)
+          .order('sort_order', ascending: true);
+      return response;
+    } catch (e) {
+      print('Error loading danger levels: $e');
+      return [];
     }
   }
 

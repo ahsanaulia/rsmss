@@ -1,4 +1,4 @@
-// lib/insights/profiles/widgets/shared/donut_chart.dart
+// File: lib/insights/profiles/widgets/shared/donut_chart.dart
 
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -20,29 +20,28 @@ class DonutChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final entries = data.entries.toList();
     final colors = [
-      const Color(0xFF01579B),
-      const Color(0xFF00838F),
-      const Color(0xFF2E7D32),
-      const Color(0xFFED6C02),
-      const Color(0xFFD32F2F),
-      const Color(0xFF5E35B1),
-      const Color(0xFFF9A825),
+      const Color(0xFFF59E0B), // PENDING - Orange/Warning
+      const Color(0xFF10B981), // APPROVED - Hijau/Success
+      const Color(0xFFEF4444), // REJECTED - Merah/Danger
+      const Color(0xFF8B5CF6), // COMPLETED - Ungu/Purple
+      const Color(0xFF3B82F6), // Cadangan - Biru
+      const Color(0xFF06B6D4), // Cadangan - Cyan
+      const Color(0xFFF9A825), // Cadangan - Kuning
     ];
 
     if (entries.isEmpty || total == 0) {
       return Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.85),
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey.shade200, width: 1),
         ),
         child: Center(
           child: Text(
             'Tidak ada data',
             style: GoogleFonts.poppins(
-              fontSize: 16,
-              color: Colors.grey.shade500,
+              fontSize: 14,
+              color: Colors.white.withValues(alpha: 0.5),
             ),
           ),
         ),
@@ -59,9 +58,9 @@ class DonutChart extends StatelessWidget {
           value: percentage,
           title: '${percentage.toStringAsFixed(0)}%',
           color: colors[i % colors.length],
-          radius: 55,
+          radius: 45, // DIPERKECIL DARI 55
           titleStyle: GoogleFonts.poppins(
-            fontSize: 14,
+            fontSize: 12,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
@@ -71,46 +70,49 @@ class DonutChart extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(8), // DIPERKECIL DARI 12
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.85),
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.grey.shade200, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             title,
             style: GoogleFonts.poppins(
-              fontSize: 18,
+              fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
+              color: Colors.white.withValues(alpha: 0.9),
             ),
           ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 180, // 🔥 DIPERBESAR untuk accommodate legend multi-baris
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 1,
-                  child: PieChart(
-                    PieChartData(
-                      sections: sections,
-                      sectionsSpace: 2,
-                      centerSpaceRadius: 35,
-                      startDegreeOffset: -90,
-                      borderData: FlBorderData(show: false),
+          const SizedBox(height: 8),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // Tinggi responsif berdasarkan lebar
+              final chartHeight = constraints.maxWidth * 0.35;
+              return SizedBox(
+                height: chartHeight.clamp(130.0, 160.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 1,
+                      child: PieChart(
+                        PieChartData(
+                          sections: sections,
+                          sectionsSpace: 2,
+                          centerSpaceRadius: 25, // DIPERKECIL DARI 35
+                          startDegreeOffset: -90,
+                          borderData: FlBorderData(show: false),
+                        ),
+                      ),
                     ),
-                  ),
+                    Expanded(flex: 1, child: _buildLegend(entries, colors)),
+                  ],
                 ),
-                Expanded(
-                  flex: 1,
-                  child: _buildLegend(entries, colors),
-                ),
-              ],
-            ),
+              );
+            },
           ),
         ],
       ),
@@ -121,44 +123,45 @@ class DonutChart extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: entries.take(5).map((entry) {
+      mainAxisSize: MainAxisSize.min,
+      children: entries.map((entry) {
         final index = entries.indexOf(entry);
         final percentage = total > 0 ? (entry.value / total) * 100 : 0;
         return Padding(
-          padding: const EdgeInsets.only(bottom: 12), // 🔥 DIPERBESAR jarak antar item
+          padding: const EdgeInsets.only(bottom: 6), // DIPERKECIL DARI 12
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start, // 🔥 Ubah agar teks multi-baris sejajar atas
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 12,
-                height: 12,
-                margin: const EdgeInsets.only(top: 2), // 🔥 sejajarkan dengan teks baris pertama
+                width: 10,
+                height: 10,
+                margin: const EdgeInsets.only(top: 2),
                 decoration: BoxDecoration(
                   color: colors[index % colors.length],
                   shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 🔥 TEKS BISA 2-3 BARIS
                     Text(
                       entry.key,
                       style: GoogleFonts.poppins(
-                        fontSize: 13,
+                        fontSize: 11,
                         fontWeight: FontWeight.w500,
-                        color: Colors.grey.shade800,
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
-                      softWrap: true, // 🔥 BAWAAN - biarkan wrap
-                      overflow: TextOverflow.visible, // 🔥 JANGAN dipotong
+                      softWrap: true,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '${percentage.toStringAsFixed(1)}%',
                       style: GoogleFonts.poppins(
-                        fontSize: 12,
+                        fontSize: 10,
                         fontWeight: FontWeight.w600,
                         color: colors[index % colors.length],
                       ),
