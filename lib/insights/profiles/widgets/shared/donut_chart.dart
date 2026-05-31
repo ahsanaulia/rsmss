@@ -119,60 +119,70 @@ class DonutChart extends StatelessWidget {
     );
   }
 
-  Widget _buildLegend(List<MapEntry<String, int>> entries, List<Color> colors) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: entries.map((entry) {
-        final index = entries.indexOf(entry);
-        final percentage = total > 0 ? (entry.value / total) * 100 : 0;
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 6), // DIPERKECIL DARI 12
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 10,
-                height: 10,
-                margin: const EdgeInsets.only(top: 2),
-                decoration: BoxDecoration(
-                  color: colors[index % colors.length],
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      entry.key,
-                      style: GoogleFonts.poppins(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white.withValues(alpha: 0.9),
-                      ),
-                      softWrap: true,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+ Widget _buildLegend(List<MapEntry<String, int>> entries, List<Color> colors) {
+  // Bagi legend menjadi 3 kolom
+  final int columns = 3;
+  final int rows = (entries.length / columns).ceil();
+  
+  return SizedBox(
+    height: rows * 50.0, // Tinggi dinamis
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        final itemWidth = constraints.maxWidth / columns;
+        return Wrap(
+          spacing: 6,
+          runSpacing: 8,
+          children: entries.map((entry) {
+            final index = entries.indexOf(entry);
+            final percentage = total > 0 ? (entry.value / total) * 100 : 0;
+            return SizedBox(
+              width: itemWidth,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 10,
+                    height: 10,
+                    margin: const EdgeInsets.only(top: 3),
+                    decoration: BoxDecoration(
+                      color: colors[index % colors.length],
+                      shape: BoxShape.circle,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '${percentage.toStringAsFixed(1)}%',
-                      style: GoogleFonts.poppins(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: colors[index % colors.length],
-                      ),
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          entry.key,
+                          style: GoogleFonts.poppins(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
+                          softWrap: true,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          '${percentage.toStringAsFixed(1)}% (${entry.value})',
+                          style: GoogleFonts.poppins(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w600,
+                            color: colors[index % colors.length],
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          }).toList(),
         );
-      }).toList(),
-    );
-  }
+      },
+    ),
+  );
+}
 }

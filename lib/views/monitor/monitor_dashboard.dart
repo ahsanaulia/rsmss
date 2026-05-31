@@ -14,6 +14,8 @@ import 'asset_report_screen.dart';
 import 'stocks_intelligence_screen.dart';
 import 'stock_report_screen.dart';
 import '../../models/hospital_profile_model.dart';
+import '../../../insights/hospital/views/hospital_overview_screen.dart';
+import '../../../insights/hospital/views/human_ratio_screen.dart';
 
 // 🔥 IMPORT SUB-MENU PROFILES INSIGHTS
 import '../../../insights/profiles/views/submenu1_ringkasan.dart';
@@ -29,6 +31,7 @@ import '../../../insights/stocks/views/stock_overview_screen.dart';
 import '../../../insights/stocks/views/stock_requests_screen.dart';
 import '../../../insights/stocks/views/stock_opname_screen.dart';
 import '../../../insights/stocks/views/storage_distribution_screen.dart';
+import '../../insights/stocks/views/storage_hierarchy_screen.dart';
 
 class MonitorDashboard extends StatefulWidget {
   final String userName;
@@ -202,6 +205,10 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
                       // =========================
                       // PEOPLE INSIGHTS (BARU)
                       // =========================
+                      _sectionTitle("ORGANIZATION INSIGHTS"),
+                      _menu("Organization Overview", Icons.business_outlined),
+                      _menu("Human Ratio & Analytics", Icons.people_outline),
+                      const SizedBox(height: 24),
                       _sectionTitle("PEOPLE INSIGHTS"),
                       _menu("Ringkasan Pegawai", Icons.people_alt),
                       _menu("Wellbeing & Kinerja", Icons.favorite_outline),
@@ -214,9 +221,9 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
                       // ASSET
                       // =========================
                       _sectionTitle("ASSET"),
-                      _menu("Live Asset Tracking", Icons.inventory),
-                      _menu("Asset by Taxonomy", Icons.account_tree), 
                       _menu("Asset Utilization", Icons.speed),
+                      _menu("Live Asset Tracking", Icons.inventory),
+                      _menu("Asset by Taxonomy", Icons.account_tree),
                       // _menu("Asset Overview", Icons.assessment_outlined),
                       _menu("Asset Intelligence", Icons.bar_chart),
                       _menu("Asset Report", Icons.description),
@@ -229,9 +236,13 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
                       _sectionTitle("STOCK & INVENTORY"),
                       _menu("Stock Overview", Icons.inventory),
                       _menu("Stock Tree View", Icons.account_tree),
-                      _menu("Stock Requests", Icons.request_page), // 👈 TAMBAHKAN INI 
-                       _menu("Stock Opname", Icons.medical_information_outlined),
-                       _menu("Storage Distribution", Icons.inventory_2_outlined), 
+                      _menu(
+                        "Stock Requests",
+                        Icons.request_page,
+                      ), // 👈 TAMBAHKAN INI
+                      _menu("Stock Opname", Icons.medical_information_outlined),
+                      _menu("Storage Distribution", Icons.inventory_2_outlined),
+                      _menu("Storage Tree View", Icons.account_tree_outlined),
                       _menu("Stock Intelligence", Icons.watch_later),
                       _menu("Stock Report", Icons.description),
                       const SizedBox(height: 24),
@@ -448,10 +459,17 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
   // GET BODY BASED ON SELECTED MENU
   // ======================
   Widget _getBody() {
+
+    if (_selectedMenu == "Organization Overview") {
+  return const HospitalOverviewScreen();
+}
     // 🔥 PEOPLE INSIGHTS - SUB MENU 1
     if (_selectedMenu == "Ringkasan Pegawai") {
       return const Submenu1Ringkasan();
     }
+    if (_selectedMenu == "Human Ratio & Analytics") {
+  return const HumanRatioScreen();
+}
 
     // 🔥 PEOPLE INSIGHTS - SUB MENU 2
     if (_selectedMenu == "Wellbeing & Kinerja") {
@@ -491,16 +509,16 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
     }
 
     if (_selectedMenu == "Asset by Taxonomy") {
-  return const AssetTreeScreen();
-}
+      return const AssetTreeScreen();
+    }
 
     if (_selectedMenu == "Asset Intelligence") {
       return const AssetIntelligenceScreen();
     }
 
     if (_selectedMenu == "Asset Utilization") {
-  return const AssetUtilizationScreen();
-}
+      return const AssetUtilizationScreen();
+    }
 
     if (_selectedMenu == "Asset Report") {
       return const AssetReportScreen();
@@ -511,21 +529,29 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
       return const StockOverviewScreen();
     }
 
-    if (_selectedMenu == "Stock Tree View") {  // 👈 TAMBAHKAN INI
-  return const StockTreeView();
-}
+    if (_selectedMenu == "Stock Tree View") {
+      // 👈 TAMBAHKAN INI
+      return const StockTreeView();
+    }
 
-if (_selectedMenu == "Stock Opname") {  // 👈 TAMBAHKAN INI
-  return const StockOpnameScreen();
-}
+    if (_selectedMenu == "Stock Opname") {
+      // 👈 TAMBAHKAN INI
+      return const StockOpnameScreen();
+    }
 
-if (_selectedMenu == "Storage Distribution") {  // 👈 TAMBAHKAN INI
-  return const StorageDistributionScreen();
-}
+    if (_selectedMenu == "Storage Distribution") {
+      // 👈 TAMBAHKAN INI
+      return const StorageDistributionScreen();
+    }
 
-if (_selectedMenu == "Stock Requests") {
-  return const StockRequestsScreen();
-}
+    if (_selectedMenu == "Storage Tree View") {
+      // 👈 TAMBAHKAN INI
+      return const StorageHierarchyScreen();
+    }
+
+    if (_selectedMenu == "Stock Requests") {
+      return const StockRequestsScreen();
+    }
     if (_selectedMenu == "Stock Intelligence") {
       return const StocksIntelligenceScreen();
     }
