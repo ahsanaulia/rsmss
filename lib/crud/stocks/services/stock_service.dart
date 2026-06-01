@@ -21,17 +21,17 @@ class StockService {
 
   Future<List<Stock>> fetchAllStocks() async {
     try {
-      print('📦 FETCHING ALL STOCKS...');
+      // print('📦 FETCHING ALL STOCKS...');
       final response = await _supabase
           .from('v_crud_stocks')
           .select('*')
           .order('stock_name', ascending: true);
 
-      print('📦 RESPONSE COUNT: ${response.length}');
+      // print('📦 RESPONSE COUNT: ${response.length}');
       if (response.isEmpty) return [];
       return response.map((item) => Stock.fromJson(item)).toList();
     } catch (e) {
-      print('❌ FETCH ERROR: $e');
+      // print('❌ FETCH ERROR: $e');
       throw Exception('Gagal memuat data stok: $e');
     }
   }
@@ -83,16 +83,12 @@ class StockService {
 
   Future<Stock> createStock(Stock stock, String userId) async {
     try {
-      print('🟢 CREATE STOCK START');
-      print('🟢 Stock name: ${stock.stockName}');
-      print('🟢 Unit: ${stock.unit}');
-      print('🟢 UserId: $userId');
+     
       
       if (stock.stockName.isEmpty) throw Exception('Nama stok wajib diisi');
       if (stock.unit.isEmpty) throw Exception('Satuan wajib diisi');
       
       final jsonData = stock.toJsonForCreate(userId);
-      print('🟢 JSON to insert: $jsonData');
       
       final response = await _supabase
           .from('stocks')
@@ -100,15 +96,12 @@ class StockService {
           .select()
           .single();
       
-      print('🟢 INSERT RESPONSE: $response');
       
       final createdStock = await fetchStockById(response['id'] as String);
       if (createdStock == null) throw Exception('Gagal mengambil data stok baru');
       
-      print('🟢 CREATE SUCCESS');
       return createdStock;
     } catch (e) {
-      print('🔴 CREATE ERROR: $e');
       throw Exception('Gagal menambah stok: $e');
     }
   }
@@ -159,16 +152,14 @@ class StockService {
 
   Future<String> uploadStockPhoto(XFile xFile, String stockId) async {
     try {
-      print('📸 UPLOAD PHOTO START');
-      print('📸 Stock ID: $stockId');
-      print('📸 File path: ${xFile.path}');
+
       
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final fileName = '${stockId}_$timestamp.jpg';
-      print('📸 File name: $fileName');
+
       
       final bytes = await xFile.readAsBytes();
-      print('📸 Bytes length: ${bytes.length}');
+
       
       await _supabase.storage
           .from(_stockImageBucket)
@@ -178,11 +169,10 @@ class StockService {
           .from(_stockImageBucket)
           .getPublicUrl(fileName);
       
-      print('📸 Public URL: $publicUrl');
-      print('📸 UPLOAD SUCCESS');
+
       return publicUrl;
     } catch (e) {
-      print('🔴 UPLOAD ERROR: $e');
+
       throw Exception('Gagal upload foto: ${e.toString()}');
     }
   }
@@ -197,7 +187,7 @@ class StockService {
         await _supabase.storage.from(_stockImageBucket).remove([filePath]);
       }
     } catch (e) {
-      print('Gagal menghapus foto stok: $e');
+      // pri?nt('Gagal menghapus foto stok: $e');
     }
   }
 

@@ -1,13 +1,11 @@
-// lib/insights/profiles/views/submenu2_wellbeing.dart
+// File: lib/insights/profiles/views/submenu2_wellbeing.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/profile_wellbeing_provider.dart';
-// import '../widgets/shared/kpi_card.dart';
 import '../widgets/shared/gauge_widget.dart';
 import '../widgets/shared/line_chart.dart';
-// import '../widgets/shared/alert_card.dart';
 import '../widgets/shared/shimmer_loading.dart';
 import '../models/profile_wellbeing_model.dart';
 
@@ -19,25 +17,37 @@ class Submenu2Wellbeing extends ConsumerWidget {
     final wellbeingAsync = ref.watch(wellbeingSummaryStreamProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF052D9C), // Biru tua seperti submenu1 & 3
-      body: RefreshIndicator(
-        onRefresh: () async {
-          ref.invalidate(wellbeingSummaryProvider);
-        },
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 20),
-              wellbeingAsync.when(
-                data: (summary) => _buildContent(context, summary),
-                loading: () => _buildLoadingShimmer(),
-                error: (error, _) => _buildErrorState(error.toString()),
-              ),
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: const [
+              Color(0xFF052D9C),
+              Color(0xFF1E3A8A),
             ],
+          ),
+        ),
+        child: RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(wellbeingSummaryProvider);
+          },
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(),
+                const SizedBox(height: 20),
+                wellbeingAsync.when(
+                  data: (summary) => _buildContent(context, summary),
+                  loading: () => _buildLoadingShimmer(),
+                  error: (error, _) => _buildErrorState(error.toString()),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -49,7 +59,7 @@ class Submenu2Wellbeing extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '        WELLBEING & KINERJA',
+          'WELLBEING & KINERJA',
           style: GoogleFonts.poppins(
             fontSize: 24,
             fontWeight: FontWeight.w800,
@@ -61,13 +71,13 @@ class Submenu2Wellbeing extends ConsumerWidget {
         Text(
           'Monitoring kesehatan mental, fatigue, dan skor kinerja pegawai',
           style: GoogleFonts.poppins(
-            fontSize: 16,
+            fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: const Color(0xFF6A98DF),
+            color: Colors.white.withValues(alpha: 0.7),
           ),
         ),
         const SizedBox(height: 8),
-        Container(height: 3, width: 40, color: Color(0xFF052D9C)),
+        Container(height: 3, width: 40, color: Colors.white.withValues(alpha: 0.5)),
       ],
     );
   }
@@ -78,35 +88,29 @@ class Submenu2Wellbeing extends ConsumerWidget {
         // KPI Cards Row - 3 kolom
         Row(
           children: [
-            Expanded(
-              child: _buildKpiCard(
-                title: 'Rata-rata Fatigue',
-                value: summary.averageFatigueScore.toStringAsFixed(1),
-                icon: Icons.battery_alert_outlined,
-                color: _getFatigueColor(summary.averageFatigueScore),
-                percentage: (summary.averageFatigueScore / 100) * 100,
-              ),
-            ),
+            Expanded(child: _buildKpiCard(
+              title: 'Rata-rata Fatigue',
+              value: summary.averageFatigueScore.toStringAsFixed(1),
+              icon: Icons.battery_alert_outlined,
+              color: _getFatigueColor(summary.averageFatigueScore),
+              percentage: (summary.averageFatigueScore / 100) * 100,
+            )),
             const SizedBox(width: 16),
-            Expanded(
-              child: _buildKpiCard(
-                title: 'Rata-rata Stress',
-                value: summary.averageStressScore.toStringAsFixed(1),
-                icon: Icons.psychology_outlined,
-                color: _getStressColor(summary.averageStressScore),
-                percentage: (summary.averageStressScore / 100) * 100,
-              ),
-            ),
+            Expanded(child: _buildKpiCard(
+              title: 'Rata-rata Stress',
+              value: summary.averageStressScore.toStringAsFixed(1),
+              icon: Icons.psychology_outlined,
+              color: _getStressColor(summary.averageStressScore),
+              percentage: (summary.averageStressScore / 100) * 100,
+            )),
             const SizedBox(width: 16),
-            Expanded(
-              child: _buildKpiCard(
-                title: 'Rata-rata Mood',
-                value: summary.averageMoodScore.toStringAsFixed(1),
-                icon: Icons.sentiment_satisfied_outlined,
-                color: _getMoodColor(summary.averageMoodScore),
-                percentage: summary.averageMoodScore,
-              ),
-            ),
+            Expanded(child: _buildKpiCard(
+              title: 'Rata-rata Mood',
+              value: summary.averageMoodScore.toStringAsFixed(1),
+              icon: Icons.sentiment_satisfied_outlined,
+              color: _getMoodColor(summary.averageMoodScore),
+              percentage: summary.averageMoodScore,
+            )),
           ],
         ),
         const SizedBox(height: 20),
@@ -115,19 +119,15 @@ class Submenu2Wellbeing extends ConsumerWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: _buildGaugeCard(
-                title: 'TINGKAT FATIGUE GLOBAL',
-                value: summary.averageFatigueScore,
-              ),
-            ),
+            Expanded(child: _buildGaugeCard(
+              title: 'TINGKAT FATIGUE GLOBAL',
+              value: summary.averageFatigueScore,
+            )),
             const SizedBox(width: 16),
-            Expanded(
-              child: _buildHighRiskCard(
-                title: 'PERINGATAN FATIGUE TINGGI',
-                employees: summary.highRiskEmployees,
-              ),
-            ),
+            Expanded(child: _buildHighRiskCard(
+              title: 'PERINGATAN FATIGUE TINGGI',
+              employees: summary.highRiskEmployees,
+            )),
           ],
         ),
         const SizedBox(height: 20),
@@ -160,25 +160,7 @@ class Submenu2Wellbeing extends ConsumerWidget {
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withValues(alpha: 0.95),
-            Colors.white.withValues(alpha: 0.85),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      decoration: _glassDecoration(color),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -191,18 +173,18 @@ class Submenu2Wellbeing extends ConsumerWidget {
                   color: color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: color, size: 24),
+                child: Icon(icon, color: color, size: 22),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
+                  color: color.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   '${percentage.toStringAsFixed(0)}%',
                   style: GoogleFonts.poppins(
-                    fontSize: 12,
+                    fontSize: 10,
                     fontWeight: FontWeight.w700,
                     color: color,
                   ),
@@ -214,16 +196,16 @@ class Submenu2Wellbeing extends ConsumerWidget {
           Text(
             title,
             style: GoogleFonts.poppins(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
+              color: Colors.white.withValues(alpha: 0.8),
             ),
           ),
           const SizedBox(height: 4),
           Text(
             value,
             style: GoogleFonts.poppins(
-              fontSize: 36,
+              fontSize: 32,
               fontWeight: FontWeight.bold,
               color: color,
             ),
@@ -233,59 +215,33 @@ class Submenu2Wellbeing extends ConsumerWidget {
     );
   }
 
-  Widget _buildGaugeCard({
-    required String title,
-    required double value,
-  }) {
+  Widget _buildGaugeCard({required String title, required double value}) {
     final color = _getFatigueColor(value);
     
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withValues(alpha: 0.95),
-            Colors.white.withValues(alpha: 0.85),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      decoration: _glassDecoration(color),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
             style: GoogleFonts.poppins(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.w700,
               color: color,
             ),
           ),
           const SizedBox(height: 16),
           Center(
-            child: GaugeWidget(
-              title: '',
-              value: value,
-              minValue: 0,
-              maxValue: 100,
-            ),
+            child: GaugeWidget(title: '', value: value, minValue: 0, maxValue: 100),
           ),
           const SizedBox(height: 8),
           Center(
             child: Text(
               '${value.toStringAsFixed(1)}%',
               style: GoogleFonts.poppins(
-                fontSize: 28,
+                fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: color,
               ),
@@ -300,36 +256,18 @@ class Submenu2Wellbeing extends ConsumerWidget {
     required String title,
     required List<HighRiskEmployee> employees,
   }) {
-    final color = const Color.fromARGB(255, 233, 1, 1);
+    final color = const Color(0xFFEF4444);
     
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withValues(alpha: 0.95),
-            Colors.white.withValues(alpha: 0.85),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      decoration: _glassDecoration(color),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
             style: GoogleFonts.poppins(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.w700,
               color: color,
             ),
@@ -342,9 +280,9 @@ class Submenu2Wellbeing extends ConsumerWidget {
                 child: Text(
                   'Tidak ada pegawai dengan fatigue tinggi',
                   style: GoogleFonts.poppins(
-                    fontSize: 14,
+                    fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF2E7D32),
+                    color: Colors.white.withValues(alpha: 0.6),
                   ),
                 ),
               ),
@@ -355,30 +293,30 @@ class Submenu2Wellbeing extends ConsumerWidget {
               child: Row(
                 children: [
                   Container(
-                    width: 10,
-                    height: 10,
+                    width: 8,
+                    height: 8,
                     decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 245, 16, 0),
+                      color: color,
                       shape: BoxShape.circle,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       emp.fullName,
                       style: GoogleFonts.poppins(
-                        fontSize: 14,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: const Color.fromARGB(255, 32, 32, 32),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ),
                   Text(
                     '${emp.fatigueScore.toStringAsFixed(0)}%',
                     style: GoogleFonts.poppins(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: const Color.fromARGB(255, 233, 1, 1),
+                      color: color,
                     ),
                   ),
                 ],
@@ -394,36 +332,19 @@ class Submenu2Wellbeing extends ConsumerWidget {
     required List<double> data,
     required List<String> labels,
   }) {
+    final color = const Color(0xFF3B82F6);
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withValues(alpha: 0.95),
-            Colors.white.withValues(alpha: 0.85),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF0288D1).withValues(alpha: 0.3), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF0288D1).withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      decoration: _glassDecoration(color),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
             style: GoogleFonts.poppins(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: const Color(0xFF0288D1),
+              color: color,
             ),
           ),
           const SizedBox(height: 16),
@@ -431,7 +352,7 @@ class Submenu2Wellbeing extends ConsumerWidget {
             title: '',
             data: data,
             xAxisLabels: labels,
-            lineColor: const Color(0xFF0288D1),
+            lineColor: color,
           ),
         ],
       ),
@@ -442,36 +363,19 @@ class Submenu2Wellbeing extends ConsumerWidget {
     required String title,
     required List<AttentionRequiredEmployee> employees,
   }) {
+    final color = const Color(0xFFF59E0B);
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withValues(alpha: 0.95),
-            Colors.white.withValues(alpha: 0.85),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color.fromARGB(255, 65, 12, 12).withValues(alpha: 0.3), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: const Color.fromARGB(255, 87, 29, 29).withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      decoration: _glassDecoration(color),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
             style: GoogleFonts.poppins(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.w700,
-              color: const Color.fromARGB(255, 82, 26, 26),
+              color: color,
             ),
           ),
           const SizedBox(height: 16),
@@ -479,9 +383,12 @@ class Submenu2Wellbeing extends ConsumerWidget {
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 77, 29, 29).withValues(alpha: 0.05),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color.fromARGB(255, 87, 27, 27).withValues(alpha: 0.2), width: 0.5),
+              border: Border.all(
+                color: color.withValues(alpha: 0.2),
+                width: 0.5,
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -489,10 +396,10 @@ class Submenu2Wellbeing extends ConsumerWidget {
                 Row(
                   children: [
                     Container(
-                      width: 10,
-                      height: 10,
-                      decoration: const BoxDecoration(
-                        color: Color.fromARGB(255, 77, 27, 27),
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: color,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -500,48 +407,49 @@ class Submenu2Wellbeing extends ConsumerWidget {
                     Text(
                       emp.fullName,
                       style: GoogleFonts.poppins(
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: const Color.fromARGB(255, 70, 22, 22),
+                        color: Colors.white,
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
                 Padding(
-                  padding: const EdgeInsets.only(left: 18),
+                  padding: const EdgeInsets.only(left: 16),
                   child: Text(
                     emp.aiRecommendation ?? 'Fatigue: ${emp.fatigueScore.toStringAsFixed(0)}%, Stress: ${emp.stressScore.toStringAsFixed(0)}%',
                     style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      color: Colors.grey.shade700,
+                      fontSize: 11,
+                      color: Colors.white.withValues(alpha: 0.7),
                     ),
                   ),
                 ),
               ],
             ),
-          )).toList(),
+          )),
         ],
       ),
     );
   }
 
+
   Color _getFatigueColor(double score) {
-    if (score >= 70) return const Color(0xFFD32F2F);
-    if (score >= 50) return const Color(0xFFED6C02);
-    return const Color(0xFF2E7D32);
+    if (score >= 70) return const Color(0xFFEF4444);
+    if (score >= 50) return const Color(0xFFF59E0B);
+    return const Color(0xFF10B981);
   }
 
   Color _getStressColor(double score) {
-    if (score >= 70) return const Color.fromARGB(255, 0, 52, 194);
-    if (score >= 50) return const Color.fromARGB(255, 237, 2, 61);
-    return const Color(0xFF2E7D32);
+    if (score >= 70) return const Color(0xFFEF4444);
+    if (score >= 50) return const Color(0xFFF59E0B);
+    return const Color(0xFF10B981);
   }
 
   Color _getMoodColor(double score) {
-    if (score >= 70) return Color.fromARGB(255, 0, 52, 194);
-    if (score >= 50) return  Color.fromARGB(255, 237, 2, 61);
-    return const Color.fromARGB(255, 5, 46, 136);
+    if (score >= 70) return const Color(0xFF10B981);
+    if (score >= 50) return const Color(0xFFF59E0B);
+    return const Color(0xFFEF4444);
   }
 
   String _formatDate(DateTime date) {
@@ -574,7 +482,7 @@ class Submenu2Wellbeing extends ConsumerWidget {
       child: Container(
         height: 180,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
         ),
       ),
@@ -586,17 +494,31 @@ class Submenu2Wellbeing extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline, size: 48, color: Colors.red.shade300),
+          Icon(Icons.error_outline, size: 48, color: Colors.white.withValues(alpha: 0.5)),
           const SizedBox(height: 12),
           Text(
             'Gagal memuat data wellbeing',
             style: GoogleFonts.poppins(
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.w600,
               color: Colors.white,
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ============================================================
+  // GLASSMORPHISM DECORATION
+  // ============================================================
+  Decoration _glassDecoration(Color accentColor) {
+    return BoxDecoration(
+      borderRadius: BorderRadius.circular(20),
+      color: Colors.white.withValues(alpha: 0.08),
+      border: Border.all(
+        color: accentColor.withValues(alpha: 0.2),
+        width: 0.5,
       ),
     );
   }

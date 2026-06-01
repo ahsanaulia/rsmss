@@ -1,4 +1,4 @@
-// lib/insights/profiles/widgets/shared/progress_list.dart
+// File: lib/insights/profiles/widgets/shared/progress_list.dart
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -44,27 +44,17 @@ class ProgressList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final displayItems = items.take(maxItems).toList();
+    final accentColor = const Color(0xFF3B82F6);
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withValues(alpha: 0.9),
-            Colors.white.withValues(alpha: 0.7),
-          ],
+        borderRadius: BorderRadius.circular(20),
+        color: Colors.white.withValues(alpha: 0.08),
+        border: Border.all(
+          color: accentColor.withValues(alpha: 0.2),
+          width: 0.5,
         ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.grey.shade200, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,7 +64,7 @@ class ProgressList extends StatelessWidget {
             style: GoogleFonts.poppins(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
+              color: Colors.white.withValues(alpha: 0.8),
             ),
           ),
           const SizedBox(height: 14),
@@ -86,8 +76,8 @@ class ProgressList extends StatelessWidget {
                 'dan ${items.length - maxItems} lainnya...',
                 style: GoogleFonts.poppins(
                   fontSize: 9,
-                  color: Colors.grey.shade500,
                   fontStyle: FontStyle.italic,
+                  color: Colors.white.withValues(alpha: 0.5),
                 ),
               ),
             ),
@@ -97,7 +87,7 @@ class ProgressList extends StatelessWidget {
   }
 
   Widget _buildProgressItem(ProgressItem item) {
-    final itemColor = item.color ?? const Color(0xFF01579B);
+    final itemColor = item.color ?? const Color(0xFF3B82F6);
     final percentage = item.percentage;
 
     return Padding(
@@ -110,14 +100,7 @@ class ProgressList extends StatelessWidget {
               height: 36,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    itemColor.withValues(alpha: 0.2),
-                    itemColor.withValues(alpha: 0.05),
-                  ],
-                ),
+                color: itemColor.withValues(alpha: 0.1),
                 border: Border.all(color: itemColor.withValues(alpha: 0.3), width: 1),
               ),
               child: Center(
@@ -130,7 +113,7 @@ class ProgressList extends StatelessWidget {
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => Icon(
                             Icons.person,
-                            size: 18,
+                            size: 16,
                             color: itemColor,
                           ),
                         ),
@@ -159,7 +142,7 @@ class ProgressList extends StatelessWidget {
                         style: GoogleFonts.poppins(
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
-                          color: Colors.grey.shade800,
+                          color: Colors.white.withValues(alpha: 0.9),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -183,7 +166,7 @@ class ProgressList extends StatelessWidget {
                       item.subtitle!,
                       style: GoogleFonts.poppins(
                         fontSize: 9,
-                        color: Colors.grey.shade500,
+                        color: Colors.white.withValues(alpha: 0.5),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -191,16 +174,12 @@ class ProgressList extends StatelessWidget {
                   ),
                 const SizedBox(height: 4),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: percentage / 100,
-                    backgroundColor: itemColor.withValues(alpha: 0.1),
-                    color: percentage < 30
-                        ? Colors.red
-                        : percentage < 70
-                            ? Colors.orange
-                            : itemColor,
-                    minHeight: 6,
+                    backgroundColor: itemColor.withValues(alpha: 0.15),
+                    color: _getProgressColor(percentage, itemColor),
+                    minHeight: 4,
                   ),
                 ),
               ],
@@ -209,5 +188,11 @@ class ProgressList extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Color _getProgressColor(double percentage, Color defaultColor) {
+    if (percentage < 30) return const Color(0xFFEF4444);
+    if (percentage < 70) return const Color(0xFFF59E0B);
+    return defaultColor;
   }
 }

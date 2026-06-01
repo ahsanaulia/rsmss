@@ -1,4 +1,4 @@
-// lib/insights/profiles/widgets/shared/gauge_widget.dart
+// File: lib/insights/profiles/widgets/shared/gauge_widget.dart
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -18,9 +18,9 @@ class GaugeWidget extends StatelessWidget {
     required this.title,
     this.minValue = 0,
     this.maxValue = 100,
-    this.lowColor = Colors.green,
-    this.mediumColor = Colors.orange,
-    this.highColor = Colors.red,
+    this.lowColor = const Color(0xFF10B981),
+    this.mediumColor = const Color(0xFFF59E0B),
+    this.highColor = const Color(0xFFEF4444),
   });
 
   @override
@@ -31,23 +31,12 @@ class GaugeWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withValues(alpha: 0.9),
-            Colors.white.withValues(alpha: 0.7),
-          ],
+        borderRadius: BorderRadius.circular(20),
+        color: Colors.white.withValues(alpha: 0.08),
+        border: Border.all(
+          color: gaugeColor.withValues(alpha: 0.2),
+          width: 0.5,
         ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.grey.shade200, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,7 +46,7 @@ class GaugeWidget extends StatelessWidget {
             style: GoogleFonts.poppins(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
+              color: Colors.white.withValues(alpha: 0.8),
             ),
           ),
           const SizedBox(height: 16),
@@ -81,7 +70,7 @@ class GaugeWidget extends StatelessWidget {
             child: Text(
               '${value.toStringAsFixed(1)}%',
               style: GoogleFonts.poppins(
-                fontSize: 20,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: gaugeColor,
               ),
@@ -121,10 +110,10 @@ class _GaugePainter extends CustomPainter {
     final startAngle = -180 * (3.14159 / 180);
     final sweepAngle = 180 * (3.14159 / 180);
     
-    // Background arc
+    // Background arc - glassmorphism style
     final bgPaint = Paint()
-      ..color = Colors.grey.shade200
-      ..strokeWidth = 12
+      ..color = Colors.white.withValues(alpha: 0.15)
+      ..strokeWidth = 10
       ..style = PaintingStyle.stroke;
     canvas.drawArc(Rect.fromCircle(center: center, radius: radius), startAngle, sweepAngle, false, bgPaint);
 
@@ -132,7 +121,7 @@ class _GaugePainter extends CustomPainter {
     final valueAngle = sweepAngle * percentage;
     final valuePaint = Paint()
       ..color = gaugeColor
-      ..strokeWidth = 12
+      ..strokeWidth = 10
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
     canvas.drawArc(Rect.fromCircle(center: center, radius: radius), startAngle, valueAngle, false, valuePaint);
@@ -140,10 +129,10 @@ class _GaugePainter extends CustomPainter {
     // Needle
     final needleAngle = startAngle + valueAngle;
     final needleEnd = Offset(
-      center.dx + (radius - 15) * (needleAngle < 0 ? -1 : 1),
-      center.dy + (radius - 15) * (needleAngle.abs() / 180),
+      center.dx + (radius - 12) * (needleAngle < 0 ? -1 : 1),
+      center.dy + (radius - 12) * (needleAngle.abs() / 180),
     );
-    canvas.drawLine(center, needleEnd, Paint()..color = Colors.grey.shade800..strokeWidth = 2);
+    canvas.drawLine(center, needleEnd, Paint()..color = Colors.white..strokeWidth = 2);
   }
 
   @override

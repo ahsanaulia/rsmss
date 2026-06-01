@@ -1,4 +1,4 @@
-// lib/insights/profiles/views/submenu4_sertifikasi_penilaian.dart
+// File: lib/insights/profiles/views/submenu4_sertifikasi_penilaian.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,16 +16,11 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     print('🔥🔥🔥 [SUB-MENU 4] BUILD DIPANGGIL 🔥🔥🔥');
     
-    // Gunakan StreamProvider untuk realtime
     final scoreSummaryAsync = ref.watch(scoreSummaryListStreamProvider);
     final topPerformersAsync = ref.watch(topPerformersStreamProvider);
     final categoriesAsync = ref.watch(scoringCategoriesStreamProvider);
-    
-    // 🔥 Gunakan FutureProvider untuk test (lebih mudah debug)
-    print('🔥 [SUB-MENU 4] Sebelum watch allOwnedQualificationsProvider');
     final allQualificationsAsync = ref.watch(allOwnedQualificationsProvider);
     
-    // 🔥 DEBUG: Print status provider
     allQualificationsAsync.when(
       data: (list) => print('✅ [SUB-MENU 4] Data sertifikasi: ${list.length} items'),
       loading: () => print('⏳ [SUB-MENU 4] Loading sertifikasi...'),
@@ -33,49 +28,53 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
     );
 
     return Scaffold(
-      backgroundColor: const Color(0xFF052D9C),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          print('🔄 [SUB-MENU 4] Refresh dipanggil');
-          ref.invalidate(scoreSummaryListProvider);
-          ref.invalidate(topPerformersProvider);
-          ref.invalidate(allOwnedQualificationsProvider);
-        },
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 20),
-
-              // KPI Cards Row
-              _buildKpiRow(scoreSummaryAsync, allQualificationsAsync),
-              const SizedBox(height: 20),
-
-              // Top Performers & Bottom Performers
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: _buildTopPerformersCard(topPerformersAsync),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildBottomPerformersCard(scoreSummaryAsync),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Score by Category
-              _buildScoreByCategoryCard(categoriesAsync, scoreSummaryAsync),
-              const SizedBox(height: 20),
-
-              // 🔥 Qualifications Card
-              _buildQualificationsCard(allQualificationsAsync),
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: const [
+              Color(0xFF052D9C),
+              Color(0xFF1E3A8A),
             ],
+          ),
+        ),
+        child: RefreshIndicator(
+          onRefresh: () async {
+            print('🔄 [SUB-MENU 4] Refresh dipanggil');
+            ref.invalidate(scoreSummaryListProvider);
+            ref.invalidate(topPerformersProvider);
+            ref.invalidate(allOwnedQualificationsProvider);
+          },
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeader(),
+                const SizedBox(height: 20),
+
+                _buildKpiRow(scoreSummaryAsync, allQualificationsAsync),
+                const SizedBox(height: 20),
+
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: _buildTopPerformersCard(topPerformersAsync)),
+                    const SizedBox(width: 16),
+                    Expanded(child: _buildBottomPerformersCard(scoreSummaryAsync)),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                _buildScoreByCategoryCard(categoriesAsync, scoreSummaryAsync),
+                const SizedBox(height: 20),
+
+                _buildQualificationsCard(allQualificationsAsync),
+              ],
+            ),
           ),
         ),
       ),
@@ -99,13 +98,13 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
         Text(
           'Skor kinerja pegawai dan status sertifikasi',
           style: GoogleFonts.poppins(
-            fontSize: 16,
+            fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: const Color(0xFF6A98DF),
+            color: Colors.white.withValues(alpha: 0.7),
           ),
         ),
         const SizedBox(height: 8),
-        Container(height: 3, width: 40, color: Colors.white),
+        Container(height: 3, width: 40, color: Colors.white.withValues(alpha: 0.5)),
       ],
     );
   }
@@ -128,41 +127,33 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
             
             return Row(
               children: [
-                Expanded(
-                  child: _buildKpiCard(
-                    title: 'PEGAWAI DINILAI',
-                    value: totalEmployees.toString(),
-                    icon: Icons.people_alt,
-                    color: const Color(0xFF0288D1),
-                  ),
-                ),
+                Expanded(child: _buildKpiCard(
+                  title: 'PEGAWAI DINILAI',
+                  value: totalEmployees.toString(),
+                  icon: Icons.people_alt,
+                  color: const Color(0xFF3B82F6),
+                )),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: _buildKpiCard(
-                    title: 'RATA-RATA SKOR',
-                    value: '${avgScore.toStringAsFixed(1)}%',
-                    icon: Icons.assessment_outlined,
-                    color: avgScore >= 70 ? const Color(0xFF2E7D32) : (avgScore >= 50 ? const Color(0xFFED6C02) : const Color(0xFFD32F2F)),
-                  ),
-                ),
+                Expanded(child: _buildKpiCard(
+                  title: 'RATA-RATA SKOR',
+                  value: '${avgScore.toStringAsFixed(1)}%',
+                  icon: Icons.assessment_outlined,
+                  color: avgScore >= 70 ? const Color(0xFF10B981) : (avgScore >= 50 ? const Color(0xFFF59E0B) : const Color(0xFFEF4444)),
+                )),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: _buildKpiCard(
-                    title: 'TOTAL SERTIFIKASI',
-                    value: totalCertifications.toString(),
-                    icon: Icons.verified_outlined,
-                    color: const Color(0xFF5E35B1),
-                  ),
-                ),
+                Expanded(child: _buildKpiCard(
+                  title: 'TOTAL SERTIFIKASI',
+                  value: totalCertifications.toString(),
+                  icon: Icons.verified_outlined,
+                  color: const Color(0xFF8B5CF6),
+                )),
                 const SizedBox(width: 12),
-                Expanded(
-                  child: _buildKpiCard(
-                    title: 'RATA-RATA SKOR',
-                    value: '${avgScore.toStringAsFixed(1)}%',
-                    icon: Icons.assessment_outlined,
-                    color: avgScore >= 70 ? const Color(0xFF2E7D32) : (avgScore >= 50 ? const Color(0xFFED6C02) : const Color(0xFFD32F2F)),
-                  ),
-                ),
+                Expanded(child: _buildKpiCard(
+                  title: 'RATA-RATA SKOR',
+                  value: '${avgScore.toStringAsFixed(1)}%',
+                  icon: Icons.assessment_outlined,
+                  color: avgScore >= 70 ? const Color(0xFF10B981) : (avgScore >= 50 ? const Color(0xFFF59E0B) : const Color(0xFFEF4444)),
+                )),
               ],
             );
           },
@@ -172,7 +163,7 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
                 padding: const EdgeInsets.only(right: 12),
                 child: ShimmerLoading(
                   isLoading: true,
-                  child: Container(height: 120, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16))),
+                  child: Container(height: 120, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(16))),
                 ),
               ),
             )),
@@ -193,7 +184,7 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
             padding: const EdgeInsets.only(right: 12),
             child: ShimmerLoading(
               isLoading: true,
-              child: Container(height: 120, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16))),
+              child: Container(height: 120, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(16))),
             ),
           ),
         )),
@@ -217,25 +208,7 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withValues(alpha: 0.95),
-            Colors.white.withValues(alpha: 0.85),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      decoration: _glassDecoration(color),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -245,15 +218,15 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
               color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: color, size: 24),
+            child: Icon(icon, color: color, size: 22),
           ),
           const SizedBox(height: 12),
           Text(
             title,
             style: GoogleFonts.poppins(
-              fontSize: 14,
+              fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
+              color: Colors.white.withValues(alpha: 0.8),
             ),
           ),
           const SizedBox(height: 4),
@@ -271,36 +244,18 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
   }
 
   Widget _buildTopPerformersCard(AsyncValue<List<ScoreSummary>> performers) {
-    const color = Color(0xFF2E7D32);
+    const color = Color(0xFF10B981);
     
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withValues(alpha: 0.95),
-            Colors.white.withValues(alpha: 0.85),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      decoration: _glassDecoration(color),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             '🏆 TOP PERFORMERS',
             style: GoogleFonts.poppins(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.w700,
               color: color,
             ),
@@ -314,8 +269,8 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
                       child: Text(
                         'Belum ada data penilaian',
                         style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
+                          fontSize: 12,
+                          color: Colors.white.withValues(alpha: 0.5),
                         ),
                       ),
                     ),
@@ -339,7 +294,7 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
                                 child: Text(
                                   '$index',
                                   style: GoogleFonts.poppins(
-                                    fontSize: 14,
+                                    fontSize: 12,
                                     fontWeight: FontWeight.bold,
                                     color: color,
                                   ),
@@ -354,9 +309,9 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
                                   Text(
                                     score.fullName,
                                     style: GoogleFonts.poppins(
-                                      fontSize: 14,
+                                      fontSize: 12,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.grey.shade800,
+                                      color: Colors.white,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -365,8 +320,8 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
                                     Text(
                                       score.unitCode!,
                                       style: GoogleFonts.poppins(
-                                        fontSize: 11,
-                                        color: Colors.grey.shade600,
+                                        fontSize: 10,
+                                        color: Colors.white.withValues(alpha: 0.5),
                                       ),
                                     ),
                                 ],
@@ -375,7 +330,7 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
                             Text(
                               '${score.totalPercentage.toStringAsFixed(1)}%',
                               style: GoogleFonts.poppins(
-                                fontSize: 18,
+                                fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: color,
                               ),
@@ -385,11 +340,11 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
                       );
                     }).toList(),
                   ),
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF10B981))),
             error: (e, _) => Center(
               child: Text(
                 'Gagal memuat data',
-                style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey.shade600),
+                style: GoogleFonts.poppins(fontSize: 12, color: Colors.white.withValues(alpha: 0.5)),
               ),
             ),
           ),
@@ -399,36 +354,18 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
   }
 
   Widget _buildBottomPerformersCard(AsyncValue<List<ScoreSummary>> summaries) {
-    const color = Color(0xFFD32F2F);
+    const color = Color(0xFFEF4444);
     
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withValues(alpha: 0.95),
-            Colors.white.withValues(alpha: 0.85),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      decoration: _glassDecoration(color),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             '📉 BOTTOM PERFORMERS',
             style: GoogleFonts.poppins(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.w700,
               color: color,
             ),
@@ -442,8 +379,8 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
                       child: Text(
                         'Belum ada data penilaian',
                         style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
+                          fontSize: 12,
+                          color: Colors.white.withValues(alpha: 0.5),
                         ),
                       ),
                     ),
@@ -467,7 +404,7 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
                                 child: Text(
                                   '$index',
                                   style: GoogleFonts.poppins(
-                                    fontSize: 14,
+                                    fontSize: 12,
                                     fontWeight: FontWeight.bold,
                                     color: color,
                                   ),
@@ -482,9 +419,9 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
                                   Text(
                                     score.fullName,
                                     style: GoogleFonts.poppins(
-                                      fontSize: 14,
+                                      fontSize: 12,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.grey.shade800,
+                                      color: Colors.white,
                                     ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -493,8 +430,8 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
                                     Text(
                                       score.unitCode!,
                                       style: GoogleFonts.poppins(
-                                        fontSize: 11,
-                                        color: Colors.grey.shade600,
+                                        fontSize: 10,
+                                        color: Colors.white.withValues(alpha: 0.5),
                                       ),
                                     ),
                                 ],
@@ -503,7 +440,7 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
                             Text(
                               '${score.totalPercentage.toStringAsFixed(1)}%',
                               style: GoogleFonts.poppins(
-                                fontSize: 18,
+                                fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: color,
                               ),
@@ -513,11 +450,11 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
                       );
                     }).toList(),
                   ),
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFFEF4444))),
             error: (e, _) => Center(
               child: Text(
                 'Gagal memuat data',
-                style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey.shade600),
+                style: GoogleFonts.poppins(fontSize: 12, color: Colors.white.withValues(alpha: 0.5)),
               ),
             ),
           ),
@@ -530,6 +467,8 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
     AsyncValue<List<ScoringCategoryModel>> categoriesAsync,
     AsyncValue<List<ScoreSummary>> scoresAsync,
   ) {
+    const color = Color(0xFF8B5CF6);
+    
     return categoriesAsync.when(
       data: (categories) {
         return scoresAsync.when(
@@ -562,39 +501,21 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
             }
 
             if (avgScores.isEmpty) {
-              return _buildPlaceholderCard('SKOR PER KATEGORI', const Color(0xFF5E35B1));
+              return _buildPlaceholderCard('SKOR PER KATEGORI', color);
             }
 
             return Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.white.withValues(alpha: 0.95),
-                    Colors.white.withValues(alpha: 0.85),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF5E35B1).withValues(alpha: 0.3), width: 1),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF5E35B1).withValues(alpha: 0.2),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
+              decoration: _glassDecoration(color),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'SKOR PER KATEGORI',
                     style: GoogleFonts.poppins(
-                      fontSize: 16,
+                      fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF5E35B1),
+                      color: color,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -608,15 +529,15 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
                             Text(
                               entry.key,
                               style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey.shade800,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white.withValues(alpha: 0.9),
                               ),
                             ),
                             Text(
                               '${entry.value.toStringAsFixed(1)}%',
                               style: GoogleFonts.poppins(
-                                fontSize: 16,
+                                fontSize: 14,
                                 fontWeight: FontWeight.bold,
                                 color: _getScoreColor(entry.value),
                               ),
@@ -625,12 +546,12 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
                         ),
                         const SizedBox(height: 4),
                         ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(4),
                           child: LinearProgressIndicator(
                             value: entry.value / 100,
-                            backgroundColor: Colors.grey.shade200,
+                            backgroundColor: Colors.white.withValues(alpha: 0.15),
                             color: _getScoreColor(entry.value),
-                            minHeight: 8,
+                            minHeight: 6,
                           ),
                         ),
                       ],
@@ -640,49 +561,28 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
               ),
             );
           },
-          loading: () => _buildPlaceholderCard('SKOR PER KATEGORI', const Color(0xFF5E35B1)),
-          error: (e, _) => _buildPlaceholderCard('SKOR PER KATEGORI', const Color(0xFF5E35B1)),
+          loading: () => _buildPlaceholderCard('SKOR PER KATEGORI', color),
+          error: (e, _) => _buildPlaceholderCard('SKOR PER KATEGORI', color),
         );
       },
-      loading: () => _buildPlaceholderCard('SKOR PER KATEGORI', const Color(0xFF5E35B1)),
-      error: (e, _) => _buildPlaceholderCard('SKOR PER KATEGORI', const Color(0xFF5E35B1)),
+      loading: () => _buildPlaceholderCard('SKOR PER KATEGORI', color),
+      error: (e, _) => _buildPlaceholderCard('SKOR PER KATEGORI', color),
     );
   }
 
-  // 🔥 CARD UNTUK SEMUA SERTIFIKASI
   Widget _buildQualificationsCard(AsyncValue<List<QualificationWithAssignment>> qualifications) {
-    print('🔥 [_buildQualificationsCard] Dipanggil');
-    
-    const color = Color(0xFF5E35B1);
+    const color = Color(0xFF8B5CF6);
     
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withValues(alpha: 0.95),
-            Colors.white.withValues(alpha: 0.85),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      decoration: _glassDecoration(color),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             '📜 SERTIFIKASI PEGAWAI',
             style: GoogleFonts.poppins(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.w700,
               color: color,
             ),
@@ -696,91 +596,93 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
                       child: Text(
                         'Belum ada data sertifikasi',
                         style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
+                          fontSize: 12,
+                          color: Colors.white.withValues(alpha: 0.5),
                         ),
                       ),
                     ),
                   )
-                : Column(
-                    children: list.take(5).map((item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Avatar atau icon
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: color.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Center(
-                              child: Text(
-                                item.displayName.isNotEmpty ? item.displayName[0] : '?',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: color,
+                : ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 350),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: list.take(10).map((item) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: color.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Center(
+                                  child: Text(
+                                    item.displayName.isNotEmpty ? item.displayName[0].toUpperCase() : '?',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: color,
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // NAMA PEGAWAI
-                                Text(
-                                  item.displayName,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF1A3A5F),
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                // Nama Sertifikasi
-                                Text(
-                                  item.qualification.qualificationName,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.grey.shade800,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                if (item.unitCode != null && item.unitCode!.isNotEmpty)
-                                  Text(
-                                    item.unitCode!,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 10,
-                                      color: Colors.grey.shade600,
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      item.displayName,
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
                                     ),
-                                  ),
-                                if (item.expiryDate != null)
-                                  Text(
-                                    'Berlaku s/d: ${_formatDate(item.expiryDate!)}',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 10,
-                                      color: _getExpiryColor(item.expiryDate!),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      item.qualification.qualificationName,
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.white.withValues(alpha: 0.7),
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                  ),
-                              ],
-                            ),
+                                    if (item.unitCode != null && item.unitCode!.isNotEmpty)
+                                      Text(
+                                        item.unitCode!,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 9,
+                                          color: Colors.white.withValues(alpha: 0.5),
+                                        ),
+                                      ),
+                                    if (item.expiryDate != null)
+                                      Text(
+                                        'Berlaku s/d: ${_formatDate(item.expiryDate!)}',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 9,
+                                          color: _getExpiryColor(item.expiryDate!),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
+                        )).toList(),
                       ),
-                    )).toList(),
+                    ),
                   ),
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const Center(child: CircularProgressIndicator(color: Color(0xFF8B5CF6))),
             error: (e, _) => Center(
               child: Text(
                 'Gagal memuat data: ${e.toString()}',
-                style: GoogleFonts.poppins(fontSize: 14, color: Colors.red.shade400),
+                style: GoogleFonts.poppins(fontSize: 12, color: Colors.white.withValues(alpha: 0.5)),
               ),
             ),
           ),
@@ -792,46 +694,42 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
   Widget _buildPlaceholderCard(String title, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withValues(alpha: 0.95),
-            Colors.white.withValues(alpha: 0.85),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.2),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      decoration: _glassDecoration(color),
       child: ShimmerLoading(
         isLoading: true,
-        child: Container(height: 200, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16))),
+        child: Container(height: 200, decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.05), borderRadius: BorderRadius.circular(16))),
       ),
     );
   }
 
   Color _getScoreColor(double score) {
-    if (score >= 70) return const Color(0xFF2E7D32);
-    if (score >= 50) return const Color(0xFFED6C02);
-    return const Color(0xFFD32F2F);
+    if (score >= 70) return const Color(0xFF10B981);
+    if (score >= 50) return const Color(0xFFF59E0B);
+    return const Color(0xFFEF4444);
   }
 
   Color _getExpiryColor(DateTime expiryDate) {
     final daysLeft = expiryDate.difference(DateTime.now()).inDays;
-    if (daysLeft < 0) return const Color(0xFFD32F2F);
-    if (daysLeft <= 30) return const Color(0xFFED6C02);
-    return const Color(0xFF2E7D32);
+    if (daysLeft < 0) return const Color(0xFFEF4444);
+    if (daysLeft <= 30) return const Color(0xFFF59E0B);
+    return const Color(0xFF10B981);
   }
 
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
+  }
+
+  // ============================================================
+  // GLASSMORPHISM DECORATION
+  // ============================================================
+  Decoration _glassDecoration(Color accentColor) {
+    return BoxDecoration(
+      borderRadius: BorderRadius.circular(20),
+      color: Colors.white.withValues(alpha: 0.08),
+      border: Border.all(
+        color: accentColor.withValues(alpha: 0.2),
+        width: 0.5,
+      ),
+    );
   }
 }

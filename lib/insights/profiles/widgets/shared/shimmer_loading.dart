@@ -1,4 +1,4 @@
-// lib/insights/profiles/widgets/shared/shimmer_loading.dart
+// File: lib/insights/profiles/widgets/shared/shimmer_loading.dart
 
 import 'package:flutter/material.dart';
 
@@ -19,11 +19,11 @@ class ShimmerLoading extends StatelessWidget {
     return Shimmer(
       linearGradient: const LinearGradient(
         colors: [
-          Color(0xFFEBEBF4),
-          Color(0xFFF5F5FA),
-          Color(0xFFEBEBF4),
+          Color(0xFF1E3A8A),  // Biru tua transparan
+          Color(0xFF2E4A8E),  // Biru sedang
+          Color(0xFF1E3A8A),  // Biru tua transparan
         ],
-        stops: [0.1, 0.3, 0.4],
+        stops: [0.1, 0.4, 0.6],
         begin: Alignment(-1.0, -0.3),
         end: Alignment(1.0, 0.3),
       ),

@@ -1,3 +1,5 @@
+// File: lib/views/monitor/monitor_dashboard.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -5,26 +7,23 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:ui';
 import 'people_watch_list.dart';
 import 'asset_overview_screen.dart';
-// import 'asset_watch_list.dart';
 import 'general_people_map.dart';
 import 'general_asset_map.dart';
 import 'asset_intelligence_screen.dart';
 import 'asset_report_screen.dart';
-// import 'stock_overview_screen.dart';
 import 'stocks_intelligence_screen.dart';
 import 'stock_report_screen.dart';
 import '../../models/hospital_profile_model.dart';
 import '../../../insights/hospital/views/hospital_overview_screen.dart';
 import '../../../insights/hospital/views/human_ratio_screen.dart';
 
-// 🔥 IMPORT SUB-MENU PROFILES INSIGHTS
+// IMPORT SUB-MENU PROFILES INSIGHTS
 import '../../../insights/profiles/views/submenu1_ringkasan.dart';
 import '../../../insights/profiles/views/submenu2_wellbeing.dart';
 import '../../../insights/profiles/views/submenu3_lokasi_kehadiran.dart';
 import '../../../insights/profiles/views/submenu4_sertifikasi_penilaian.dart';
 import '../../../insights/profiles/views/submenu5_insight_pegawai.dart';
 import '../../../insights/assets/views/asset_utilization_screen.dart';
-// Import
 import '../../../insights/assets/views/asset_tree_screen.dart';
 import '../../../insights/stocks/views/stock_tree_view.dart';
 import '../../../insights/stocks/views/stock_overview_screen.dart';
@@ -32,6 +31,8 @@ import '../../../insights/stocks/views/stock_requests_screen.dart';
 import '../../../insights/stocks/views/stock_opname_screen.dart';
 import '../../../insights/stocks/views/storage_distribution_screen.dart';
 import '../../insights/stocks/views/storage_hierarchy_screen.dart';
+import '../../../insights/hospital/views/incident_response_screen.dart';
+import '../../../insights/hospital/views/occupancy_dashboard_screen.dart';
 
 class MonitorDashboard extends StatefulWidget {
   final String userName;
@@ -50,14 +51,14 @@ class MonitorDashboard extends StatefulWidget {
 class _MonitorDashboardState extends State<MonitorDashboard> {
   final _supabase = Supabase.instance.client;
 
-  String _selectedMenu = "Asset Overview";
+  String _selectedMenu = "Organization Overview";
   HospitalProfileModel? _hospitalProfile;
 
   bool _isSidebarVisible = true;
 
   final Color deepBlue = const Color(0xFF01579B);
 
-  // 🔥 CACHE MAP (tidak pernah rebuild)
+  // CACHE MAP (tidak pernah rebuild)
   late final Widget _peopleMapView = const GeneralPeopleMap();
   late final Widget _assetMapView = const GeneralAssetMap();
 
@@ -140,7 +141,7 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 93, 160, 177),
+                  color: const Color(0xFF3B82F6).withValues(alpha: 0.8),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -174,18 +175,21 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Colors.white.withOpacity(0.20),
-                Colors.white.withOpacity(0.05),
+                Colors.white.withValues(alpha: 0.20),
+                Colors.white.withValues(alpha: 0.05),
               ],
             ),
             borderRadius: const BorderRadius.only(
               topRight: Radius.circular(20),
               bottomRight: Radius.circular(20),
             ),
-            border: Border.all(color: Colors.white.withOpacity(0.25), width: 1),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.25),
+              width: 1,
+            ),
             boxShadow: [
               BoxShadow(
-                color: const Color.fromARGB(255, 36, 86, 194).withOpacity(0.15),
+                color: const Color(0xFF052D9C).withValues(alpha: 0.15),
                 blurRadius: 20,
                 offset: const Offset(4, 0),
               ),
@@ -202,12 +206,12 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // =========================
-                      // PEOPLE INSIGHTS (BARU)
-                      // =========================
                       _sectionTitle("ORGANIZATION INSIGHTS"),
                       _menu("Organization Overview", Icons.business_outlined),
                       _menu("Human Ratio & Analytics", Icons.people_outline),
+                      // Di dalam _sectionTitle "ORGANIZATION INSIGHTS" atau "HOSPITAL OPERATIONS"
+                      _menu("Bed Occupancy", Icons.bed),
+                      _menu("Incident & Response", Icons.warning_amber),
                       const SizedBox(height: 24),
                       _sectionTitle("PEOPLE INSIGHTS"),
                       _menu("Ringkasan Pegawai", Icons.people_alt),
@@ -217,29 +221,18 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
                       _menu("Insight Pegawai", Icons.people_outline_outlined),
                       const SizedBox(height: 24),
 
-                      // =========================
-                      // ASSET
-                      // =========================
                       _sectionTitle("ASSET"),
                       _menu("Asset Utilization", Icons.speed),
                       _menu("Live Asset Tracking", Icons.inventory),
                       _menu("Asset by Taxonomy", Icons.account_tree),
-                      // _menu("Asset Overview", Icons.assessment_outlined),
                       _menu("Asset Intelligence", Icons.bar_chart),
                       _menu("Asset Report", Icons.description),
-                      // _menu("Asset Watch List", Icons.watch_later),
                       const SizedBox(height: 24),
 
-                      // =========================
-                      // STOCK & INVENTORY
-                      // =========================
                       _sectionTitle("STOCK & INVENTORY"),
                       _menu("Stock Overview", Icons.inventory),
                       _menu("Stock Tree View", Icons.account_tree),
-                      _menu(
-                        "Stock Requests",
-                        Icons.request_page,
-                      ), // 👈 TAMBAHKAN INI
+                      _menu("Stock Requests", Icons.request_page),
                       _menu("Stock Opname", Icons.medical_information_outlined),
                       _menu("Storage Distribution", Icons.inventory_2_outlined),
                       _menu("Storage Tree View", Icons.account_tree_outlined),
@@ -247,23 +240,14 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
                       _menu("Stock Report", Icons.description),
                       const SizedBox(height: 24),
 
-                      // =========================
-                      // PEOPLE (LIVE TRACKING)
-                      // =========================
                       _sectionTitle("PEOPLE TRACKING"),
                       _menu("Live People Tracking", Icons.language),
                       _menu("People Watch List", Icons.person),
                       const SizedBox(height: 24),
 
-                      // =========================
-                      // SYSTEM
-                      // =========================
                       _sectionTitle("SYSTEM"),
                       _menu("Logout", Icons.logout, isLogout: true),
 
-                      // =========================
-                      // FOOTER INFORMATION
-                      // =========================
                       const SizedBox(height: 32),
                       Center(
                         child: Column(
@@ -274,7 +258,7 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 8,
                                 fontWeight: FontWeight.w500,
-                                color: Colors.green.shade800.withOpacity(0.7),
+                                color: Colors.white.withValues(alpha: 0.5),
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -284,7 +268,7 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 8,
                                 fontWeight: FontWeight.w500,
-                                color: Colors.green.shade800.withOpacity(0.7),
+                                color: Colors.white.withValues(alpha: 0.5),
                               ),
                             ),
                             const SizedBox(height: 6),
@@ -293,7 +277,7 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 8,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.green.shade900.withOpacity(0.8),
+                                color: Colors.white.withValues(alpha: 0.6),
                               ),
                             ),
                             const SizedBox(height: 20),
@@ -317,7 +301,7 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
       child: Text(
         title,
         style: TextStyle(
-          color: const Color.fromARGB(255, 3, 37, 150).withOpacity(0.7),
+          color: const Color(0xFF8B5CF6).withValues(alpha: 0.8),
           fontSize: 12,
           fontWeight: FontWeight.w700,
           letterSpacing: 1.2,
@@ -344,10 +328,12 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
         margin: const EdgeInsets.only(bottom: 6),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? Colors.white.withOpacity(0.28) : Colors.transparent,
+          color: active
+              ? Colors.white.withValues(alpha: 0.28)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           border: active
-              ? Border.all(color: Colors.white.withOpacity(0.35))
+              ? Border.all(color: Colors.white.withValues(alpha: 0.35))
               : null,
         ),
         child: Row(
@@ -356,8 +342,10 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
               icon,
               size: 16,
               color: isLogout
-                  ? Colors.red
-                  : (active ? deepBlue : Colors.black54),
+                  ? const Color(0xFFEF4444)
+                  : (active
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.6)),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -369,8 +357,10 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
                   fontSize: 11,
                   fontWeight: active ? FontWeight.w600 : FontWeight.w400,
                   color: isLogout
-                      ? Colors.red
-                      : (active ? deepBlue : Colors.black87),
+                      ? const Color(0xFFEF4444)
+                      : (active
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 0.7)),
                   letterSpacing: 0.2,
                 ),
               ),
@@ -398,12 +388,12 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
                     errorBuilder: (context, error, stackTrace) {
                       return Icon(
                         Icons.local_hospital,
-                        color: deepBlue,
+                        color: Colors.white,
                         size: 42,
                       );
                     },
                   )
-                : Icon(Icons.local_hospital, color: deepBlue, size: 42),
+                : Icon(Icons.local_hospital, color: Colors.white, size: 42),
           ),
           const SizedBox(height: 14),
           Text(
@@ -416,7 +406,7 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
               fontSize: 13,
               height: 1.35,
               letterSpacing: 0.2,
-              color: deepBlue,
+              color: Colors.white,
             ),
           ),
           if (_hospitalProfile?.address != null &&
@@ -431,7 +421,7 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
                 fontSize: 10,
                 fontWeight: FontWeight.w500,
                 height: 1.4,
-                color: Colors.black54,
+                color: Colors.white.withValues(alpha: 0.7),
               ),
             ),
           ],
@@ -449,7 +439,16 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
         borderRadius: BorderRadius.circular(0),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 0, sigmaY: 0),
-          child: _getBody(),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: const [Color(0xFF052D9C), Color(0xFF1E3A8A)],
+              ),
+            ),
+            child: _getBody(),
+          ),
         ),
       ),
     );
@@ -459,19 +458,25 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
   // GET BODY BASED ON SELECTED MENU
   // ======================
   Widget _getBody() {
-
     if (_selectedMenu == "Organization Overview") {
-  return const HospitalOverviewScreen();
-}
-    // 🔥 PEOPLE INSIGHTS - SUB MENU 1
+      return const HospitalOverviewScreen();
+    }
+    if (_selectedMenu == "Bed Occupancy") {
+      return const OccupancyDashboardScreen();
+    }
+
+    if (_selectedMenu == "Incident & Response") {
+      return const IncidentResponseScreen();
+    }
+
     if (_selectedMenu == "Ringkasan Pegawai") {
       return const Submenu1Ringkasan();
     }
-    if (_selectedMenu == "Human Ratio & Analytics") {
-  return const HumanRatioScreen();
-}
 
-    // 🔥 PEOPLE INSIGHTS - SUB MENU 2
+    if (_selectedMenu == "Human Ratio & Analytics") {
+      return const HumanRatioScreen();
+    }
+
     if (_selectedMenu == "Wellbeing & Kinerja") {
       return const Submenu2Wellbeing();
     }
@@ -488,22 +493,18 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
       return const Submenu5InsightPegawai();
     }
 
-    // LIVE PEOPLE TRACKING
     if (_selectedMenu == "Live People Tracking") {
       return _peopleMapView;
     }
 
-    // LIVE ASSET TRACKING
     if (_selectedMenu == "Live Asset Tracking") {
       return _assetMapView;
     }
 
-    // PEOPLE WATCH LIST
     if (_selectedMenu == "People Watch List") {
       return const PeopleWatchList();
     }
 
-    // ASSET MENU
     if (_selectedMenu == "Asset Overview") {
       return const AssetOverviewScreen();
     }
@@ -524,34 +525,30 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
       return const AssetReportScreen();
     }
 
-    // STOCK MENU
     if (_selectedMenu == "Stock Overview") {
       return const StockOverviewScreen();
     }
 
     if (_selectedMenu == "Stock Tree View") {
-      // 👈 TAMBAHKAN INI
       return const StockTreeView();
     }
 
     if (_selectedMenu == "Stock Opname") {
-      // 👈 TAMBAHKAN INI
       return const StockOpnameScreen();
     }
 
     if (_selectedMenu == "Storage Distribution") {
-      // 👈 TAMBAHKAN INI
       return const StorageDistributionScreen();
     }
 
     if (_selectedMenu == "Storage Tree View") {
-      // 👈 TAMBAHKAN INI
       return const StorageHierarchyScreen();
     }
 
     if (_selectedMenu == "Stock Requests") {
       return const StockRequestsScreen();
     }
+
     if (_selectedMenu == "Stock Intelligence") {
       return const StocksIntelligenceScreen();
     }
@@ -561,6 +558,11 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
     }
 
     // DEFAULT
-    return const Center(child: Text("EMPTY"));
+    return Center(
+      child: Text(
+        "EMPTY",
+        style: GoogleFonts.poppins(color: Colors.white, fontSize: 16),
+      ),
+    );
   }
 }

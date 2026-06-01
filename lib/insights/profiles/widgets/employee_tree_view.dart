@@ -1,4 +1,4 @@
-// lib/insights/profiles/widgets/employee_tree_view.dart
+// File: lib/insights/profiles/widgets/employee_tree_view.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,16 +26,25 @@ class _EmployeeTreeViewState extends ConsumerState<EmployeeTreeView> {
 
     return Container(
       decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 19, 98, 151),
         borderRadius: BorderRadius.circular(16),
+        color: Colors.white.withValues(alpha: 0.05),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.15),
+          width: 0.5,
+        ),
       ),
-      child: levelsAsync.when(
-        data: (levels) => _buildTree(levels),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Text(
-            'Gagal memuat data level: ${e.toString()}',
-            style: GoogleFonts.poppins(color: Colors.red),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: levelsAsync.when(
+          data: (levels) => _buildTree(levels),
+          loading: () => const Center(
+            child: CircularProgressIndicator(color: Colors.white),
+          ),
+          error: (e, _) => Center(
+            child: Text(
+              'Gagal memuat data level: ${e.toString()}',
+              style: GoogleFonts.poppins(color: Colors.white70),
+            ),
           ),
         ),
       ),
@@ -47,7 +56,7 @@ class _EmployeeTreeViewState extends ConsumerState<EmployeeTreeView> {
       return Center(
         child: Text(
           'Tidak ada data level',
-          style: GoogleFonts.poppins(color: const Color.fromARGB(255, 219, 219, 219)),
+          style: GoogleFonts.poppins(color: Colors.white.withValues(alpha: 0.5)),
         ),
       );
     }
@@ -74,24 +83,23 @@ class _EmployeeTreeViewState extends ConsumerState<EmployeeTreeView> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         decoration: BoxDecoration(
           color: isSelected 
-              ? levelColor.withValues(alpha: 0.8)
-              : const Color.fromARGB(255, 106, 199, 236),
+              ? levelColor.withValues(alpha: 0.15)
+              : Colors.white.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected 
-                ? levelColor.withValues(alpha: 0.8)
-                : Colors.grey.shade200,
-            width: isSelected ? 1.5 : 1,
+                ? levelColor.withValues(alpha: 0.4)
+                : Colors.white.withValues(alpha: 0.1),
+            width: isSelected ? 1.5 : 0.5,
           ),
         ),
         child: Row(
           children: [
-            // Icon Container
             Container(
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: levelColor.withValues(alpha: 0.1),
+                color: levelColor.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
@@ -101,26 +109,24 @@ class _EmployeeTreeViewState extends ConsumerState<EmployeeTreeView> {
               ),
             ),
             const SizedBox(width: 12),
-            // Level Number, Name & Employee Count
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      // Badge level
                       Container(
                         width: 28,
                         height: 28,
                         decoration: BoxDecoration(
-                          color: levelColor.withValues(alpha: 0.1),
+                          color: levelColor.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Center(
                           child: Text(
                             '${level.level}',
                             style: GoogleFonts.poppins(
-                              fontSize: 14,
+                              fontSize: 12,
                               fontWeight: FontWeight.bold,
                               color: levelColor,
                             ),
@@ -128,14 +134,13 @@ class _EmployeeTreeViewState extends ConsumerState<EmployeeTreeView> {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      // Nama Level
                       Expanded(
                         child: Text(
                           level.name,
                           style: GoogleFonts.poppins(
-                            fontSize: 14,
+                            fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: const Color.fromARGB(255, 2, 24, 150),
+                            color: Colors.white,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -144,20 +149,19 @@ class _EmployeeTreeViewState extends ConsumerState<EmployeeTreeView> {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  // 🔥 JUMLAH PEGAWAI (Insight)
                   Row(
                     children: [
                       Icon(
                         Icons.people_outline,
                         size: 12,
-                        color: Colors.grey.shade500,
+                        color: Colors.white.withValues(alpha: 0.5),
                       ),
                       const SizedBox(width: 4),
                       Text(
                         '${level.employeeCount} Orang',
                         style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: const Color.fromARGB(255, 37, 37, 37),
+                          fontSize: 11,
+                          color: Colors.white.withValues(alpha: 0.6),
                         ),
                       ),
                     ],
@@ -165,12 +169,11 @@ class _EmployeeTreeViewState extends ConsumerState<EmployeeTreeView> {
                 ],
               ),
             ),
-            // Indicator if selected
             if (isSelected)
               Icon(
                 Icons.chevron_right,
                 color: levelColor,
-                size: 20,
+                size: 18,
               ),
           ],
         ),
@@ -182,7 +185,7 @@ class _EmployeeTreeViewState extends ConsumerState<EmployeeTreeView> {
     try {
       return Color(int.parse('0xFF${hexColor.replaceAll('#', '')}'));
     } catch (e) {
-      return Colors.grey;
+      return const Color(0xFF8B5CF6);
     }
   }
 

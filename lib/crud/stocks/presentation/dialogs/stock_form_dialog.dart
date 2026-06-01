@@ -263,32 +263,32 @@ class _StockFormDialogState extends State<StockFormDialog> {
       if (!widget.isEditing && _selectedImageXFile != null) {
         // 1. Create stock dulu (tanpa foto)
         final createdStock = await widget.stockService.createStock(stock, widget.currentUserId!);
-        print('✅ STOCK CREATED: ${createdStock.id}');
+        // print('✅ STOCK CREATED: ${createdStock.id}');
         
         // 2. Upload foto
         final photoUrl = await widget.stockService.uploadStockPhoto(_selectedImageXFile!, createdStock.id);
-        print('✅ PHOTO UPLOADED: $photoUrl');
+        // print('✅ PHOTO UPLOADED: $photoUrl');
         
         // 3. Update stock dengan photo_url
         final updatedStock = createdStock.copyWith(photoUrl: photoUrl);
         await widget.stockService.updateStock(updatedStock, widget.currentUserId!);
-        print('✅ STOCK UPDATED WITH PHOTO');
+        // print('✅ STOCK UPDATED WITH PHOTO');
         
       } else if (widget.isEditing && _existingPhotoUrl != null && _existingPhotoUrl!.isNotEmpty) {
         // Edit mode dengan foto yang sudah ada
         final updatedStock = stock.copyWith(photoUrl: _existingPhotoUrl);
         await widget.stockService.updateStock(updatedStock, widget.currentUserId!);
-        print('✅ STOCK UPDATED (EDIT WITH PHOTO)');
+        // print('✅ STOCK UPDATED (EDIT WITH PHOTO)');
         
       } else if (widget.isEditing) {
         // Edit mode tanpa foto
         await widget.stockService.updateStock(stock, widget.currentUserId!);
-        print('✅ STOCK UPDATED (EDIT WITHOUT PHOTO)');
+        // print('✅ STOCK UPDATED (EDIT WITHOUT PHOTO)');
         
       } else {
         // Create tanpa foto
         await widget.stockService.createStock(stock, widget.currentUserId!);
-        print('✅ STOCK CREATED (WITHOUT PHOTO)');
+        // print('✅ STOCK CREATED (WITHOUT PHOTO)');
       }
       
       if (mounted) {
@@ -298,7 +298,7 @@ class _StockFormDialogState extends State<StockFormDialog> {
         widget.onSuccess();
       }
     } catch (e) {
-      print('🔴 SUBMIT ERROR: $e');
+      // print('🔴 SUBMIT ERROR: $e');
       if (mounted) {
         _showErrorSnackbar('Gagal menyimpan stok: $e');
       }

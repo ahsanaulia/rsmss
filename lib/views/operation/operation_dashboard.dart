@@ -45,6 +45,10 @@ import '../../features/stock_request/presentations/stock_request_approval_page.d
 import '../../features/stock_request/presentations/stock_request_fulfillment_page.dart';
 import '../../crud/buildings/views/building_mobile.dart';
 import '../../crud/stock_bins/views/stock_bin_mobile.dart';
+import '../../features/bed_assignments/views/bed_assignment_screen.dart';
+import '../../features/bed_unassignment/views/bed_unassignment_screen.dart';
+import '../../features/people/views/people_input_screen.dart';
+import '../../features/people_checkout/views/people_checkout_screen.dart';
 
 // ========== TAMBAHKAN IMPORT UNTUK TODO ==========
 // import '../../crud/todos/views/todo_mobile_card.dart';
@@ -369,6 +373,67 @@ class _OperationDashboardState extends ConsumerState<OperationDashboard> {
                 );
               },
             ),
+            if (_profileData?['is_people_input'] == true)
+              _menuItemSmall(
+                "Registrasi Orang & RFID",
+                Icons.person_add_alt_1,
+                Colors.green,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PeopleInputScreen(),
+                    ),
+                  );
+                },
+              ),
+
+            if (_profileData?['is_people_input'] == true)
+              _menuItemSmall(
+                "Penentuan Tempat Tidur",
+                Icons.bed,
+                Colors.teal,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const BedAssignmentScreen(),
+                    ),
+                  );
+                },
+              ),
+
+            // Di OperationDashboard, tambahkan menu:
+            if (_profileData?['is_people_input'] == true)
+              _menuItemSmall(
+                "Tempat Tidur Dikosongkan",
+                Icons.bed_rounded,
+                Colors.orange,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const BedUnassignmentScreen(),
+                    ),
+                  );
+                },
+              ),
+
+            // Di OperationDashboard, tambahkan menu:
+            if (_profileData?['is_people_input'] == true)
+              _menuItemSmall(
+                "Check Out People",
+                Icons.exit_to_app,
+                Colors.orange,
+                () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PeopleCheckoutScreen(),
+                    ),
+                  );
+                },
+              ),
             if (_profileData?['is_asset_initial'] == true)
               _menuItemSmall(
                 "Inisialisasi Awal Asset",

@@ -1,4 +1,4 @@
-// lib/insights/profiles/widgets/shared/bar_chart.dart
+// File: lib/insights/profiles/widgets/shared/bar_chart.dart
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -13,7 +13,7 @@ class BarChartWidget extends StatelessWidget {
     super.key,
     required this.data,
     required this.title,
-    this.barColor = const Color(0xFF01579B),
+    this.barColor = const Color(0xFF3B82F6),
     this.maxItems = 10,
   });
 
@@ -30,23 +30,12 @@ class BarChartWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withValues(alpha: 0.9),
-            Colors.white.withValues(alpha: 0.7),
-          ],
+        borderRadius: BorderRadius.circular(20),
+        color: Colors.white.withValues(alpha: 0.08),
+        border: Border.all(
+          color: barColor.withValues(alpha: 0.2),
+          width: 0.5,
         ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.grey.shade200, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -56,7 +45,7 @@ class BarChartWidget extends StatelessWidget {
             style: GoogleFonts.poppins(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
+              color: Colors.white.withValues(alpha: 0.8),
             ),
           ),
           const SizedBox(height: 16),
@@ -82,7 +71,7 @@ class BarChartWidget extends StatelessWidget {
                   label,
                   style: GoogleFonts.poppins(
                     fontSize: 10,
-                    color: Colors.grey.shade700,
+                    color: Colors.white.withValues(alpha: 0.7),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -101,12 +90,12 @@ class BarChartWidget extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: percentage / 100,
-              backgroundColor: barColor.withValues(alpha: 0.1),
+              backgroundColor: barColor.withValues(alpha: 0.15),
               color: barColor,
-              minHeight: 8,
+              minHeight: 6,
             ),
           ),
         ],

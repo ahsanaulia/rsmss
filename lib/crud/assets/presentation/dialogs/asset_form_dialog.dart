@@ -117,7 +117,7 @@ class _AssetFormDialogState extends State<AssetFormDialog> {
         _dangerLevels = levels;
       });
     } catch (e) {
-      print('Error loading danger levels: $e');
+      // print('Error loading danger levels: $e');
     }
   }
 

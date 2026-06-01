@@ -1,4 +1,4 @@
-// lib/insights/profiles/widgets/shared/line_chart.dart
+// File: lib/insights/profiles/widgets/shared/line_chart.dart
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -17,8 +17,8 @@ class LineChartWidget extends StatelessWidget {
     required this.title,
     this.yAxisLabel,
     this.xAxisLabels,
-    this.lineColor = const Color(0xFF01579B),
-    this.fillColor = const Color(0xFF01579B),
+    this.lineColor = const Color(0xFF3B82F6),
+    this.fillColor = const Color(0xFF3B82F6),
   });
 
   @override
@@ -32,7 +32,7 @@ class LineChartWidget extends StatelessWidget {
             'Belum ada data',
             style: GoogleFonts.poppins(
               fontSize: 12,
-              color: Colors.grey.shade500,
+              color: Colors.white.withValues(alpha: 0.5),
             ),
           ),
         ),
@@ -41,7 +41,6 @@ class LineChartWidget extends StatelessWidget {
 
     final maxValue = data.reduce((a, b) => a > b ? a : b);
     final minValue = data.reduce((a, b) => a < b ? a : b);
-    // final range = maxValue - minValue;
     final chartHeight = 120.0;
 
     return Container(
@@ -55,7 +54,7 @@ class LineChartWidget extends StatelessWidget {
             style: GoogleFonts.poppins(
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: Colors.grey.shade700,
+              color: Colors.white.withValues(alpha: 0.8),
             ),
           ),
           const SizedBox(height: 16),
@@ -68,7 +67,7 @@ class LineChartWidget extends StatelessWidget {
                 minValue: minValue,
                 chartHeight: chartHeight,
                 lineColor: lineColor,
-                fillColor: fillColor.withValues(alpha: 0.2),
+                fillColor: fillColor.withValues(alpha: 0.15),
               ),
             ),
           ),
@@ -81,8 +80,8 @@ class LineChartWidget extends StatelessWidget {
                   return Text(
                     label,
                     style: GoogleFonts.poppins(
-                      fontSize: 8,
-                      color: Colors.grey.shade500,
+                      fontSize: 9,
+                      color: Colors.white.withValues(alpha: 0.5),
                     ),
                   );
                 }).toList(),
@@ -95,23 +94,12 @@ class LineChartWidget extends StatelessWidget {
 
   BoxDecoration _buildDecoration() {
     return BoxDecoration(
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Colors.white.withValues(alpha: 0.9),
-          Colors.white.withValues(alpha: 0.7),
-        ],
+      borderRadius: BorderRadius.circular(20),
+      color: Colors.white.withValues(alpha: 0.08),
+      border: Border.all(
+        color: lineColor.withValues(alpha: 0.2),
+        width: 0.5,
       ),
-      borderRadius: BorderRadius.circular(24),
-      border: Border.all(color: Colors.grey.shade200, width: 1),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.03),
-          blurRadius: 12,
-          offset: const Offset(0, 4),
-        ),
-      ],
     );
   }
 }
@@ -168,8 +156,8 @@ class _LineChartPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
     
     for (final point in points) {
-      canvas.drawCircle(point, 4, pointPaint);
-      canvas.drawCircle(point, 2, Paint()..color = Colors.white);
+      canvas.drawCircle(point, 3, pointPaint);
+      canvas.drawCircle(point, 1.5, Paint()..color = Colors.white);
     }
   }
 

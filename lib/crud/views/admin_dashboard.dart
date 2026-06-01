@@ -48,6 +48,11 @@ import '../../crud/ref_shifts/views/ref_shift_list.dart';
 // import '../../crud/admin_incidents/views/incident_list_admin.dart';
 import '../../crud/todos/views/todo_list.dart';
 import '../../crud/ref_asset_danger_levels/views/ref_asset_danger_level_list.dart';
+import '../../crud/beds/views/bed_list_page.dart';
+import '../../features/people/views/people_input_screen.dart';
+import '../../features/bed_assignments/views/bed_assignment_screen.dart';
+import '../../features/bed_unassignment/views/bed_unassignment_screen.dart';
+import '../../features/people_checkout/views/people_checkout_screen.dart';
 
 class AdminDashboard extends ConsumerStatefulWidget {
   final VoidCallback onLogout;
@@ -124,6 +129,11 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
           const AdminAssetVerificationPage(),
         ),
         MenuItem("Laporan Aset", Icons.receipt_long, const AssetReportPage()),
+        MenuItem(
+          "Manajemen Asset Ranjang/Beds",
+          Icons.bed,
+          const BedListPage(),
+        ),
       ],
     ),
     MenuGroup(
@@ -153,9 +163,29 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
       title: "OPERASIONAL",
       icon: Icons.work,
       menus: [
-        MenuItem("Penjadwalan", Icons.calendar_today, const RosterPage()),
-        MenuItem("Pengumuman", Icons.assignment, AnnouncementsTable()),
-        MenuItem("Penugasan", Icons.assignment, TasksTable()),
+        MenuItem(
+          "Registrasi People & RFID",
+          Icons.person_add_alt_1,
+          const PeopleInputScreen(),
+        ),
+        MenuItem(
+          "Penentuan Tempat Tidur Pasien",
+          Icons.bed,
+          const BedAssignmentScreen(),
+        ),
+        MenuItem(
+          "Tempat Tidur Pasien Dikosongkan",
+          Icons.bed,
+          const BedUnassignmentScreen(),
+        ),
+        MenuItem(
+          "Unregister People (Check Out RFID)",
+          Icons.exit_to_app,
+          const PeopleCheckoutScreen(),
+        ),
+        MenuItem("Penjadwalan Pegawai", Icons.calendar_today, const RosterPage()),
+        MenuItem("Pengumuman Pegawai", Icons.assignment, AnnouncementsTable()),
+        MenuItem("Penugasan Pegawai", Icons.assignment, TasksTable()),
         MenuItem("To Do", Icons.checklist, const TodoListPage()),
         // MenuItem("Penanganan Atas Laporan ", Icons.assignment, IncidentListAdmin()),
         // MenuItem("Daftar Penanganan Laporan ", Icons.assignment, AccidentList()),
@@ -180,7 +210,11 @@ class _AdminDashboardState extends ConsumerState<AdminDashboard> {
               const RefAssetSubCategoryListPage(),
             ),
             MenuItem("Tipe Aset", Icons.devices, const RefAssetTypeListPage()),
-            MenuItem("Tingkat Bahaya Aset", Icons.warning_amber, const RefAssetDangerLevelListPage()),
+            MenuItem(
+              "Tingkat Bahaya Aset",
+              Icons.warning_amber,
+              const RefAssetDangerLevelListPage(),
+            ),
           ],
         ),
         SubMenuGroup(

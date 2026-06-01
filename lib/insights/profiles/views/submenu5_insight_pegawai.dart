@@ -1,6 +1,6 @@
-// lib/insights/profiles/views/submenu5_insight_pegawai.dart
+// File: lib/insights/profiles/views/submenu5_insight_pegawai.dart
 
-import 'dart:ui'; // IMPORT UNTUK ImageFilter
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -56,77 +56,87 @@ class _Submenu5InsightPegawaiState extends ConsumerState<Submenu5InsightPegawai>
         : const AsyncValue.data(<UnitItem>[]);
 
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 26, 110, 194),
-      body: Row(
-        children: [
-          // LEFT PANEL - Tree View (30% width)
-          Expanded(
-            flex: 3,
-            child: Container(
-              margin: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: EmployeeTreeView(
-                onLevelTap: _onLevelTap,
-                selectedLevel: _selectedLevel,
-              ),
-            ),
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: const [
+              Color(0xFF052D9C),
+              Color(0xFF1E3A8A),
+            ],
           ),
-          
-          // RIGHT PANEL - Employees List Grouped by Unit (70% width)
-          Expanded(
-            flex: 7,
-            child: Container(
-              margin: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF052D9C).withValues(alpha: 0.85),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  width: 1,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 20,
-                    offset: const Offset(0, 5),
+        ),
+        child: Row(
+          children: [
+            // LEFT PANEL - Tree View (30% width)
+            Expanded(
+              flex: 3,
+              child: Container(
+                margin: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  color: Colors.white.withValues(alpha: 0.05),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    width: 0.5,
                   ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
-                child: BackdropFilter(
-                  // PERBAIKAN: SigmaX dan SigmaY harus double, bukan Color
-                  filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
-                  child: Container(
-                    color: const Color(0xFF052D9C).withValues(alpha: 0.7),
-                    child: Column(
-                      children: [
-                        _buildSearchBar(),
-                        Expanded(
-                          child: employeesGroupedAsync.when(
-                            data: (groupedUnits) => _buildGroupedEmployeeList(groupedUnits),
-                            loading: () => _buildLoading(),
-                            error: (e, _) => _buildError(e.toString()),
-                          ),
-                        ),
-                      ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
+                    child: Container(
+                      color: Colors.white.withValues(alpha: 0.02),
+                      child: EmployeeTreeView(
+                        onLevelTap: _onLevelTap,
+                        selectedLevel: _selectedLevel,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+            
+            // RIGHT PANEL - Employees List Grouped by Unit (70% width)
+            Expanded(
+              flex: 7,
+              child: Container(
+                margin: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  color: Colors.white.withValues(alpha: 0.05),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    width: 0.5,
+                  ),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 8.0, sigmaY: 8.0),
+                    child: Container(
+                      color: Colors.white.withValues(alpha: 0.02),
+                      child: Column(
+                        children: [
+                          _buildSearchBar(),
+                          Expanded(
+                            child: employeesGroupedAsync.when(
+                              data: (groupedUnits) => _buildGroupedEmployeeList(groupedUnits),
+                              loading: () => _buildLoading(),
+                              error: (e, _) => _buildError(e.toString()),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -136,19 +146,19 @@ class _Submenu5InsightPegawaiState extends ConsumerState<Submenu5InsightPegawai>
       padding: const EdgeInsets.all(12),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.15),
+          color: Colors.white.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 0.5),
         ),
         child: TextField(
           style: GoogleFonts.poppins(fontSize: 13, color: Colors.white),
           decoration: InputDecoration(
             hintText: 'Cari unit atau nama pegawai...',
-            hintStyle: GoogleFonts.poppins(fontSize: 12, color: Colors.white.withValues(alpha: 0.7)),
-            prefixIcon: Icon(Icons.search, size: 18, color: Colors.white.withValues(alpha: 0.7)),
+            hintStyle: GoogleFonts.poppins(fontSize: 12, color: Colors.white.withValues(alpha: 0.6)),
+            prefixIcon: Icon(Icons.search, size: 18, color: Colors.white.withValues(alpha: 0.6)),
             suffixIcon: _searchQuery.isNotEmpty
                 ? IconButton(
-                    icon: Icon(Icons.clear, size: 16, color: Colors.white.withValues(alpha: 0.7)),
+                    icon: Icon(Icons.clear, size: 16, color: Colors.white.withValues(alpha: 0.6)),
                     onPressed: () {
                       setState(() {
                         _searchQuery = '';
@@ -202,7 +212,7 @@ class _Submenu5InsightPegawaiState extends ConsumerState<Submenu5InsightPegawai>
             Icon(
               Icons.search_off,
               size: 64,
-              color: Colors.white.withValues(alpha: 0.6),
+              color: Colors.white.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 16),
             Text(
@@ -218,7 +228,7 @@ class _Submenu5InsightPegawaiState extends ConsumerState<Submenu5InsightPegawai>
               'Unit atau pegawai dengan kata "$_searchQuery" tidak ditemukan',
               style: GoogleFonts.poppins(
                 fontSize: 12,
-                color: Colors.white.withValues(alpha: 0.6),
+                color: Colors.white.withValues(alpha: 0.5),
               ),
               textAlign: TextAlign.center,
             ),
@@ -247,9 +257,9 @@ class _Submenu5InsightPegawaiState extends ConsumerState<Submenu5InsightPegawai>
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 0.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,7 +267,7 @@ class _Submenu5InsightPegawaiState extends ConsumerState<Submenu5InsightPegawai>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.08),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(12),
                 topRight: Radius.circular(12),
@@ -308,7 +318,7 @@ class _Submenu5InsightPegawaiState extends ConsumerState<Submenu5InsightPegawai>
   }
 
   Widget _buildEmployeeCard(ProfileListItem employee) {
-    final levelColor = _getColorFromHex(employee.positionColor ?? '#9E9E9E');
+    final levelColor = _getColorFromHex(employee.positionColor ?? '#8B5CF6');
 
     return GestureDetector(
       onTap: () => _showEmployeePopup(employee.id),
@@ -316,9 +326,9 @@ class _Submenu5InsightPegawaiState extends ConsumerState<Submenu5InsightPegawai>
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.08),
+          color: Colors.white.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08), width: 0.5),
         ),
         child: Row(
           children: [
@@ -327,8 +337,8 @@ class _Submenu5InsightPegawaiState extends ConsumerState<Submenu5InsightPegawai>
               height: 40,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: levelColor.withValues(alpha: 0.2),
-                border: Border.all(color: levelColor.withValues(alpha: 0.5), width: 1),
+                color: levelColor.withValues(alpha: 0.15),
+                border: Border.all(color: levelColor.withValues(alpha: 0.4), width: 1),
               ),
               child: ClipOval(
                 child: employee.avatarUrl != null
@@ -362,7 +372,7 @@ class _Submenu5InsightPegawaiState extends ConsumerState<Submenu5InsightPegawai>
                     employee.positionName ?? 'Tidak Ada Posisi',
                     style: GoogleFonts.poppins(
                       fontSize: 10,
-                      color: Colors.white.withValues(alpha: 0.7),
+                      color: Colors.white.withValues(alpha: 0.6),
                     ),
                   ),
                 ],
@@ -370,7 +380,7 @@ class _Submenu5InsightPegawaiState extends ConsumerState<Submenu5InsightPegawai>
             ),
             Icon(
               Icons.chevron_right,
-              color: Colors.white.withValues(alpha: 0.5),
+              color: Colors.white.withValues(alpha: 0.4),
               size: 18,
             ),
           ],
@@ -390,7 +400,7 @@ class _Submenu5InsightPegawaiState extends ConsumerState<Submenu5InsightPegawai>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.error_outline, size: 48, color: Colors.white.withValues(alpha: 0.8)),
+          Icon(Icons.error_outline, size: 48, color: Colors.white.withValues(alpha: 0.6)),
           const SizedBox(height: 16),
           Text(
             'Gagal memuat data',
@@ -399,7 +409,7 @@ class _Submenu5InsightPegawaiState extends ConsumerState<Submenu5InsightPegawai>
           const SizedBox(height: 8),
           Text(
             message,
-            style: GoogleFonts.poppins(fontSize: 12, color: Colors.white.withValues(alpha: 0.7)),
+            style: GoogleFonts.poppins(fontSize: 12, color: Colors.white.withValues(alpha: 0.5)),
             textAlign: TextAlign.center,
           ),
         ],
@@ -411,7 +421,7 @@ class _Submenu5InsightPegawaiState extends ConsumerState<Submenu5InsightPegawai>
     try {
       return Color(int.parse('0xFF${hexColor.replaceAll('#', '')}'));
     } catch (e) {
-      return Colors.grey;
+      return const Color(0xFF8B5CF6);
     }
   }
 }

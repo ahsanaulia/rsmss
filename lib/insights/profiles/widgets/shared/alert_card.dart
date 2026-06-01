@@ -1,4 +1,4 @@
-// lib/insights/profiles/widgets/shared/alert_card.dart
+// File: lib/insights/profiles/widgets/shared/alert_card.dart
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -39,23 +39,12 @@ class AlertCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              colors['bg']!.withValues(alpha: 0.95),
-              colors['bg']!.withValues(alpha: 0.8),
-            ],
-          ),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: colors['border']!.withValues(alpha: 0.5), width: 1),
-          boxShadow: [
-            BoxShadow(
-              color: colors['shadow']!.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          color: Colors.white.withValues(alpha: 0.08),
+          border: Border.all(
+            color: colors['border']!.withValues(alpha: 0.3),
+            width: 0.5,
+          ),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,10 +52,10 @@ class AlertCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: colors['iconBg']!.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
+                color: colors['iconBg']!.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: colors['icon'], size: 20),
+              child: Icon(icon, color: colors['icon'], size: 18),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -86,7 +75,7 @@ class AlertCard extends StatelessWidget {
                     message,
                     style: GoogleFonts.poppins(
                       fontSize: 10,
-                      color: colors['text']?.withValues(alpha: 0.8),
+                      color: Colors.white.withValues(alpha: 0.7),
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -99,7 +88,7 @@ class AlertCard extends StatelessWidget {
                         style: GoogleFonts.poppins(
                           fontSize: 9,
                           fontStyle: FontStyle.italic,
-                          color: colors['text']?.withValues(alpha: 0.6),
+                          color: Colors.white.withValues(alpha: 0.5),
                         ),
                       ),
                     ),
@@ -111,8 +100,8 @@ class AlertCard extends StatelessWidget {
                 onTap: onDismiss,
                 child: Icon(
                   Icons.close,
-                  size: 16,
-                  color: colors['text']?.withValues(alpha: 0.5),
+                  size: 14,
+                  color: Colors.white.withValues(alpha: 0.4),
                 ),
               ),
           ],
@@ -125,39 +114,31 @@ class AlertCard extends StatelessWidget {
     switch (type) {
       case AlertType.critical:
         return {
-          'bg': Colors.red.shade50,
-          'border': Colors.red.shade300,
-          'shadow': Colors.red,
-          'iconBg': Colors.red,
-          'icon': Colors.red.shade700,
-          'text': Colors.red.shade900,
+          'border': const Color(0xFFEF4444),
+          'iconBg': const Color(0xFFEF4444),
+          'icon': const Color(0xFFEF4444),
+          'text': const Color(0xFFEF4444),
         };
       case AlertType.warning:
         return {
-          'bg': Colors.orange.shade50,
-          'border': Colors.orange.shade300,
-          'shadow': Colors.orange,
-          'iconBg': Colors.orange,
-          'icon': Colors.orange.shade700,
-          'text': Colors.orange.shade900,
+          'border': const Color(0xFFF59E0B),
+          'iconBg': const Color(0xFFF59E0B),
+          'icon': const Color(0xFFF59E0B),
+          'text': const Color(0xFFF59E0B),
         };
       case AlertType.info:
         return {
-          'bg': Colors.blue.shade50,
-          'border': Colors.blue.shade300,
-          'shadow': Colors.blue,
-          'iconBg': Colors.blue,
-          'icon': Colors.blue.shade700,
-          'text': Colors.blue.shade900,
+          'border': const Color(0xFF3B82F6),
+          'iconBg': const Color(0xFF3B82F6),
+          'icon': const Color(0xFF3B82F6),
+          'text': const Color(0xFF3B82F6),
         };
       case AlertType.success:
         return {
-          'bg': Colors.green.shade50,
-          'border': Colors.green.shade300,
-          'shadow': Colors.green,
-          'iconBg': Colors.green,
-          'icon': Colors.green.shade700,
-          'text': Colors.green.shade900,
+          'border': const Color(0xFF10B981),
+          'iconBg': const Color(0xFF10B981),
+          'icon': const Color(0xFF10B981),
+          'text': const Color(0xFF10B981),
         };
     }
   }
