@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:intl/intl.dart';
 import 'task_detail_page.dart';
 import '../../services/sound_notification_service.dart';
+import 'package:rsmss/l10n/app_localizations.dart';
 
 class TaskListView extends StatefulWidget {
   const TaskListView({super.key});
@@ -16,7 +17,7 @@ class TaskListView extends StatefulWidget {
 class _TaskListViewState extends State<TaskListView> {
   final supabase = Supabase.instance.client;
   final SoundNotificationService _soundService = SoundNotificationService();
-  Set<String> _previousTaskIds = {}; // ← TAMBAHKAN
+  Set<String> _previousTaskIds = {};
 
   String _formatDateTime(String? timestamp) {
     if (timestamp == null) return "-";
@@ -25,6 +26,19 @@ class _TaskListViewState extends State<TaskListView> {
       return DateFormat('dd MMM yyyy, HH:mm:ss').format(dt);
     } catch (e) {
       return timestamp;
+    }
+  }
+
+  String _getStatusText(String status, AppLocalizations localizations) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return localizations.task_statusPending ?? "PENDING";
+      case 'accepted':
+        return localizations.task_statusAccepted ?? "ACCEPTED";
+      case 'done':
+        return localizations.task_statusDone ?? "DONE";
+      default:
+        return status.toUpperCase();
     }
   }
 
@@ -92,21 +106,22 @@ class _TaskListViewState extends State<TaskListView> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+    
     return Scaffold(
-      backgroundColor: Colors.transparent, // Agar gradient dashboard tembus
+      backgroundColor: Colors.transparent,
       body: Column(
         children: [
-          // Header Glassmorphism ala AttendanceView
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 20),
               child: Center(
                 child: Text(
-                  "DAFTAR TUGAS",
+                  localizations?.task_title ?? "DAFTAR TUGAS",
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFF01579B), // Warna identitas kamu
+                    color: const Color(0xFF01579B),
                   ),
                 ),
               ),
@@ -125,7 +140,7 @@ class _TaskListViewState extends State<TaskListView> {
                 if (snapshot.hasError) {
                   return Center(
                     child: Text(
-                      "Error: ${snapshot.error}",
+                      "${localizations?.task_error ?? "Error: "}${snapshot.error}",
                       style: const TextStyle(color: Colors.red),
                     ),
                   );
@@ -143,17 +158,17 @@ class _TaskListViewState extends State<TaskListView> {
                   final priority =
                       newTask['priority']?.toString().toLowerCase() ?? 'normal';
 
-                  // Mainkan suara untuk task baru dengan priority urgent/emergency
                   if (priority == 'urgent' || priority == 'emergency') {
                     _soundService.playNotificationSound(newId, type: 'task');
                   }
                 }
 
                 _previousTaskIds = currentTaskIds;
+                
                 if (tasks.isEmpty) {
                   return Center(
                     child: Text(
-                      "Antrian Kosong 🚀",
+                      localizations?.task_empty ?? "Antrian Kosong 🚀",
                       style: GoogleFonts.poppins(
                         color: Colors.black54,
                         fontWeight: FontWeight.w500,
@@ -166,7 +181,7 @@ class _TaskListViewState extends State<TaskListView> {
                   padding: const EdgeInsets.fromLTRB(25, 0, 25, 120),
                   itemCount: tasks.length,
                   itemBuilder: (context, index) =>
-                      _buildGlassTaskCard(tasks[index]),
+                      _buildGlassTaskCard(tasks[index], localizations),
                 );
               },
             ),
@@ -176,13 +191,21 @@ class _TaskListViewState extends State<TaskListView> {
     );
   }
 
-  Widget _buildGlassTaskCard(Map<String, dynamic> task) {
+  Widget _buildGlassTaskCard(Map<String, dynamic> task, AppLocalizations? localizations) {
     final priority = task['priority']?.toString().toLowerCase() ?? 'normal';
     final status = task['status']?.toString().toLowerCase() ?? 'pending';
     final isActive = status == 'accepted';
     final createdAt = task['created_at']?.toString();
+    final statusText = _getStatusText(status, localizations ?? 
+        (throw Exception('Localizations null')));
+    
+    // Gunakan fallback jika localizations null
+    final fromLabel = localizations?.task_from ?? "DARI";
+    final toLabel = localizations?.task_to ?? "KE";
+    final defaultFromRoom = localizations?.task_defaultFromRoom ?? "Lokasi A";
+    final defaultToRoom = localizations?.task_defaultToRoom ?? "Lokasi B";
+    final defaultTitle = localizations?.task_defaultTitle ?? "Task";
 
-    // Penyesuaian warna indikator priority
     Color pColor = priority == 'emergency'
         ? Colors.redAccent
         : (priority == 'urgent'
@@ -194,20 +217,15 @@ class _TaskListViewState extends State<TaskListView> {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(25),
         child: BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: 20,
-            sigmaY: 20,
-          ), // Sigma 20 sesuai AttendanceView
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white.withValues(
-                alpha: 0.2,
-              ), // Putih 0.2 sesuai AttendanceView
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(25),
               border: Border.all(
                 color: isActive
                     ? pColor
-                    : Colors.white.withValues(alpha: 0.3), // Border putih 0.3
+                    : Colors.white.withValues(alpha: 0.3),
                 width: isActive ? 2 : 1,
               ),
             ),
@@ -235,14 +253,14 @@ class _TaskListViewState extends State<TaskListView> {
                           ),
                           _badge(
                             isActive ? Icons.bolt : Icons.timer_outlined,
-                            status.toUpperCase(),
+                            statusText,
                             pColor,
                           ),
                         ],
                       ),
                       const SizedBox(height: 15),
                       Text(
-                        task['object_name'] ?? 'Task',
+                        task['object_name'] ?? defaultTitle,
                         style: GoogleFonts.poppins(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -252,14 +270,14 @@ class _TaskListViewState extends State<TaskListView> {
                       const SizedBox(height: 12),
                       _locationRow(
                         Icons.radio_button_off,
-                        "DARI",
-                        task['from_room_name'] ?? '...',
+                        fromLabel,
+                        task['from_room_name'] ?? defaultFromRoom,
                       ),
                       const SizedBox(height: 8),
                       _locationRow(
                         Icons.location_on,
-                        "KE",
-                        task['to_room_name'] ?? '...',
+                        toLabel,
+                        task['to_room_name'] ?? defaultToRoom,
                       ),
                     ],
                   ),

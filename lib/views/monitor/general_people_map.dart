@@ -904,7 +904,7 @@ class _MarkerWidget extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: Color.fromARGB(255, 200, 219, 29),
                       ),
                     ),
                     Text(

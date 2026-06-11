@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:rsmss/l10n/app_localizations.dart';
 
 class EmployeeStatsCard extends StatelessWidget {
   final double totalPoints;
@@ -27,11 +28,11 @@ class EmployeeStatsCard extends StatelessWidget {
     return Colors.red;
   }
 
-  String get _fatigueLabel {
-    if (fatigueScore <= 3) return 'Rendah';
-    if (fatigueScore <= 6) return 'Sedang';
-    if (fatigueScore <= 8) return 'Tinggi';
-    return 'Kritis';
+  String _getFatigueLabel(AppLocalizations? localizations) {
+    if (fatigueScore <= 3) return localizations?.stats_fatigueLow ?? 'Rendah';
+    if (fatigueScore <= 6) return localizations?.stats_fatigueMedium ?? 'Sedang';
+    if (fatigueScore <= 8) return localizations?.stats_fatigueHigh ?? 'Tinggi';
+    return localizations?.stats_fatigueCritical ?? 'Kritis';
   }
 
   String get _fatigueIcon {
@@ -43,6 +44,9 @@ class EmployeeStatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+    final fatigueLabel = _getFatigueLabel(localizations);
+    
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ClipRRect(
@@ -68,7 +72,6 @@ class EmployeeStatsCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Title
                       Row(
                         children: [
                           Container(
@@ -86,7 +89,7 @@ class EmployeeStatsCard extends StatelessWidget {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              "Kinerja Bulan Ini",
+                              localizations?.stats_title ?? "Kinerja Bulan Ini",
                               style: GoogleFonts.poppins(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
@@ -105,7 +108,6 @@ class EmployeeStatsCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
 
-                      // Total Points
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
@@ -118,14 +120,13 @@ class EmployeeStatsCard extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            " poin",
+                            localizations?.stats_points ?? " poin",
                             style: GoogleFonts.poppins(
                               fontSize: 14,
                               color: Colors.grey.shade600,
                             ),
                           ),
                           const Spacer(),
-                          // Fatigue Indicator
                           Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12,
@@ -147,7 +148,7 @@ class EmployeeStatsCard extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  "Fatigue: $_fatigueLabel",
+                                  "${localizations?.stats_fatiguePrefix ?? "Fatigue"}: $fatigueLabel",
                                   style: GoogleFonts.poppins(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
@@ -161,18 +162,16 @@ class EmployeeStatsCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
 
-                      // Progress Bar
-                      _buildProgressBar(),
+                      _buildProgressBar(localizations),
                       const SizedBox(height: 12),
 
-                      // Category Scores
                       if (categoryScores.isNotEmpty) ...[
                         const SizedBox(height: 8),
                         Wrap(
                           spacing: 12,
                           runSpacing: 8,
                           children: categoryScores.entries.map((entry) {
-                            return _buildCategoryChip(entry.key, entry.value);
+                            return _buildCategoryChip(entry.key, entry.value, localizations);
                           }).toList(),
                         ),
                       ],
@@ -187,8 +186,7 @@ class EmployeeStatsCard extends StatelessWidget {
     );
   }
 
-  Widget _buildProgressBar() {
-    // Target 100 points per bulan
+  Widget _buildProgressBar(AppLocalizations? localizations) {
     final target = 100.0;
     final progress = (totalPoints / target).clamp(0.0, 1.0);
     final remaining = target - totalPoints;
@@ -223,8 +221,8 @@ class EmployeeStatsCard extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           remaining > 0 
-              ? "Butuh ${remaining.toInt()} poin lagi untuk mencapai target"
-              : "Target tercapai! 🎉",
+              ? "${localizations?.stats_remainingNeededPrefix ?? "Butuh"} ${remaining.toInt()} ${localizations?.stats_remainingNeededSuffix ?? "poin lagi untuk mencapai target"}"
+              : (localizations?.stats_targetAchieved ?? "Target tercapai! 🎉"),
           style: GoogleFonts.poppins(
             fontSize: 10,
             color: remaining > 0 ? Colors.grey.shade500 : Colors.green.shade700,
@@ -234,8 +232,8 @@ class EmployeeStatsCard extends StatelessWidget {
     );
   }
 
-  Widget _buildCategoryChip(String category, double score) {
-    final Map<String, dynamic> categoryConfig = _getCategoryConfig(category);
+  Widget _buildCategoryChip(String category, double score, AppLocalizations? localizations) {
+    final Map<String, dynamic> categoryConfig = _getCategoryConfig(category, localizations);
     
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -265,22 +263,22 @@ class EmployeeStatsCard extends StatelessWidget {
     );
   }
 
-  Map<String, dynamic> _getCategoryConfig(String code) {
+  Map<String, dynamic> _getCategoryConfig(String code, AppLocalizations? localizations) {
     switch (code.toUpperCase()) {
       case 'ATTENDANCE':
-        return {'label': 'Absensi', 'icon': Icons.check_circle, 'color': Colors.green};
+        return {'label': localizations?.stats_catAttendance ?? 'Absensi', 'icon': Icons.check_circle, 'color': Colors.green};
       case 'TASK':
-        return {'label': 'Tugas', 'icon': Icons.assignment, 'color': Colors.blue};
+        return {'label': localizations?.stats_catTask ?? 'Tugas', 'icon': Icons.assignment, 'color': Colors.blue};
       case 'INCIDENT':
-        return {'label': 'Insiden', 'icon': Icons.warning, 'color': Colors.red};
+        return {'label': localizations?.stats_catIncident ?? 'Insiden', 'icon': Icons.warning, 'color': Colors.red};
       case 'INSPECTION':
-        return {'label': 'Inspeksi', 'icon': Icons.fact_check, 'color': Colors.teal};
+        return {'label': localizations?.stats_catInspection ?? 'Inspeksi', 'icon': Icons.fact_check, 'color': Colors.teal};
       case 'OPNAME':
-        return {'label': 'Opname', 'icon': Icons.inventory, 'color': Colors.orange};
+        return {'label': localizations?.stats_catOpname ?? 'Opname', 'icon': Icons.inventory, 'color': Colors.orange};
       case 'WELLBEING':
-        return {'label': 'Wellbeing', 'icon': Icons.favorite, 'color': Colors.pink};
-      case 'duty_note':
-        return {'label': 'Catatan', 'icon': Icons.note, 'color': Colors.purple};
+        return {'label': localizations?.stats_catWellbeing ?? 'Wellbeing', 'icon': Icons.favorite, 'color': Colors.pink};
+      case 'DUTY_NOTE':
+        return {'label': localizations?.stats_catDutyNote ?? 'Catatan', 'icon': Icons.note, 'color': Colors.purple};
       default:
         return {'label': code, 'icon': Icons.star, 'color': Colors.grey};
     }

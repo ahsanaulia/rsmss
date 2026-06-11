@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/roster_model.dart';
 import '../providers/roster_state.dart';
+import 'package:rsmss/l10n/app_localizations.dart';
 
 class RosterReminderCard extends StatelessWidget {
   final RosterState state;
@@ -13,12 +14,14 @@ class RosterReminderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+    
     if (state.isLoading) {
       return _buildShimmerCard();
     }
 
     if (!state.hasRoster) {
-      return _buildEmptyCard();
+      return _buildEmptyCard(localizations);
     }
 
     final todayRoster = state.displayTodayRoster;
@@ -27,20 +30,17 @@ class RosterReminderCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         children: [
-          // Card untuk jadwal hari ini
-          _buildTodayCard(todayRoster),
+          _buildTodayCard(todayRoster, localizations),
           const SizedBox(height: 12),
-
-          // Card untuk jadwal berikutnya (jika ada)
           if (state.nextRoster != null) ...[
-            _buildNextCard(state.nextRoster!),
+            _buildNextCard(state.nextRoster!, localizations),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildTodayCard(RosterModel roster) {
+  Widget _buildTodayCard(RosterModel roster, AppLocalizations? localizations) {
     final isDayOff = roster.isDayOff;
     final fatigueColor = roster.fatigueColor;
 
@@ -66,15 +66,12 @@ class RosterReminderCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
-          onTap: () {
-            // Optional: navigate to detail
-          },
+          onTap: () {},
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header dengan tanggal
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -89,7 +86,9 @@ class RosterReminderCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            isDayOff ? "HARI LIBUR" : "JADWAL HARI INI",
+                            isDayOff 
+                                ? (localizations?.roster_dayOff ?? "HARI LIBUR")
+                                : (localizations?.roster_todaySchedule ?? "JADWAL HARI INI"),
                             style: GoogleFonts.poppins(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -120,7 +119,7 @@ class RosterReminderCard extends StatelessWidget {
                           border: Border.all(color: fatigueColor),
                         ),
                         child: Text(
-                          "Fatigue: ${roster.fatigueLabel}",
+                          "${localizations?.roster_fatiguePrefix ?? "Fatigue"}: ${roster.fatigueLabel}",
                           style: GoogleFonts.poppins(
                             fontSize: 10,
                             fontWeight: FontWeight.w600,
@@ -133,7 +132,6 @@ class RosterReminderCard extends StatelessWidget {
                 const SizedBox(height: 16),
 
                 if (!isDayOff) ...[
-                  // Shift & Time
                   Row(
                     children: [
                       Icon(Icons.schedule, color: Colors.white70, size: 18),
@@ -164,14 +162,13 @@ class RosterReminderCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
 
-                  // Location (wajib ditampilkan meskipun null, tampilkan "Tidak ada lokasi")
                   Row(
                     children: [
                       Icon(Icons.location_on, color: Colors.white70, size: 18),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          roster.locationName ?? "Lokasi belum ditentukan",
+                          roster.locationName ?? (localizations?.roster_locationNotSet ?? "Lokasi belum ditentukan"),
                           style: GoogleFonts.poppins(
                             color: Colors.white,
                             fontSize: 13,
@@ -182,7 +179,6 @@ class RosterReminderCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
 
-                  // Required Equipment
                   if (roster.requiredEquipment.isNotEmpty) ...[
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -194,7 +190,7 @@ class RosterReminderCard extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                "Perlengkapan Wajib:",
+                                localizations?.roster_requiredEquipment ?? "Perlengkapan Wajib:",
                                 style: GoogleFonts.poppins(
                                   color: Colors.white70,
                                   fontSize: 11,
@@ -232,7 +228,6 @@ class RosterReminderCard extends StatelessWidget {
                     const SizedBox(height: 12),
                   ],
 
-                  // Special Instructions
                   if (roster.specialInstructions != null && roster.specialInstructions!.isNotEmpty) ...[
                     Row(
                       children: [
@@ -256,7 +251,7 @@ class RosterReminderCard extends StatelessWidget {
                 if (isDayOff) ...[
                   Center(
                     child: Text(
-                      "Selamat beristirahat!",
+                      localizations?.roster_restMessage ?? "Selamat beristirahat!",
                       style: GoogleFonts.poppins(
                         color: Colors.white,
                         fontSize: 14,
@@ -272,7 +267,7 @@ class RosterReminderCard extends StatelessWidget {
     );
   }
 
-  Widget _buildNextCard(RosterModel roster) {
+  Widget _buildNextCard(RosterModel roster, AppLocalizations? localizations) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.9),
@@ -296,7 +291,7 @@ class RosterReminderCard extends StatelessWidget {
                 Icon(Icons.calendar_today, color: Colors.blue.shade700, size: 18),
                 const SizedBox(width: 8),
                 Text(
-                  "JADWAL BERIKUTNYA",
+                  localizations?.roster_nextSchedule ?? "JADWAL BERIKUTNYA",
                   style: GoogleFonts.poppins(
                     color: Colors.blue.shade700,
                     fontWeight: FontWeight.bold,
@@ -376,7 +371,7 @@ class RosterReminderCard extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyCard() {
+  Widget _buildEmptyCard(AppLocalizations? localizations) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
@@ -390,7 +385,7 @@ class RosterReminderCard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              "Belum ada jadwal untuk hari ini. Silakan hubungi atasan.",
+              localizations?.roster_emptyMessage ?? "Belum ada jadwal untuk hari ini. Silakan hubungi atasan.",
               style: GoogleFonts.poppins(
                 color: Colors.grey.shade600,
                 fontSize: 13,

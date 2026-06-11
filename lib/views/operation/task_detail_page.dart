@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'dart:ui';
+import 'package:rsmss/l10n/app_localizations.dart';
 
 class TaskDetailPage extends StatefulWidget {
   final Map<String, dynamic> task;
@@ -26,7 +27,6 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   List<Map<String, dynamic>> _categories = [];
   File? _selectedFile;
   
-  // Lokasi penyelesaian
   Position? _completionPosition;
   String? _completionAddress;
   bool _isGettingLocation = false;
@@ -54,6 +54,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
 
   Future<void> _acceptTask() async {
     setState(() => _isLoading = true);
+    final localizations = AppLocalizations.of(context);
     try {
       final now = DateTime.now().toIso8601String();
       await supabase.from('tasks').update({
@@ -71,13 +72,19 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Tugas diterima, silakan kerjakan"), backgroundColor: Colors.green),
+          SnackBar(
+            content: Text(localizations?.taskDetail_acceptSuccess ?? "Tugas diterima, silakan kerjakan"), 
+            backgroundColor: Colors.green
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Gagal menerima tugas: $e"), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text("${localizations?.taskDetail_acceptFailed ?? "Gagal menerima tugas: "}$e"), 
+            backgroundColor: Colors.red
+          ),
         );
       }
     } finally {
@@ -87,6 +94,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
 
   Future<void> _getCurrentLocation() async {
     setState(() => _isGettingLocation = true);
+    final localizations = AppLocalizations.of(context);
     try {
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
@@ -94,7 +102,10 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
         if (permission == LocationPermission.denied) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Izin lokasi diperlukan"), backgroundColor: Colors.orange),
+              SnackBar(
+                content: Text(localizations?.taskDetail_locationPermissionRequired ?? "Izin lokasi diperlukan"), 
+                backgroundColor: Colors.orange
+              ),
             );
           }
           return;
@@ -126,13 +137,19 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
           _completionAddress = address;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Lokasi: $address"), backgroundColor: Colors.green),
+          SnackBar(
+            content: Text("${localizations?.taskDetail_locationSuccess ?? "Lokasi: "}$address"), 
+            backgroundColor: Colors.green
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Gagal mendapat lokasi: $e"), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text("${localizations?.taskDetail_locationFailed ?? "Gagal mendapat lokasi: "}$e"), 
+            backgroundColor: Colors.red
+          ),
         );
       }
     } finally {
@@ -148,11 +165,13 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
     if (media != null) setState(() => _selectedFile = File(media.path));
   }
 
-  // 🔴 METHOD INI TETAP ADA (tidak dihapus, biar tidak error)
   Future<void> _submitReport() async {
+    final localizations = AppLocalizations.of(context);
     if (_selectedFile == null || _selectedCategoryId == null || _reportController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Lengkapi foto, kategori, dan deskripsi!")),
+        SnackBar(
+          content: Text(localizations?.taskDetail_incompleteData ?? "Lengkapi foto, kategori, dan deskripsi!"),
+        ),
       );
       return;
     }
@@ -180,13 +199,19 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
       setState(() => _selectedFile = null);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Laporan kendala terkirim!"), backgroundColor: Colors.green),
+          SnackBar(
+            content: Text(localizations?.taskDetail_reportSent ?? "Laporan kendala terkirim!"), 
+            backgroundColor: Colors.green
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Gagal kirim laporan: $e"), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text("${localizations?.taskDetail_reportFailed ?? "Gagal kirim laporan: "}$e"), 
+            backgroundColor: Colors.red
+          ),
         );
       }
     } finally {
@@ -195,11 +220,13 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   }
 
   Future<void> _completeTask(String outcome) async {
-    // Validasi foto jika task memerlukan bukti foto
+    final localizations = AppLocalizations.of(context);
     final requiresPhoto = widget.task['requires_photo_proof'] == true;
     if (requiresPhoto && _selectedFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Tugas ini memerlukan bukti foto! Silakan ambil foto terlebih dahulu.")),
+        SnackBar(
+          content: Text(localizations?.taskDetail_photoRequired ?? "Tugas ini memerlukan bukti foto! Silakan ambil foto terlebih dahulu."),
+        ),
       );
       return;
     }
@@ -209,14 +236,12 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
       final now = DateTime.now();
       final completedAt = now.toIso8601String();
       
-      // Hitung durasi dari started_at ke sekarang
       int actualDuration = 0;
       if (widget.task['started_at'] != null) {
         final startedAt = DateTime.parse(widget.task['started_at']);
         actualDuration = now.difference(startedAt).inMinutes;
       }
       
-      // Data update
       final Map<String, dynamic> updateData = {
         'status': 'done',
         'task_outcome': outcome,
@@ -225,20 +250,17 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
         'actual_duration_minutes': actualDuration,
       };
       
-      // Tambah lokasi penyelesaian jika ada
       if (_completionPosition != null) {
         updateData['completion_lat'] = _completionPosition!.latitude;
         updateData['completion_long'] = _completionPosition!.longitude;
         updateData['completion_address'] = _completionAddress;
       }
       
-      // Jika gagal, catat rejected_at
       if (outcome == 'failed') {
         updateData['rejected_at'] = completedAt;
         updateData['rejection_reason'] = _outcomeController.text;
       }
       
-      // Upload foto bukti jika ada
       if (_selectedFile != null) {
         final fileName = 'proof_${DateTime.now().millisecondsSinceEpoch}.jpg';
         final filePath = 'task_proof/${widget.task['id']}/$fileName';
@@ -252,7 +274,9 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(outcome == 'success' ? "Tugas selesai! ✅" : "Tugas gagal ❌"),
+            content: Text(outcome == 'success' 
+              ? (localizations?.taskDetail_taskSuccess ?? "Tugas selesai! ✅") 
+              : (localizations?.taskDetail_taskFailed ?? "Tugas gagal ❌")),
             backgroundColor: outcome == 'success' ? Colors.green : Colors.red,
           ),
         );
@@ -271,6 +295,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     final isPending = widget.task['status']?.toString().toLowerCase() == 'pending';
     final isAccepted = widget.task['status']?.toString().toLowerCase() == 'accepted';
     final requiresPhoto = widget.task['requires_photo_proof'] == true;
@@ -289,7 +314,6 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
         ),
         child: Column(
           children: [
-            // AppBar
             SafeArea(
               child: ClipRect(
                 child: BackdropFilter(
@@ -304,7 +328,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
                           onPressed: () => Navigator.pop(context),
                         ),
-                        Text("Detail Eksekusi", 
+                        Text(localizations?.taskDetail_appBarTitle ?? "Detail Eksekusi", 
                           style: GoogleFonts.poppins(fontWeight: FontWeight.w700, fontSize: 16, color: Colors.white)
                         ),
                         const SizedBox(width: 48),
@@ -322,7 +346,6 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                     child: Column(
                       children: [
-                        // Tombol Terima Tugas (hanya jika pending)
                         if (isPending)
                           _buildGlassCard(
                             child: Column(
@@ -331,14 +354,14 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                                   children: [
                                     Icon(Icons.handshake, color: Colors.white),
                                     const SizedBox(width: 10),
-                                    Text("TERIMA TUGAS", 
+                                    Text(localizations?.taskDetail_acceptButton ?? "TERIMA TUGAS", 
                                       style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)
                                     ),
                                   ],
                                 ),
                                 const SizedBox(height: 15),
                                 Text(
-                                  "Tugas belum Anda terima. Klik tombol di bawah untuk mulai mengerjakan.",
+                                  localizations?.taskDetail_notAcceptedMessage ?? "Tugas belum Anda terima. Klik tombol di bawah untuk mulai mengerjakan.",
                                   style: GoogleFonts.poppins(fontSize: 12, color: Colors.white70),
                                 ),
                                 const SizedBox(height: 15),
@@ -351,7 +374,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                                       padding: const EdgeInsets.symmetric(vertical: 14),
                                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                     ),
-                                    child: Text("TERIMA TUGAS", 
+                                    child: Text(localizations?.taskDetail_acceptButton ?? "TERIMA TUGAS", 
                                       style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white)
                                     ),
                                   ),
@@ -361,28 +384,19 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                           ),
                         
                         if (!isPending) ...[
-                          // Informasi Task
                           _buildGlassCard(
-                            child: _buildTaskInfo(),
+                            child: _buildTaskInfo(localizations),
                           ),
                           const SizedBox(height: 20),
                           
-                          // Lokasi Penyelesaian (tombol ambil lokasi)
                           _buildGlassCard(
-                            child: _buildLocationSection(),
+                            child: _buildLocationSection(localizations),
                           ),
                           const SizedBox(height: 20),
                           
-                          // Catatan Penyelesaian & Tombol Selesai/Gagal
                           _buildGlassCard(
-                            child: _buildCompletionSection(),
+                            child: _buildCompletionSection(localizations),
                           ),
-                          
-                          // 🔴 LAPORAN KENDALA DISEMBUNYIKAN (tapi method tetap ada)
-                          // const SizedBox(height: 20),
-                          // _buildGlassCard(
-                          //   child: _buildReportSection(),
-                          // ),
                         ],
                         
                         const SizedBox(height: 40),
@@ -415,7 +429,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
     );
   }
 
-  Widget _buildTaskInfo() {
+  Widget _buildTaskInfo(AppLocalizations? localizations) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -423,7 +437,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
           children: [
             const Icon(Icons.task_alt, color: Colors.white),
             const SizedBox(width: 10),
-            Text("INFORMASI TUGAS", 
+            Text(localizations?.taskDetail_infoTitle ?? "INFORMASI TUGAS", 
               style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)
             ),
           ],
@@ -433,15 +447,15 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
           style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)
         ),
         const SizedBox(height: 12),
-        _infoRow(Icons.location_on_rounded, "Rute: ${widget.task['from_room_name'] ?? '-'} ➔ ${widget.task['to_room_name'] ?? '-'}"),
-        _infoRow(Icons.bolt, "Prioritas: ${widget.task['priority']?.toString().toUpperCase()}"),
+        _infoRow(Icons.location_on_rounded, "${localizations?.taskDetail_routeLabel ?? "Rute: "}${widget.task['from_room_name'] ?? '-'} ➔ ${widget.task['to_room_name'] ?? '-'}"),
+        _infoRow(Icons.bolt, "${localizations?.taskDetail_priorityLabel ?? "Prioritas: "}${widget.task['priority']?.toString().toUpperCase()}"),
         if (widget.task['requires_photo_proof'] == true)
-          _infoRow(Icons.camera_alt, "📸 Memerlukan bukti foto"),
+          _infoRow(Icons.camera_alt, localizations?.taskDetail_requiresPhoto ?? "Memerlukan bukti foto"),
       ],
     );
   }
 
-  Widget _buildLocationSection() {
+  Widget _buildLocationSection(AppLocalizations? localizations) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -449,14 +463,14 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
           children: [
             const Icon(Icons.location_on, color: Colors.white),
             const SizedBox(width: 10),
-            Text("LOKASI PENYELESAIAN", 
+            Text(localizations?.taskDetail_locationTitle ?? "LOKASI PENYELESAIAN", 
               style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)
             ),
           ],
         ),
         const Divider(height: 30, color: Colors.white54),
         Text(
-          _completionAddress ?? "Belum ambil lokasi",
+          _completionAddress ?? (localizations?.taskDetail_locationNotTaken ?? "Belum ambil lokasi"),
           style: GoogleFonts.poppins(fontSize: 12, color: Colors.white70),
         ),
         const SizedBox(height: 15),
@@ -467,7 +481,9 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
             icon: _isGettingLocation 
               ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
               : const Icon(Icons.gps_fixed, size: 18),
-            label: Text(_isGettingLocation ? "MENGAMBIL LOKASI..." : "AMBIL LOKASI SAAT INI"),
+            label: Text(_isGettingLocation 
+              ? (localizations?.taskDetail_takingLocation ?? "MENGAMBIL LOKASI...")
+              : (localizations?.taskDetail_takeLocationButton ?? "AMBIL LOKASI SAAT INI")),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue.shade700,
               padding: const EdgeInsets.symmetric(vertical: 12),
@@ -479,7 +495,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
     );
   }
 
-  Widget _buildCompletionSection() {
+  Widget _buildCompletionSection(AppLocalizations? localizations) {
     final requiresPhoto = widget.task['requires_photo_proof'] == true;
     
     return Column(
@@ -489,20 +505,19 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
           children: [
             const Icon(Icons.task_alt, color: Colors.white),
             const SizedBox(width: 10),
-            Text("PENYELESAIAN TUGAS", 
+            Text(localizations?.taskDetail_completionTitle ?? "PENYELESAIAN TUGAS", 
               style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)
             ),
           ],
         ),
         const Divider(height: 30, color: Colors.white54),
         
-        // Input catatan
         TextField(
           controller: _outcomeController,
           maxLines: 3,
           style: GoogleFonts.poppins(fontSize: 13, color: Colors.white),
           decoration: InputDecoration(
-            hintText: "Tulis catatan penyelesaian...",
+            hintText: localizations?.taskDetail_completionHint ?? "Tulis catatan penyelesaian...",
             hintStyle: const TextStyle(fontSize: 12, color: Colors.white60),
             filled: true,
             fillColor: Colors.white.withValues(alpha: 0.1),
@@ -511,7 +526,6 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
           ),
         ),
         
-        // Upload foto bukti jika diperlukan
         if (requiresPhoto) ...[
           const SizedBox(height: 15),
           GestureDetector(
@@ -530,7 +544,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                     children: [
                       Icon(Icons.camera_alt_outlined, size: 35, color: Colors.white),
                       const SizedBox(height: 5),
-                      Text("Klik untuk Foto Bukti", 
+                      Text(localizations?.taskDetail_clickToTakePhoto ?? "Klik untuk Foto Bukti", 
                         style: GoogleFonts.poppins(fontSize: 11, color: Colors.white70)
                       ),
                     ],
@@ -555,7 +569,9 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                 ),
-                child: Text("GAGAL", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white)),
+                child: Text(localizations?.taskDetail_failButton ?? "GAGAL", 
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white)
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -567,108 +583,12 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
                 ),
-                child: Text("SELESAI", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white)),
+                child: Text(localizations?.taskDetail_successButton ?? "SELESAI", 
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white)
+                ),
               ),
             ),
           ],
-        ),
-      ],
-    );
-  }
-
-  // 🔴 METHOD _BUILDREPORTSECTION TETAP ADA (tidak dipanggil di UI)
-  Widget _buildReportSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Icon(Icons.flash_on, color: Colors.redAccent),
-            const SizedBox(width: 10),
-            Text("LAPORKAN KENDALA", 
-              style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)
-            ),
-          ],
-        ),
-        const SizedBox(height: 5),
-        Text("Ditemukan masalah teknis/lapangan?", 
-          style: GoogleFonts.poppins(fontSize: 11, color: Colors.white70)
-        ),
-        const Divider(height: 30, color: Colors.white54),
-        
-        DropdownButtonFormField<String>(
-          style: GoogleFonts.poppins(fontSize: 13, color: Colors.white),
-          dropdownColor: Colors.blue.shade900,
-          decoration: InputDecoration(
-            labelText: "Kategori Masalah",
-            labelStyle: const TextStyle(fontSize: 12, color: Colors.white),
-            filled: true,
-            fillColor: Colors.white.withValues(alpha: 0.1),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
-          ),
-          value: _selectedCategoryId,
-          items: _categories.map((c) => DropdownMenuItem(
-            value: c['id'].toString(), 
-            child: Text(c['name'] ?? 'No Name', style: const TextStyle(fontSize: 13, color: Colors.white))
-          )).toList(),
-          onChanged: (v) => setState(() => _selectedCategoryId = v),
-        ),
-        
-        const SizedBox(height: 15),
-        
-        TextField(
-          controller: _reportController,
-          maxLines: 2,
-          style: GoogleFonts.poppins(fontSize: 13, color: Colors.white),
-          decoration: InputDecoration(
-            hintText: "Deskripsi kendala...",
-            hintStyle: const TextStyle(fontSize: 12, color: Colors.white70),
-            filled: true,
-            fillColor: Colors.white.withValues(alpha: 0.1),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
-          ),
-        ),
-        
-        const SizedBox(height: 15),
-        
-        GestureDetector(
-          onTap: _pickMedia,
-          child: Container(
-            height: 140,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-            ),
-            child: _selectedFile == null 
-              ? Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.camera_alt_outlined, size: 35, color: Colors.white),
-                    const SizedBox(height: 5),
-                    Text("Klik untuk Foto Bukti", style: GoogleFonts.poppins(fontSize: 11, color: Colors.white70)),
-                  ],
-                )
-              : ClipRRect(borderRadius: BorderRadius.circular(15), child: Image.file(_selectedFile!, fit: BoxFit.cover)),
-          ),
-        ),
-        
-        const SizedBox(height: 15),
-        
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: _submitReport,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange.shade700,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-            ),
-            child: Text("KIRIM LAPORAN KENDALA", 
-              style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)
-            ),
-          ),
         ),
       ],
     );

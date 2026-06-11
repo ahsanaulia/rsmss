@@ -4,7 +4,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:ui';
 import 'register_screen.dart';
 import 'main_screen.dart';
+import 'qr_scan_screen.dart';
 import '../widgets/adaptive_logo.dart';
+import 'package:rsmss/l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -44,8 +46,17 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  void _navigateToQrScan() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const QrScanScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+    
     return Scaffold(
       body: Container(
         width: double.infinity,
@@ -77,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 20),
                     
-                    // Title
+                    // Title - TIDAK DIUBAH (tetap hardcoded)
                     Text(
                       "Hospital Organizational Intelligence Platform",
                       style: GoogleFonts.poppins(
@@ -90,24 +101,28 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 40),
                     
-                    // Email Field
-                    _buildGlassTextField(_emailController, "Email Operator", Icons.email_outlined, false),
+                    // Email Field - hint menggunakan localizations
+                    _buildGlassTextField(_emailController, localizations?.emailHint ?? "Email Operator", Icons.email_outlined, false),
                     const SizedBox(height: 15),
                     
-                    // Password Field
-                    _buildGlassTextField(_passwordController, "Password", Icons.lock_outline, true),
+                    // Password Field - hint menggunakan localizations
+                    _buildGlassTextField(_passwordController, localizations?.passwordHint ?? "Password", Icons.lock_outline, true),
                     const SizedBox(height: 25),
                     
                     // Login Button
-                    _buildLoginButton(),
+                    _buildLoginButton(localizations),
+                    const SizedBox(height: 20),
+                    
+                    // Scan QR Tenant Button
+                    _buildScanQrButton(localizations),
                     const SizedBox(height: 20),
                     
                     // Register Link
-                    _buildRegisterLink(),
+                    _buildRegisterLink(localizations),
                     const SizedBox(height: 30),
                     
                     // Footer
-                    _buildFooter(),
+                    _buildFooter(localizations),
                     const SizedBox(height: 40),
                   ],
                 ),
@@ -139,7 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildLoginButton() {
+  Widget _buildLoginButton(AppLocalizations? localizations) {
     return SizedBox(
       width: double.infinity,
       height: 55,
@@ -151,20 +166,48 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         child: _isLoading 
           ? const CircularProgressIndicator(color: Colors.white) 
-          : Text("LOGIN", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white)),
+          : Text(
+              localizations?.loginButton ?? "LOGIN", 
+              style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white)
+            ),
       ),
     );
   }
 
-  Widget _buildRegisterLink() {
+  Widget _buildScanQrButton(AppLocalizations? localizations) {
+    return SizedBox(
+      width: double.infinity,
+      height: 55,
+      child: OutlinedButton(
+        onPressed: _navigateToQrScan,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: Colors.white.withValues(alpha: 0.3),
+          side: const BorderSide(color: Color(0xFF01579B), width: 1.5),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        ),
+        child: Text(
+          localizations?.scanQrButton ?? "SCAN QR TENANT",
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF01579B),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRegisterLink(AppLocalizations? localizations) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text("Belum memiliki akun? ", style: GoogleFonts.poppins(fontSize: 13)),
+        Text(
+          localizations?.noAccount ?? "Belum memiliki akun? ", 
+          style: GoogleFonts.poppins(fontSize: 13)
+        ),
         GestureDetector(
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterScreen())),
           child: Text(
-            "Register",
+            localizations?.register ?? "Register",
             style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF01579B)),
           ),
         ),
@@ -172,11 +215,11 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildFooter() {
+  Widget _buildFooter(AppLocalizations? localizations) {
     return Column(
       children: [
         Text(
-          "Developed By : PLATFORM PELAYANAN TERBAIK",
+          localizations?.developedBy ?? "Developed By : PLATFORM PELAYANAN TERBAIK",
           style: GoogleFonts.poppins(
             fontSize: 10,
             fontWeight: FontWeight.w500,
@@ -184,7 +227,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         Text(
-          "Distributed By : PT. REKAMITRA",
+          localizations?.distributedBy ?? "Distributed By : PT. REKAMITRA",
           style: GoogleFonts.poppins(
             fontSize: 10,
             fontWeight: FontWeight.w500,
@@ -193,7 +236,7 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 5),
         Text(
-          "2026 - Indonesia",
+          localizations?.yearCountry ?? "2026 - Indonesia",
           style: GoogleFonts.poppins(
             fontSize: 10,
             fontWeight: FontWeight.bold,

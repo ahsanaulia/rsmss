@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/todo_service.dart';
 import '../models/todo_model.dart';
 import 'todo_mobile_card.dart';
+import 'package:rsmss/l10n/app_localizations.dart';
 
 class TodoMobileStreamView extends StatefulWidget {
   final String profileId;
@@ -29,20 +30,21 @@ class _TodoMobileStreamViewState extends State<TodoMobileStreamView> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+    
     return StreamBuilder<List<TodoModel>>(
       stream: _todoService.streamTodosForEmployee(
         profileId: widget.profileId,
         date: widget.date,
       ),
       builder: (context, snapshot) {
-        // Selalu tampilkan section, baik loading, error, kosong, atau ada data
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(30, 15, 25, 8),
               child: Text(
-                "TO DO HARI INI",
+                localizations?.todo_title ?? "TO DO HARI INI",
                 style: GoogleFonts.poppins(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
@@ -51,7 +53,6 @@ class _TodoMobileStreamViewState extends State<TodoMobileStreamView> {
               ),
             ),
             
-            // Konten berdasarkan state
             if (snapshot.connectionState == ConnectionState.waiting)
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16),
@@ -62,7 +63,7 @@ class _TodoMobileStreamViewState extends State<TodoMobileStreamView> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
-                  'Gagal memuat To Do: ${snapshot.error}',
+                  '${localizations?.todo_loadError ?? "Gagal memuat To Do"}: ${snapshot.error}',
                   style: GoogleFonts.poppins(fontSize: 12, color: Colors.red),
                 ),
               ),
@@ -82,7 +83,7 @@ class _TodoMobileStreamViewState extends State<TodoMobileStreamView> {
                     Icon(Icons.checklist, size: 40, color: Colors.grey.shade400),
                     const SizedBox(height: 8),
                     Text(
-                      'Tidak ada To Do untuk hari ini',
+                      localizations?.todo_empty ?? 'Tidak ada To Do untuk hari ini',
                       style: GoogleFonts.poppins(
                         fontSize: 13,
                         color: Colors.grey.shade500,
@@ -105,7 +106,7 @@ class _TodoMobileStreamViewState extends State<TodoMobileStreamView> {
                       onCompleted: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('To Do "${todo.title}" selesai'),
+                            content: Text('${localizations?.todo_completedMessage ?? "To Do selesai"}: "${todo.title}"'),
                             backgroundColor: Colors.green,
                           ),
                         );

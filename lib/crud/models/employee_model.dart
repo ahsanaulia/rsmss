@@ -35,6 +35,27 @@ class EmployeeModel {
   final bool isStockOpname;
   final bool isFlexibleRoster;
   final bool isApproved;
+  
+  // ============ NEW PERMISSION FIELDS (can_) ============
+  final bool canRegisterPeople;
+  final bool canBedAssignment;
+  final bool canBedUnassignment;
+  final bool canCheckoutPeople;
+  final bool canAssetInitial;
+  final bool canAssetInspection;
+  final bool canStockInitial;
+  final bool canAssetRequest;
+  final bool canReturnAsset;
+  final bool canStockOpname;
+  final bool canStockIn;
+  final bool canStockPlacement;
+  final bool canStockRequest;
+  final bool canStockRequestApproval;
+  final bool canStockFulfillment;
+  final bool canStockWriteOff;
+  final bool canStockWriteOffApproval;
+  final bool canBuildingReference;
+  final bool canBinsReference;
 
   EmployeeModel({
     required this.id,
@@ -73,6 +94,26 @@ class EmployeeModel {
     this.isStockOpname = false,
     this.isFlexibleRoster = false,
     this.isApproved = false,
+    // New permission defaults
+    this.canRegisterPeople = false,
+    this.canBedAssignment = false,
+    this.canBedUnassignment = false,
+    this.canCheckoutPeople = false,
+    this.canAssetInitial = false,
+    this.canAssetInspection = false,
+    this.canStockInitial = false,
+    this.canAssetRequest = false,
+    this.canReturnAsset = false,
+    this.canStockOpname = false,
+    this.canStockIn = false,
+    this.canStockPlacement = false,
+    this.canStockRequest = false,
+    this.canStockRequestApproval = false,
+    this.canStockFulfillment = false,
+    this.canStockWriteOff = false,
+    this.canStockWriteOffApproval = false,
+    this.canBuildingReference = false,
+    this.canBinsReference = false,
   });
 
   factory EmployeeModel.fromJson(Map<String, dynamic> json) {
@@ -119,6 +160,26 @@ class EmployeeModel {
       isStockOpname: json['is_stock_opname'] ?? false,
       isFlexibleRoster: json['is_flexible_roster'] ?? false,
       isApproved: json['is_approved'] ?? false,
+      // New permission fields
+      canRegisterPeople: json['can_register_people'] ?? false,
+      canBedAssignment: json['can_bed_assignment'] ?? false,
+      canBedUnassignment: json['can_bed_unassignment'] ?? false,
+      canCheckoutPeople: json['can_checkout_people'] ?? false,
+      canAssetInitial: json['can_asset_initial'] ?? false,
+      canAssetInspection: json['can_asset_inspection'] ?? false,
+      canStockInitial: json['can_stock_initial'] ?? false,
+      canAssetRequest: json['can_asset_request'] ?? false,
+      canReturnAsset: json['can_return_asset'] ?? false,
+      canStockOpname: json['can_stock_opname'] ?? false,
+      canStockIn: json['can_stock_in'] ?? false,
+      canStockPlacement: json['can_stock_placement'] ?? false,
+      canStockRequest: json['can_stock_request'] ?? false,
+      canStockRequestApproval: json['can_stock_request_approval'] ?? false,
+      canStockFulfillment: json['can_stock_fulfillment'] ?? false,
+      canStockWriteOff: json['can_stock_write_off'] ?? false,
+      canStockWriteOffApproval: json['can_stock_write_off_approval'] ?? false,
+      canBuildingReference: json['can_building_reference'] ?? false,
+      canBinsReference: json['can_bins_reference'] ?? false,
     );
   }
 
@@ -157,6 +218,26 @@ class EmployeeModel {
       'is_stock_opname': isStockOpname,
       'is_flexible_roster': isFlexibleRoster,
       'is_approved': isApproved,
+      // New permission fields
+      'can_register_people': canRegisterPeople,
+      'can_bed_assignment': canBedAssignment,
+      'can_bed_unassignment': canBedUnassignment,
+      'can_checkout_people': canCheckoutPeople,
+      'can_asset_initial': canAssetInitial,
+      'can_asset_inspection': canAssetInspection,
+      'can_stock_initial': canStockInitial,
+      'can_asset_request': canAssetRequest,
+      'can_return_asset': canReturnAsset,
+      'can_stock_opname': canStockOpname,
+      'can_stock_in': canStockIn,
+      'can_stock_placement': canStockPlacement,
+      'can_stock_request': canStockRequest,
+      'can_stock_request_approval': canStockRequestApproval,
+      'can_stock_fulfillment': canStockFulfillment,
+      'can_stock_write_off': canStockWriteOff,
+      'can_stock_write_off_approval': canStockWriteOffApproval,
+      'can_building_reference': canBuildingReference,
+      'can_bins_reference': canBinsReference,
     };
   }
 
@@ -197,6 +278,26 @@ class EmployeeModel {
     bool? isStockOpname,
     bool? isFlexibleRoster,
     bool? isApproved,
+    // New permission fields
+    bool? canRegisterPeople,
+    bool? canBedAssignment,
+    bool? canBedUnassignment,
+    bool? canCheckoutPeople,
+    bool? canAssetInitial,
+    bool? canAssetInspection,
+    bool? canStockInitial,
+    bool? canAssetRequest,
+    bool? canReturnAsset,
+    bool? canStockOpname,
+    bool? canStockIn,
+    bool? canStockPlacement,
+    bool? canStockRequest,
+    bool? canStockRequestApproval,
+    bool? canStockFulfillment,
+    bool? canStockWriteOff,
+    bool? canStockWriteOffApproval,
+    bool? canBuildingReference,
+    bool? canBinsReference,
   }) {
     return EmployeeModel(
       id: id ?? this.id,
@@ -235,6 +336,26 @@ class EmployeeModel {
       isStockOpname: isStockOpname ?? this.isStockOpname,
       isFlexibleRoster: isFlexibleRoster ?? this.isFlexibleRoster,
       isApproved: isApproved ?? this.isApproved,
+      // New permission fields
+      canRegisterPeople: canRegisterPeople ?? this.canRegisterPeople,
+      canBedAssignment: canBedAssignment ?? this.canBedAssignment,
+      canBedUnassignment: canBedUnassignment ?? this.canBedUnassignment,
+      canCheckoutPeople: canCheckoutPeople ?? this.canCheckoutPeople,
+      canAssetInitial: canAssetInitial ?? this.canAssetInitial,
+      canAssetInspection: canAssetInspection ?? this.canAssetInspection,
+      canStockInitial: canStockInitial ?? this.canStockInitial,
+      canAssetRequest: canAssetRequest ?? this.canAssetRequest,
+      canReturnAsset: canReturnAsset ?? this.canReturnAsset,
+      canStockOpname: canStockOpname ?? this.canStockOpname,
+      canStockIn: canStockIn ?? this.canStockIn,
+      canStockPlacement: canStockPlacement ?? this.canStockPlacement,
+      canStockRequest: canStockRequest ?? this.canStockRequest,
+      canStockRequestApproval: canStockRequestApproval ?? this.canStockRequestApproval,
+      canStockFulfillment: canStockFulfillment ?? this.canStockFulfillment,
+      canStockWriteOff: canStockWriteOff ?? this.canStockWriteOff,
+      canStockWriteOffApproval: canStockWriteOffApproval ?? this.canStockWriteOffApproval,
+      canBuildingReference: canBuildingReference ?? this.canBuildingReference,
+      canBinsReference: canBinsReference ?? this.canBinsReference,
     );
   }
 }

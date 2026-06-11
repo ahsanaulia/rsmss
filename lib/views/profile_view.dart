@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:ui';
+import 'package:rsmss/l10n/app_localizations.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -86,6 +87,7 @@ class _ProfileViewState extends State<ProfileView> {
     if (image == null) return;
     
     setState(() => _isSaving = true);
+    final localizations = AppLocalizations.of(context);
     try {
       final user = supabase.auth.currentUser;
       final file = File(image.path);
@@ -105,13 +107,19 @@ class _ProfileViewState extends State<ProfileView> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Foto diperbarui"), backgroundColor: Colors.green)
+          SnackBar(
+            content: Text(localizations?.profile_avatarSuccess ?? "Foto diperbarui"), 
+            backgroundColor: Colors.green
+          )
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Gagal upload foto"), backgroundColor: Colors.red)
+          SnackBar(
+            content: Text(localizations?.profile_avatarFailed ?? "Gagal upload foto"), 
+            backgroundColor: Colors.red
+          )
         );
       }
     } finally {
@@ -121,6 +129,7 @@ class _ProfileViewState extends State<ProfileView> {
 
   Future<void> _saveProfile() async {
     setState(() => _isSaving = true);
+    final localizations = AppLocalizations.of(context);
     try {
       final user = supabase.auth.currentUser;
       await supabase.from('profiles').update({
@@ -134,13 +143,19 @@ class _ProfileViewState extends State<ProfileView> {
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Profil berhasil disimpan"), backgroundColor: Colors.green)
+          SnackBar(
+            content: Text(localizations?.profile_saveSuccess ?? "Profil berhasil disimpan"), 
+            backgroundColor: Colors.green
+          )
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Gagal menyimpan: $e"), backgroundColor: Colors.red)
+          SnackBar(
+            content: Text("${localizations?.profile_saveFailed ?? "Gagal menyimpan: "}$e"), 
+            backgroundColor: Colors.red
+          )
         );
       }
     } finally {
@@ -150,6 +165,8 @@ class _ProfileViewState extends State<ProfileView> {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
+    
     if (_isLoading) {
       return const Scaffold(
         backgroundColor: Colors.transparent,
@@ -170,7 +187,7 @@ class _ProfileViewState extends State<ProfileView> {
                 children: [
                   const SizedBox(width: 40),
                   Text(
-                    "PROFIL SAYA",
+                    localizations?.profile_title ?? "PROFIL SAYA",
                     style: GoogleFonts.poppins(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -238,7 +255,7 @@ class _ProfileViewState extends State<ProfileView> {
                           ),
                         ),
                         Text(
-                          "ID: $_employeeId",
+                          "${localizations?.profile_idPrefix ?? "ID: "}$_employeeId",
                           style: GoogleFonts.poppins(fontSize: 12, color: Colors.black54),
                         ),
                       ],
@@ -253,7 +270,7 @@ class _ProfileViewState extends State<ProfileView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "DATA PRIBADI",
+                          localizations?.profile_personalData ?? "DATA PRIBADI",
                           style: GoogleFonts.poppins(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -261,18 +278,22 @@ class _ProfileViewState extends State<ProfileView> {
                           ),
                         ),
                         const SizedBox(height: 15),
-                        _buildTextField("Nama Lengkap", _nameController, Icons.badge_outlined),
+                        _buildTextField(localizations?.profile_fullName ?? "Nama Lengkap", _nameController, Icons.badge_outlined),
                         const SizedBox(height: 15),
-                        _buildTextField("NIK KTP", _nikController, Icons.numbers, keyboardType: TextInputType.number),
+                        _buildTextField(localizations?.profile_nik ?? "NIK KTP", _nikController, Icons.numbers, keyboardType: TextInputType.number),
                         const SizedBox(height: 15),
-                        _buildDropdown("Jenis Kelamin", _selectedGender, [
-                          const DropdownMenuItem(value: 'L', child: Text("Laki-laki")),
-                          const DropdownMenuItem(value: 'P', child: Text("Perempuan")),
-                        ], (val) => setState(() => _selectedGender = val)),
+                        _buildDropdown(
+                          localizations?.profile_gender ?? "Jenis Kelamin", 
+                          _selectedGender, [
+                            DropdownMenuItem(value: 'L', child: Text(localizations?.profile_male ?? "Laki-laki")),
+                            DropdownMenuItem(value: 'P', child: Text(localizations?.profile_female ?? "Perempuan")),
+                          ], 
+                          (val) => setState(() => _selectedGender = val)
+                        ),
                         const SizedBox(height: 15),
-                        _buildTextField("No. WhatsApp", _phoneController, Icons.phone_android, keyboardType: TextInputType.phone),
+                        _buildTextField(localizations?.profile_phone ?? "No. WhatsApp", _phoneController, Icons.phone_android, keyboardType: TextInputType.phone),
                         const SizedBox(height: 15),
-                        _buildTextField("Alamat", _addressController, Icons.location_city, maxLines: 2),
+                        _buildTextField(localizations?.profile_address ?? "Alamat", _addressController, Icons.location_city, maxLines: 2),
                       ],
                     ),
                   ),
@@ -285,7 +306,7 @@ class _ProfileViewState extends State<ProfileView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "INFORMASI KERJA",
+                          localizations?.profile_workInfo ?? "INFORMASI KERJA",
                           style: GoogleFonts.poppins(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -293,11 +314,11 @@ class _ProfileViewState extends State<ProfileView> {
                           ),
                         ),
                         const SizedBox(height: 15),
-                        _buildReadOnlyField("Unit Kerja", _unitName, Icons.business),
+                        _buildReadOnlyField(localizations?.profile_unit ?? "Unit Kerja", _unitName, Icons.business),
                         const SizedBox(height: 12),
-                        _buildReadOnlyField("Jabatan", _positionName, Icons.work_outline),
+                        _buildReadOnlyField(localizations?.profile_position ?? "Jabatan", _positionName, Icons.work_outline),
                         const SizedBox(height: 12),
-                        _buildReadOnlyField("Shift Default", _shiftName, Icons.schedule),
+                        _buildReadOnlyField(localizations?.profile_shift ?? "Shift Default", _shiftName, Icons.schedule),
                       ],
                     ),
                   ),
@@ -311,7 +332,7 @@ class _ProfileViewState extends State<ProfileView> {
                       onTap: () => supabase.auth.signOut(),
                       leading: const Icon(Icons.logout, color: Colors.redAccent),
                       title: Text(
-                        "Keluar Aplikasi",
+                        localizations?.profile_logout ?? "Keluar Aplikasi",
                         style: GoogleFonts.poppins(
                           color: Colors.redAccent, 
                           fontWeight: FontWeight.bold, 
@@ -377,30 +398,30 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   Widget _buildDropdown<T>(
-  String label, 
-  T? value, 
-  List<DropdownMenuItem<T>> items, 
-  Function(T?) onChanged
-) {
-  return DropdownButtonFormField<T>(
-    value: value,
-    items: items,
-    onChanged: onChanged,
-    icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF01579B)),
-    decoration: InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(color: Color(0xFF01579B), fontSize: 12),
-      prefixIcon: const Icon(Icons.person_outline, size: 18, color: Color(0xFF01579B)),
-      filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.4),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12), 
-        borderSide: BorderSide.none
+    String label, 
+    T? value, 
+    List<DropdownMenuItem<T>> items, 
+    Function(T?) onChanged
+  ) {
+    return DropdownButtonFormField<T>(
+      value: value,
+      items: items,
+      onChanged: onChanged,
+      icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF01579B)),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Color(0xFF01579B), fontSize: 12),
+        prefixIcon: const Icon(Icons.person_outline, size: 18, color: Color(0xFF01579B)),
+        filled: true,
+        fillColor: Colors.white.withValues(alpha: 0.4),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12), 
+          borderSide: BorderSide.none
+        ),
       ),
-    ),
-    style: GoogleFonts.poppins(fontSize: 13, color: Colors.black), // ← Hanya ini yang ditambah
-  );
-}
+      style: GoogleFonts.poppins(fontSize: 13, color: Colors.black),
+    );
+  }
 
   Widget _buildReadOnlyField(String label, String value, IconData icon) {
     return Container(

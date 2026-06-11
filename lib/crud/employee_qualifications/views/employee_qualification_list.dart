@@ -5,6 +5,7 @@ import 'package:rsmss/crud/employee_qualifications/providers/employee_qualificat
 import 'package:rsmss/crud/employee_qualifications/models/employee_qualification_model.dart';
 import 'employee_qualification_form.dart';
 import 'employee_qualification_detail.dart';
+import 'package:rsmss/l10n/app_localizations.dart';
 
 class EmployeeQualificationListPage extends ConsumerStatefulWidget {
   const EmployeeQualificationListPage({super.key});
@@ -42,20 +43,22 @@ class _EmployeeQualificationListPageState extends ConsumerState<EmployeeQualific
   }
 
   Future<void> _confirmDelete(BuildContext context, EmployeeQualificationModel item) async {
+    final localizations = AppLocalizations.of(context);
+    
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Hapus Kualifikasi'),
-        content: Text('Apakah Anda yakin ingin menghapus "${item.qualificationName}"?\n\nKode: ${item.qualificationCode}'),
+        title: Text(localizations?.crud_eq_delete_title ?? 'Hapus Kualifikasi'),
+        content: Text('${localizations?.crud_eq_delete_confirm_content ?? 'Apakah Anda yakin ingin menghapus kualifikasi ini?'}\n\n"${item.qualificationName}"\n${localizations?.crud_eq_code_label ?? 'Kode: '}${item.qualificationCode}'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
+            child: Text(localizations?.crud_eq_delete_cancel ?? 'Batal'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Hapus'),
+            child: Text(localizations?.crud_eq_delete_confirm ?? 'Hapus'),
           ),
         ],
       ),
@@ -65,8 +68,8 @@ class _EmployeeQualificationListPageState extends ConsumerState<EmployeeQualific
       final success = await ref.read(employeeQualificationProvider.notifier).delete(item.id!);
       if (success && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Kualifikasi berhasil dihapus'),
+          SnackBar(
+            content: Text(localizations?.crud_eq_delete_success ?? 'Kualifikasi berhasil dihapus'),
             backgroundColor: Colors.green,
           ),
         );
@@ -113,6 +116,7 @@ class _EmployeeQualificationListPageState extends ConsumerState<EmployeeQualific
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     final state = ref.watch(employeeQualificationProvider);
     final errorMessage = state.errorMessage;
 
@@ -124,13 +128,13 @@ class _EmployeeQualificationListPageState extends ConsumerState<EmployeeQualific
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Kualifikasi Pegawai'),
+        title: Text(localizations?.crud_eq_title ?? 'Kualifikasi Pegawai'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           IconButton(
             onPressed: _refreshData,
             icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
+            tooltip: localizations?.crud_eq_refresh_tooltip ?? 'Refresh',
           ),
         ],
       ),
@@ -143,6 +147,8 @@ class _EmployeeQualificationListPageState extends ConsumerState<EmployeeQualific
   }
 
   Widget _buildBody(EmployeeQualificationState state) {
+    final localizations = AppLocalizations.of(context);
+    
     if (state.isLoading && state.items.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -159,13 +165,13 @@ class _EmployeeQualificationListPageState extends ConsumerState<EmployeeQualific
             ),
             const SizedBox(height: 16),
             Text(
-              'Belum ada data kualifikasi',
+              localizations?.crud_eq_empty_data ?? 'Belum ada data kualifikasi',
               style: TextStyle(color: Colors.grey[600]),
             ),
             const SizedBox(height: 8),
             ElevatedButton(
               onPressed: () => _navigateToForm(),
-              child: const Text('Tambah Kualifikasi'),
+              child: Text(localizations?.crud_eq_add_button ?? 'Tambah Kualifikasi'),
             ),
           ],
         ),
@@ -205,17 +211,17 @@ class _EmployeeQualificationListPageState extends ConsumerState<EmployeeQualific
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Kode: ${item.qualificationCode}',
+                    '${localizations?.crud_eq_code_label ?? 'Kode: '}${item.qualificationCode}',
                     style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                   if (item.category != null)
                     Text(
-                      'Kategori: ${_getCategoryLabel(item.category)}',
+                      '${localizations?.crud_eq_category_label ?? 'Kategori: '}${_getCategoryLabel(item.category)}',
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                   if (item.validityPeriodMonths != null)
                     Text(
-                      'Masa Berlaku: ${item.validityPeriodMonths} bulan',
+                      '${localizations?.crud_eq_validity_label ?? 'Masa Berlaku: '}${item.validityPeriodMonths}${localizations?.crud_eq_months_suffix ?? ' bulan'}',
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                   Row(
@@ -227,7 +233,9 @@ class _EmployeeQualificationListPageState extends ConsumerState<EmployeeQualific
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          isActive ? 'Aktif' : 'Nonaktif',
+                          isActive 
+                              ? (localizations?.crud_eq_status_active ?? 'Aktif') 
+                              : (localizations?.crud_eq_status_inactive ?? 'Nonaktif'),
                           style: TextStyle(
                             fontSize: 10,
                             color: isActive ? Colors.green.shade800 : Colors.red.shade800,
@@ -244,7 +252,7 @@ class _EmployeeQualificationListPageState extends ConsumerState<EmployeeQualific
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            'Perlu Perpanjangan',
+                            localizations?.crud_eq_requires_renewal ?? 'Perlu Perpanjangan',
                             style: TextStyle(
                               fontSize: 10,
                               color: Colors.orange.shade800,
@@ -272,33 +280,33 @@ class _EmployeeQualificationListPageState extends ConsumerState<EmployeeQualific
                   }
                 },
                 itemBuilder: (context) => [
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'detail',
                     child: Row(
                       children: [
-                        Icon(Icons.info_outline, size: 20),
-                        SizedBox(width: 12),
-                        Text('Detail'),
+                        const Icon(Icons.info_outline, size: 20),
+                        const SizedBox(width: 12),
+                        Text(localizations?.crud_eq_menu_detail ?? 'Detail'),
                       ],
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'edit',
                     child: Row(
                       children: [
-                        Icon(Icons.edit_outlined, size: 20),
-                        SizedBox(width: 12),
-                        Text('Edit'),
+                        const Icon(Icons.edit_outlined, size: 20),
+                        const SizedBox(width: 12),
+                        Text(localizations?.crud_eq_menu_edit ?? 'Edit'),
                       ],
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'delete',
                     child: Row(
                       children: [
-                        Icon(Icons.delete_outline, size: 20, color: Colors.red),
-                        SizedBox(width: 12),
-                        Text('Hapus', style: TextStyle(color: Colors.red)),
+                        const Icon(Icons.delete_outline, size: 20, color: Colors.red),
+                        const SizedBox(width: 12),
+                        Text(localizations?.crud_eq_menu_delete ?? 'Hapus', style: const TextStyle(color: Colors.red)),
                       ],
                     ),
                   ),

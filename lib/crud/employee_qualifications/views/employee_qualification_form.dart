@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rsmss/crud/employee_qualifications/models/employee_qualification_model.dart';
 import 'package:rsmss/crud/employee_qualifications/providers/employee_qualification_provider.dart';
+import 'package:rsmss/l10n/app_localizations.dart';
 
 class EmployeeQualificationFormPage extends ConsumerStatefulWidget {
   final EmployeeQualificationModel? item;
@@ -60,6 +61,7 @@ class _EmployeeQualificationFormPageState extends ConsumerState<EmployeeQualific
   }
 
   Future<void> _showCategoryPicker() async {
+    final localizations = AppLocalizations.of(context);
     final result = await showModalBottomSheet<Map<String, String>>(
       context: context,
       isScrollControlled: true,
@@ -67,7 +69,7 @@ class _EmployeeQualificationFormPageState extends ConsumerState<EmployeeQualific
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (bottomSheetContext) {
-        return _buildCategoryPickerSheet(bottomSheetContext);
+        return _buildCategoryPickerSheet(bottomSheetContext, localizations);
       },
     );
 
@@ -78,7 +80,7 @@ class _EmployeeQualificationFormPageState extends ConsumerState<EmployeeQualific
     }
   }
 
-  Widget _buildCategoryPickerSheet(BuildContext sheetContext) {
+  Widget _buildCategoryPickerSheet(BuildContext sheetContext, AppLocalizations? localizations) {
     return DraggableScrollableSheet(
       initialChildSize: 0.5,
       minChildSize: 0.3,
@@ -97,11 +99,11 @@ class _EmployeeQualificationFormPageState extends ConsumerState<EmployeeQualific
               ),
             ),
             const SizedBox(height: 8),
-            const Padding(
-              padding: EdgeInsets.all(16),
+            Padding(
+              padding: const EdgeInsets.all(16),
               child: Text(
-                'Pilih Kategori',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                localizations?.crud_eq_form_category_picker_title ?? 'Pilih Kategori',
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
             Expanded(
@@ -135,6 +137,8 @@ class _EmployeeQualificationFormPageState extends ConsumerState<EmployeeQualific
   }
 
   Future<void> _submitForm() async {
+    final localizations = AppLocalizations.of(context);
+    
     if (!_formKey.currentState!.validate()) return;
 
     final isEditing = widget.item != null;
@@ -167,7 +171,11 @@ class _EmployeeQualificationFormPageState extends ConsumerState<EmployeeQualific
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isEditing ? 'Kualifikasi berhasil diupdate' : 'Kualifikasi berhasil ditambahkan'),
+          content: Text(
+            isEditing 
+                ? (localizations?.crud_eq_success_update ?? 'Kualifikasi berhasil diupdate')
+                : (localizations?.crud_eq_success_create ?? 'Kualifikasi berhasil ditambahkan')
+          ),
           backgroundColor: Colors.green,
         ),
       );
@@ -176,54 +184,65 @@ class _EmployeeQualificationFormPageState extends ConsumerState<EmployeeQualific
   }
 
   String? _validateCode(String? value) {
+    final localizations = AppLocalizations.of(context);
+    
     if (value == null || value.trim().isEmpty) {
-      return 'Kode kualifikasi wajib diisi';
+      return localizations?.crud_eq_validation_code_required ?? 'Kode kualifikasi wajib diisi';
     }
     if (value.trim().length < 2) {
-      return 'Kode minimal 2 karakter';
+      return localizations?.crud_eq_validation_code_min ?? 'Kode minimal 2 karakter';
     }
     if (value.trim().length > 30) {
-      return 'Kode maksimal 30 karakter';
+      return localizations?.crud_eq_validation_code_max ?? 'Kode maksimal 30 karakter';
     }
     return null;
   }
 
   String? _validateName(String? value) {
+    final localizations = AppLocalizations.of(context);
+    
     if (value == null || value.trim().isEmpty) {
-      return 'Nama kualifikasi wajib diisi';
+      return localizations?.crud_eq_validation_name_required ?? 'Nama kualifikasi wajib diisi';
     }
     if (value.trim().length < 2) {
-      return 'Nama minimal 2 karakter';
+      return localizations?.crud_eq_validation_name_min ?? 'Nama minimal 2 karakter';
     }
     if (value.trim().length > 100) {
-      return 'Nama maksimal 100 karakter';
+      return localizations?.crud_eq_validation_name_max ?? 'Nama maksimal 100 karakter';
     }
     return null;
   }
 
   String? _validateValidityPeriod(String? value) {
+    final localizations = AppLocalizations.of(context);
+    
     if (value == null || value.trim().isEmpty) {
       return null; // Optional
     }
     final months = int.tryParse(value);
     if (months == null || months < 1) {
-      return 'Masa berlaku minimal 1 bulan';
+      return localizations?.crud_eq_validation_validity_min ?? 'Masa berlaku minimal 1 bulan';
     }
     if (months > 120) {
-      return 'Masa berlaku maksimal 120 bulan (10 tahun)';
+      return localizations?.crud_eq_validation_validity_max ?? 'Masa berlaku maksimal 120 bulan (10 tahun)';
     }
     return null;
   }
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     final state = ref.watch(employeeQualificationProvider);
     final isEditing = widget.item != null;
     final isSubmitting = state.isSubmitting;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditing ? 'Edit Kualifikasi' : 'Tambah Kualifikasi'),
+        title: Text(
+          isEditing 
+              ? (localizations?.crud_eq_menu_edit ?? 'Edit Kualifikasi')
+              : (localizations?.crud_eq_add_button ?? 'Tambah Kualifikasi')
+        ),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           if (isSubmitting)
@@ -245,11 +264,11 @@ class _EmployeeQualificationFormPageState extends ConsumerState<EmployeeQualific
             // Kode Kualifikasi
             TextFormField(
               controller: _codeController,
-              decoration: const InputDecoration(
-                labelText: 'Kode Kualifikasi *',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.code),
-                hintText: 'Contoh: STR, SIP, KLS, ACLS',
+              decoration: InputDecoration(
+                labelText: localizations?.crud_eq_code_label ?? 'Kode Kualifikasi',
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.code),
+                hintText: localizations?.crud_eq_form_code_hint ?? 'Contoh: STR, SIP, KLS, ACLS',
               ),
               validator: _validateCode,
               enabled: !isSubmitting,
@@ -260,11 +279,11 @@ class _EmployeeQualificationFormPageState extends ConsumerState<EmployeeQualific
             // Nama Kualifikasi
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Nama Kualifikasi *',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.verified),
-                hintText: 'Contoh: Surat Tanda Registrasi, Sertifikasi ACLS',
+              decoration: InputDecoration(
+                labelText: localizations?.crud_eq_detail_name ?? 'Nama Kualifikasi',
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.verified),
+                hintText: localizations?.crud_eq_form_name_hint ?? 'Contoh: Surat Tanda Registrasi, Sertifikasi ACLS',
               ),
               validator: _validateName,
               enabled: !isSubmitting,
@@ -290,7 +309,7 @@ class _EmployeeQualificationFormPageState extends ConsumerState<EmployeeQualific
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Kategori',
+                            localizations?.crud_eq_category_label ?? 'Kategori',
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey[600],
@@ -299,7 +318,7 @@ class _EmployeeQualificationFormPageState extends ConsumerState<EmployeeQualific
                           const SizedBox(height: 4),
                           Text(
                             _categoryController.text.isEmpty
-                                ? 'Pilih kategori (opsional)'
+                                ? (localizations?.crud_eq_form_category_hint ?? 'Pilih kategori (opsional)')
                                 : _getCategoryLabel(_categoryController.text),
                             style: TextStyle(
                               fontSize: 16,
@@ -321,11 +340,11 @@ class _EmployeeQualificationFormPageState extends ConsumerState<EmployeeQualific
             // Masa Berlaku (Bulan)
             TextFormField(
               controller: _validityPeriodController,
-              decoration: const InputDecoration(
-                labelText: 'Masa Berlaku (Bulan)',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.calendar_today),
-                hintText: 'Contoh: 12 (opsional)',
+              decoration: InputDecoration(
+                labelText: '${localizations?.crud_eq_validity_label ?? 'Masa Berlaku'} (${localizations?.crud_eq_months_suffix ?? 'bulan'})',
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.calendar_today),
+                hintText: localizations?.crud_eq_form_validity_hint ?? 'Contoh: 12 (opsional)',
               ),
               keyboardType: TextInputType.number,
               validator: _validateValidityPeriod,
@@ -336,8 +355,8 @@ class _EmployeeQualificationFormPageState extends ConsumerState<EmployeeQualific
 
             // Requires Renewal
             SwitchListTile(
-              title: const Text('Perlu Perpanjangan'),
-              subtitle: const Text('Aktifkan jika kualifikasi ini perlu diperpanjang secara berkala'),
+              title: Text(localizations?.crud_eq_requires_renewal ?? 'Perlu Perpanjangan'),
+              subtitle: Text(localizations?.crud_eq_form_renewal_subtitle ?? 'Aktifkan jika kualifikasi ini perlu diperpanjang secara berkala'),
               value: _requiresRenewal,
               onChanged: isSubmitting ? null : (value) {
                 setState(() {
@@ -351,8 +370,8 @@ class _EmployeeQualificationFormPageState extends ConsumerState<EmployeeQualific
 
             // Is Active
             SwitchListTile(
-              title: const Text('Status Aktif'),
-              subtitle: const Text('Nonaktifkan jika kualifikasi ini tidak digunakan lagi'),
+              title: Text(localizations?.crud_eq_status_active ?? 'Status Aktif'),
+              subtitle: Text(localizations?.crud_eq_form_active_subtitle ?? 'Nonaktifkan jika kualifikasi ini tidak digunakan lagi'),
               value: _isActive,
               onChanged: isSubmitting ? null : (value) {
                 setState(() {
@@ -367,11 +386,11 @@ class _EmployeeQualificationFormPageState extends ConsumerState<EmployeeQualific
             // Deskripsi
             TextFormField(
               controller: _descriptionController,
-              decoration: const InputDecoration(
-                labelText: 'Deskripsi',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.description),
-                hintText: 'Deskripsi singkat tentang kualifikasi ini (opsional)',
+              decoration: InputDecoration(
+                labelText: localizations?.crud_eq_detail_description ?? 'Deskripsi',
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.description),
+                hintText: localizations?.crud_eq_form_description_hint ?? 'Deskripsi singkat tentang kualifikasi ini (opsional)',
               ),
               maxLines: 3,
               enabled: !isSubmitting,
@@ -387,9 +406,9 @@ class _EmployeeQualificationFormPageState extends ConsumerState<EmployeeQualific
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Preview',
-                      style: TextStyle(
+                    Text(
+                      localizations?.crud_eq_form_preview_title ?? 'Preview',
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
@@ -411,16 +430,16 @@ class _EmployeeQualificationFormPageState extends ConsumerState<EmployeeQualific
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              _nameController.text.isEmpty ? 'Nama Kualifikasi' : _nameController.text,
+                              _nameController.text.isEmpty ? (localizations?.crud_eq_detail_name ?? 'Nama Kualifikasi') : _nameController.text,
                               style: const TextStyle(fontSize: 16),
                             ),
                             Text(
-                              'Kode: ${_codeController.text.isEmpty ? 'Kode' : _codeController.text}',
+                              '${localizations?.crud_eq_code_label ?? 'Kode'}: ${_codeController.text.isEmpty ? (localizations?.crud_eq_detail_code ?? 'Kode') : _codeController.text}',
                               style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                             ),
                             if (_categoryController.text.isNotEmpty)
                               Text(
-                                'Kategori: ${_getCategoryLabel(_categoryController.text)}',
+                                '${localizations?.crud_eq_category_label ?? 'Kategori'}: ${_getCategoryLabel(_categoryController.text)}',
                                 style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                               ),
                             Row(
@@ -432,7 +451,9 @@ class _EmployeeQualificationFormPageState extends ConsumerState<EmployeeQualific
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
-                                    _isActive ? 'Aktif' : 'Nonaktif',
+                                    _isActive 
+                                        ? (localizations?.crud_eq_status_active ?? 'Aktif')
+                                        : (localizations?.crud_eq_status_inactive ?? 'Nonaktif'),
                                     style: TextStyle(
                                       fontSize: 10,
                                       color: _isActive ? Colors.green.shade800 : Colors.red.shade800,
@@ -448,7 +469,7 @@ class _EmployeeQualificationFormPageState extends ConsumerState<EmployeeQualific
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Text(
-                                      'Perlu Perpanjangan',
+                                      localizations?.crud_eq_requires_renewal ?? 'Perlu Perpanjangan',
                                       style: TextStyle(
                                         fontSize: 10,
                                         color: Colors.orange.shade800,
@@ -474,7 +495,7 @@ class _EmployeeQualificationFormPageState extends ConsumerState<EmployeeQualific
                 Expanded(
                   child: OutlinedButton(
                     onPressed: isSubmitting ? null : () => Navigator.pop(context),
-                    child: const Text('Batal'),
+                    child: Text(localizations?.crud_eq_delete_cancel ?? 'Batal'),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -485,7 +506,11 @@ class _EmployeeQualificationFormPageState extends ConsumerState<EmployeeQualific
                       backgroundColor: Colors.blue,
                       foregroundColor: Colors.white,
                     ),
-                    child: Text(isEditing ? 'Update' : 'Simpan'),
+                    child: Text(
+                      isEditing 
+                          ? (localizations?.crud_eq_form_update_button ?? 'Update')
+                          : (localizations?.crud_eq_form_save_button ?? 'Simpan')
+                    ),
                   ),
                 ),
               ],

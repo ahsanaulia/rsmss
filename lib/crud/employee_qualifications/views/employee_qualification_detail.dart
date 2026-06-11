@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rsmss/crud/employee_qualifications/models/employee_qualification_model.dart';
+import 'package:rsmss/l10n/app_localizations.dart';
 
 class EmployeeQualificationDetailPage extends StatelessWidget {
   final EmployeeQualificationModel item;
@@ -26,11 +27,12 @@ class EmployeeQualificationDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     final isActive = item.isActive ?? true;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Detail: ${item.qualificationName}'),
+        title: Text('${localizations?.crud_eq_detail_title ?? 'Detail'}: ${item.qualificationName}'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
       ),
       body: SingleChildScrollView(
@@ -82,7 +84,9 @@ class EmployeeQualificationDetailPage extends StatelessWidget {
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Text(
-                              isActive ? 'Aktif' : 'Nonaktif',
+                              isActive 
+                                  ? (localizations?.crud_eq_status_active ?? 'Aktif')
+                                  : (localizations?.crud_eq_status_inactive ?? 'Nonaktif'),
                               style: TextStyle(
                                 color: isActive ? Colors.green.shade800 : Colors.red.shade800,
                                 fontWeight: FontWeight.w500,
@@ -97,9 +101,9 @@ class EmployeeQualificationDetailPage extends StatelessWidget {
                                 color: Colors.orange.shade100,
                                 borderRadius: BorderRadius.circular(20),
                               ),
-                              child: const Text(
-                                'Perlu Perpanjangan',
-                                style: TextStyle(
+                              child: Text(
+                                localizations?.crud_eq_requires_renewal ?? 'Perlu Perpanjangan',
+                                style: const TextStyle(
                                   color: Colors.orange,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -113,30 +117,35 @@ class EmployeeQualificationDetailPage extends StatelessWidget {
                 ),
                 const Divider(height: 32),
 
-                _buildDetailRow('ID', item.id ?? '-'),
+                _buildDetailRow(context, localizations?.crud_eq_detail_id ?? 'ID', item.id ?? '-'),
                 const SizedBox(height: 12),
-                _buildDetailRow('Kode Kualifikasi', item.qualificationCode),
+                _buildDetailRow(context, localizations?.crud_eq_detail_code ?? 'Kode Kualifikasi', item.qualificationCode),
                 const SizedBox(height: 12),
-                _buildDetailRow('Nama Kualifikasi', item.qualificationName),
+                _buildDetailRow(context, localizations?.crud_eq_detail_name ?? 'Nama Kualifikasi', item.qualificationName),
                 const SizedBox(height: 12),
-                _buildDetailRow('Kategori', _getCategoryLabel(item.category)),
+                _buildDetailRow(context, localizations?.crud_eq_detail_category ?? 'Kategori', _getCategoryLabel(item.category)),
                 const SizedBox(height: 12),
                 _buildDetailRow(
-                  'Masa Berlaku',
+                  context,
+                  localizations?.crud_eq_detail_validity ?? 'Masa Berlaku',
                   item.validityPeriodMonths != null
-                      ? '${item.validityPeriodMonths} bulan'
+                      ? '${item.validityPeriodMonths} ${localizations?.crud_eq_months_suffix ?? 'bulan'}'
                       : '-',
                 ),
                 const SizedBox(height: 12),
                 _buildDetailRow(
-                  'Perlu Perpanjangan',
-                  item.requiresRenewal == true ? 'Ya' : 'Tidak',
+                  context,
+                  localizations?.crud_eq_detail_requires_renewal ?? 'Perlu Perpanjangan',
+                  item.requiresRenewal == true 
+                      ? (localizations?.crud_eq_yes ?? 'Ya')
+                      : (localizations?.crud_eq_no ?? 'Tidak'),
                 ),
                 const SizedBox(height: 12),
-                _buildDetailRow('Deskripsi', item.description ?? '-'),
+                _buildDetailRow(context, localizations?.crud_eq_detail_description ?? 'Deskripsi', item.description ?? '-'),
                 const SizedBox(height: 12),
                 _buildDetailRow(
-                  'Dibuat Pada',
+                  context,
+                  localizations?.crud_eq_detail_created_at ?? 'Dibuat Pada',
                   item.createdAt != null
                       ? _formatDateTime(item.createdAt!)
                       : '-',
@@ -149,7 +158,7 @@ class EmployeeQualificationDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(BuildContext context, String label, String value) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
