@@ -14,6 +14,7 @@ import 'asset_intelligence_screen.dart';
 import 'asset_report_screen.dart';
 import 'stocks_intelligence_screen.dart';
 import 'stock_report_screen.dart';
+import 'gps_live_tracking_screen.dart';
 import '../../models/hospital_profile_model.dart';
 import '../../../insights/hospital/views/hospital_overview_screen.dart';
 import '../../../insights/hospital/views/human_ratio_screen.dart';
@@ -253,6 +254,9 @@ class _MonitorDashboardState extends ConsumerState<MonitorDashboard> {
                       _menu(localizations?.monitor_menu_live_people_tracking ?? "Live People Tracking", Icons.language),
                       _menu(localizations?.monitor_menu_people_watch_list ?? "People Watch List", Icons.person),
                       const SizedBox(height: 24),
+                                            const SizedBox(height: 16),
+                      _sectionTitle(localizations?.monitor_section_gps_tracking ?? "GPS TRACKING"),
+                      _menu(localizations?.monitor_menu_gps_live_tracking ?? "GPS Live Tracking", Icons.gps_fixed),
 
                       _sectionTitle(localizations?.monitor_section_system ?? "SYSTEM"),
                       _menu(localizations?.monitor_menu_logout ?? "Logout", Icons.logout, isLogout: true),
@@ -561,6 +565,10 @@ class _MonitorDashboardState extends ConsumerState<MonitorDashboard> {
 
     if (_selectedMenu == (localizations?.monitor_menu_location_attendance ?? "Lokasi & Kehadiran")) {
       return const Submenu3LokasiKehadiran();
+    }
+
+    if (_selectedMenu == (localizations?.monitor_menu_gps_live_tracking ?? "GPS Live Tracking")) {
+      return const GpsLiveTrackingScreen();
     }
 
     if (_selectedMenu == (localizations?.monitor_menu_certification_assessment ?? "Sertifikasi & Penilaian")) {

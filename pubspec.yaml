@@ -42,6 +42,9 @@ dependencies:
   lottie: ^3.1.0
   just_audio: ^0.9.36
   fl_chart: ^0.68.0
+  latlong2: ^0.9.0           # Untuk koordinat
+  flutter_map: ^7.0.0        # Untuk OSM map
+  http: ^1.2.0               # Untuk OSRM API routing
   
 
 dev_dependencies:

@@ -2923,6 +2923,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Try Again'**
   String get human_ratio_error_retry_button;
+
+  /// No description provided for @monitor_section_gps_tracking.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS TRACKING'**
+  String get monitor_section_gps_tracking;
+
+  /// No description provided for @monitor_menu_gps_live_tracking.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS Live Tracking'**
+  String get monitor_menu_gps_live_tracking;
 }
 
 class _AppLocalizationsDelegate

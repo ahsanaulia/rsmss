@@ -477,5 +477,7 @@
 "human_ratio_person_suffix": "org",
 "human_ratio_person_suffix_plural": "org",
 "human_ratio_error_title": "Gagal memuat data",
-"human_ratio_error_retry_button": "Coba Lagi"
+"human_ratio_error_retry_button": "Coba Lagi",
+"monitor_section_gps_tracking": "GPS TRACKING",
+"monitor_menu_gps_live_tracking": "Live Tracking GPS"
 }

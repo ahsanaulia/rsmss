@@ -1,24 +1,10 @@
--- ============================================================
--- RSMSS HOIP 5.0 - TENANT DATABASE TEMPLATE
--- ============================================================
--- File ini untuk membuat database tenant baru dari nol
--- Jalankan di Supabase SQL Editor project baru
--- ============================================================
-
--- ============================================================
--- 1. ENABLE EXTENSIONS
--- ============================================================
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE EXTENSION IF NOT EXISTS "postgis";
 CREATE EXTENSION IF NOT EXISTS "postgis_topology";
 
--- ============================================================
--- 2. CREATE TABLES (Urutan berdasarkan Foreign Key dependency)
--- ============================================================
 
--- 2.1 APPS CONFIG (Master konfigurasi tenant)
 CREATE TABLE public.apps_config (
     id uuid NOT NULL DEFAULT gen_random_uuid(),
     client_name character varying NOT NULL,
@@ -30,7 +16,6 @@ CREATE TABLE public.apps_config (
     CONSTRAINT apps_config_pkey PRIMARY KEY (id)
 );
 
--- 2.2 REFERENCE TABLES (Master data)
 CREATE TABLE public.ref_building_functions (
     id uuid NOT NULL DEFAULT gen_random_uuid(),
     app_id uuid,
@@ -217,7 +202,7 @@ CREATE TABLE public.profiles (
     default_shift_id uuid,
     max_weekly_hours integer DEFAULT 40,
     max_daily_hours integer DEFAULT 8,
-    preferred_shift_ids ARRAY DEFAULT '{}'::uuid[],
+    preferred_shift_ids uuid[] DEFAULT '{}'::uuid[],
     wellbeing_risk_level text DEFAULT 'normal'::text,
     last_wellbeing_assessment timestamp with time zone,
     employee_nik character varying UNIQUE,
@@ -340,10 +325,10 @@ CREATE TABLE public.employee_shift_rosters (
     updated_at timestamp with time zone DEFAULT now(),
     location_name character varying,
     location_room_id uuid,
-    required_equipment ARRAY DEFAULT '{}'::text[],
+    required_equipment text[] DEFAULT '{}'::text[],
     special_instructions text,
     leave_request_id uuid,
-    qualification_required ARRAY DEFAULT '{}'::uuid[],
+    qualification_required uuid[] DEFAULT '{}'::uuid[],
     min_score_required numeric,
     CONSTRAINT employee_shift_rosters_pkey PRIMARY KEY (id),
     CONSTRAINT fk_employee_shift_profile FOREIGN KEY (profile_id) REFERENCES public.profiles(id),
@@ -1084,9 +1069,9 @@ CREATE TABLE public.incidents (
     action_taken text,
     action_taken_at timestamp with time zone,
     action_taken_by uuid,
-    action_task_ids ARRAY,
+    action_task_ids uuid[],
     action_taken_model text,
-    action_announcement_ids ARRAY,
+    action_announcement_ids uuid[],
     CONSTRAINT incidents_pkey PRIMARY KEY (id),
     CONSTRAINT incidents_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.ref_incident_categories(id),
     CONSTRAINT incidents_reported_by_fkey FOREIGN KEY (reported_by) REFERENCES public.profiles(id),
@@ -1361,7 +1346,7 @@ CREATE TABLE public.packages (
     price_monthly numeric,
     price_yearly numeric,
     is_popular boolean DEFAULT false,
-    features ARRAY DEFAULT '{}'::text[],
+    features text[] DEFAULT '{}'::text[],
     display_order integer DEFAULT 0,
     is_active boolean DEFAULT true,
     created_at timestamp with time zone DEFAULT now(),
@@ -1395,7 +1380,7 @@ CREATE TABLE public.features (
     picture_url text,
     level integer DEFAULT 1,
     details jsonb,
-    package_uuids ARRAY,
+    package_uuids uuid[],
     icon_name text,
     is_active boolean DEFAULT true,
     created_at timestamp with time zone DEFAULT now(),
@@ -1489,7 +1474,7 @@ CREATE TABLE public.downloads (
     file_size text,
     version text,
     platform text,
-    allowed_roles ARRAY DEFAULT '{}'::text[],
+    allowed_roles text[] DEFAULT '{}'::text[],
     download_count integer DEFAULT 0,
     display_order integer DEFAULT 0 UNIQUE,
     is_active boolean DEFAULT true,
@@ -3027,3 +3012,105 @@ CREATE TRIGGER trigger_generate_ticket_number
 -- ============================================================
 -- 5. SCRIPT SELESAI
 -- ============================================================
+
+-- ============================================================
+-- 3.x AUTO CREATE PROFILE WHEN USER REGISTERS
+-- ============================================================
+
+-- Fungsi untuk handle new user
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  INSERT INTO public.profiles (
+    id, 
+    full_name, 
+    role, 
+    is_active, 
+    is_approved
+  ) VALUES (
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', 'User'),
+    COALESCE(NEW.raw_user_meta_data->>'role', 'operation'),
+    true,
+    false
+  );
+  RETURN NEW;
+END;
+$$;
+
+-- Trigger setelah insert ke auth.users
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_new_user();
+
+-- Enable realtime untuk semua tabel public
+--============================================
+--- REALTIME SEMUA TABEL PUBLIC
+--==========================================
+DO $$
+DECLARE
+  tablename TEXT;
+BEGIN
+  FOR tablename IN 
+    SELECT table_name 
+    FROM information_schema.tables 
+    WHERE table_schema = 'public' 
+      AND table_type = 'BASE TABLE'
+      AND table_name NOT IN ('spatial_ref_sys', 'geography_columns', 'geometry_columns')
+  LOOP
+    EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE %I', tablename);
+  END LOOP;
+END;
+$$;
+
+-- ============================================================
+-- 7. CREATE STORAGE BUCKETS
+-- ============================================================
+
+-- Insert buckets jika belum ada
+INSERT INTO storage.buckets (id, name, public, allowed_mime_types, file_size_limit)
+VALUES 
+  ('asset_images', 'asset_images', true, ARRAY['image/jpeg', 'image/png', 'image/webp'], 5242880),
+  ('assets_picture', 'assets_picture', true, ARRAY['image/jpeg', 'image/png', 'image/webp'], 5242880),
+  ('floorplan', 'floorplan', true, ARRAY['image/jpeg', 'image/png', 'image/webp', 'application/pdf'], 10485760),
+  ('rsmss_files', 'rsmss_files', true, NULL, 10485760),
+  ('stocks_images', 'stocks_images', true, ARRAY['image/jpeg', 'image/png', 'image/webp'], 5242880),
+  ('task_temporary_evidence', 'task_temporary_evidence', true, ARRAY['image/jpeg', 'image/png', 'image/webp', 'video/mp4'], 52428800)
+ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================
+-- 8. STORAGE POLICIES
+-- ============================================================
+
+-- Policy untuk asset_images (authenticated users bisa upload & read)
+CREATE POLICY "Asset images are publicly accessible"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'asset_images');
+
+CREATE POLICY "Authenticated users can upload asset images"
+  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'asset_images' AND auth.role() = 'authenticated');
+
+-- Policy untuk stocks_images
+CREATE POLICY "Stock images are publicly accessible"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'stocks_images');
+
+CREATE POLICY "Authenticated users can upload stock images"
+  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'stocks_images' AND auth.role() = 'authenticated');
+
+-- Policy untuk floorplan
+CREATE POLICY "Floorplan are publicly accessible"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'floorplan');
+
+-- Policy untuk rsmss_files (hanya authenticated)
+CREATE POLICY "Authenticated users can manage rsmss_files"
+  ON storage.objects FOR ALL
+  USING (bucket_id = 'rsmss_files' AND auth.role() = 'authenticated');

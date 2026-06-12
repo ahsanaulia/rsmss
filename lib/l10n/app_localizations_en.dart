@@ -1461,4 +1461,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get human_ratio_error_retry_button => 'Try Again';
+
+  @override
+  String get monitor_section_gps_tracking => 'GPS TRACKING';
+
+  @override
+  String get monitor_menu_gps_live_tracking => 'GPS Live Tracking';
 }
