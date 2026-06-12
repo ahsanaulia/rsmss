@@ -71,7 +71,11 @@ class _GpsEmployeeSearchDropdownState
               children: [
                 Row(
                   children: [
-                    Icon(Icons.people, size: 20, color: const Color(0xFF3B82F6).withOpacity(0.9)),
+                    Icon(
+                      Icons.people,
+                      size: 20,
+                      color: const Color(0xFF3B82F6).withOpacity(0.9),
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Pilih Pegawai (Maksimal 3)',
@@ -124,24 +128,36 @@ class _GpsEmployeeSearchDropdownState
                                   orElse: () => {'full_name': 'Unknown'},
                                 );
                                 return Chip(
-  label: Text(
-    employee['full_name'] ?? id,
-    style: const TextStyle(
-      fontSize: 12,
-      color: Colors.white,  // ← putih, bukan merah
-      fontWeight: FontWeight.w500,
-    ),
-  ),
-  onDeleted: () {
-    setState(() {
-      _selectedIds.remove(id);
-    });
-    widget.onSelectionChanged(_selectedIds);
-  },
-  deleteIcon: Icon(Icons.close, size: 16, color: Colors.white.withOpacity(0.7)),
-  backgroundColor: const Color(0xFF3B82F6).withOpacity(0.35),  // ← lebih gelap sedikit
-  side: BorderSide(color: const Color(0xFF3B82F6).withOpacity(0.5), width: 0.5),
-);
+                                  label: Text(
+                                    employee['full_name'] ?? id,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color:
+                                          Colors.white, // ← putih, bukan merah
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  onDeleted: () {
+                                    setState(() {
+                                      _selectedIds.remove(id);
+                                    });
+                                    widget.onSelectionChanged(_selectedIds);
+                                  },
+                                  deleteIcon: Icon(
+                                    Icons.close,
+                                    size: 16,
+                                    color: Colors.white.withOpacity(0.7),
+                                  ),
+                                  backgroundColor: const Color(
+                                    0xFF3B82F6,
+                                  ).withOpacity(0.35), // ← lebih gelap sedikit
+                                  side: BorderSide(
+                                    color: const Color(
+                                      0xFF3B82F6,
+                                    ).withOpacity(0.5),
+                                    width: 0.5,
+                                  ),
+                                );
                               }).toList(),
                             ),
                           ),
@@ -155,14 +171,29 @@ class _GpsEmployeeSearchDropdownState
                           child: TextField(
                             controller: _searchController,
                             focusNode: _focusNode,
-                            style: TextStyle(color: Colors.white.withOpacity(0.95)),
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.95),
+                            ),
                             decoration: InputDecoration(
                               hintText: 'Cari pegawai...',
-                              hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
-                              prefixIcon: Icon(Icons.search, color: const Color.fromARGB(255, 178, 200, 236).withOpacity(0.8)),
+                              hintStyle: TextStyle(
+                                color: Colors.white.withOpacity(0.4),
+                              ),
+                              prefixIcon: Icon(
+                                Icons.search,
+                                color: const Color.fromARGB(
+                                  255,
+                                  178,
+                                  200,
+                                  236,
+                                ).withOpacity(0.8),
+                              ),
                               suffixIcon: _searchController.text.isNotEmpty
                                   ? IconButton(
-                                      icon: Icon(Icons.clear, color: Colors.white.withOpacity(0.6)),
+                                      icon: Icon(
+                                        Icons.clear,
+                                        color: Colors.white.withOpacity(0.6),
+                                      ),
                                       onPressed: () {
                                         _searchController.clear();
                                         setState(() {});
@@ -184,13 +215,17 @@ class _GpsEmployeeSearchDropdownState
                           ),
                         ),
                         // Dropdown options
-                        if (_focusNode.hasFocus && _getFilteredEmployees().isNotEmpty)
+                        if (_focusNode.hasFocus &&
+                            _getFilteredEmployees().isNotEmpty)
                           Container(
                             margin: const EdgeInsets.only(top: 4),
                             decoration: BoxDecoration(
                               color: const Color(0xFF0F2B5C).withOpacity(0.95),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: const Color(0xFF3B82F6).withOpacity(0.3), width: 0.5),
+                              border: Border.all(
+                                color: const Color(0xFF3B82F6).withOpacity(0.3),
+                                width: 0.5,
+                              ),
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.black.withOpacity(0.2),
@@ -205,16 +240,24 @@ class _GpsEmployeeSearchDropdownState
                               itemCount: _getFilteredEmployees().length,
                               itemBuilder: (context, index) {
                                 final employee = _getFilteredEmployees()[index];
-                                final isSelected = _selectedIds.contains(employee['id'].toString());
+                                final isSelected = _selectedIds.contains(
+                                  employee['id'].toString(),
+                                );
                                 return Container(
                                   decoration: BoxDecoration(
                                     color: isSelected
-                                        ? const Color(0xFF3B82F6).withOpacity(0.15)
+                                        ? const Color(
+                                            0xFF3B82F6,
+                                          ).withOpacity(0.15)
                                         : null,
-                                    border: index != _getFilteredEmployees().length - 1
+                                    border:
+                                        index !=
+                                            _getFilteredEmployees().length - 1
                                         ? Border(
                                             bottom: BorderSide(
-                                              color: const Color(0xFF3B82F6).withOpacity(0.15),
+                                              color: const Color(
+                                                0xFF3B82F6,
+                                              ).withOpacity(0.15),
                                               width: 0.5,
                                             ),
                                           )
@@ -223,8 +266,10 @@ class _GpsEmployeeSearchDropdownState
                                   child: ListTile(
                                     leading: Icon(
                                       Icons.person,
-                                      color: isSelected 
-                                          ? const Color(0xFF10B981).withOpacity(0.9)
+                                      color: isSelected
+                                          ? const Color(
+                                              0xFF10B981,
+                                            ).withOpacity(0.9)
                                           : Colors.white.withOpacity(0.5),
                                       size: 20,
                                     ),
@@ -243,20 +288,31 @@ class _GpsEmployeeSearchDropdownState
                                       ),
                                     ),
                                     trailing: isSelected
-                                        ? Icon(Icons.check, color: const Color(0xFF10B981).withOpacity(0.9), size: 18)
+                                        ? Icon(
+                                            Icons.check,
+                                            color: const Color(
+                                              0xFF10B981,
+                                            ).withOpacity(0.9),
+                                            size: 18,
+                                          )
                                         : null,
                                     onTap: () {
                                       final id = employee['id'].toString();
-                                      if (!_selectedIds.contains(id) && _selectedIds.length < 3) {
+                                      if (!_selectedIds.contains(id) &&
+                                          _selectedIds.length < 3) {
                                         setState(() {
                                           _selectedIds.add(id);
                                           _searchController.clear();
                                         });
                                         widget.onSelectionChanged(_selectedIds);
                                       } else if (_selectedIds.length >= 3) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
                                           const SnackBar(
-                                            content: Text('Maksimal 3 pegawai dapat dipilih'),
+                                            content: Text(
+                                              'Maksimal 3 pegawai dapat dipilih',
+                                            ),
                                             backgroundColor: Colors.orange,
                                             duration: Duration(seconds: 2),
                                           ),
@@ -273,7 +329,7 @@ class _GpsEmployeeSearchDropdownState
                           '${_selectedIds.length} dari 3 pegawai dipilih',
                           style: TextStyle(
                             fontSize: 11,
-                            color: _selectedIds.length == 3 
+                            color: _selectedIds.length == 3
                                 ? const Color(0xFFF59E0B).withOpacity(0.9)
                                 : Colors.white.withOpacity(0.5),
                           ),
@@ -294,7 +350,10 @@ class _GpsEmployeeSearchDropdownState
                   error: (error, _) => Center(
                     child: Text(
                       'Error: $error',
-                      style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12),
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.7),
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ),
@@ -313,7 +372,8 @@ class _GpsEmployeeSearchDropdownState
     }
     return _employees.where((employee) {
       final fullName = employee['full_name'].toString().toLowerCase();
-      final employeeId = employee['employee_id']?.toString().toLowerCase() ?? '';
+      final employeeId =
+          employee['employee_id']?.toString().toLowerCase() ?? '';
       return fullName.contains(query) || employeeId.contains(query);
     }).toList();
   }
