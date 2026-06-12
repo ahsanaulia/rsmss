@@ -14,7 +14,7 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    print('🔥🔥🔥 [SUB-MENU 4] BUILD DIPANGGIL 🔥🔥🔥');
+    // print('🔥🔥🔥 [SUB-MENU 4] BUILD DIPANGGIL 🔥🔥🔥');
     
     final scoreSummaryAsync = ref.watch(scoreSummaryListStreamProvider);
     final topPerformersAsync = ref.watch(topPerformersStreamProvider);
@@ -42,7 +42,7 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
         ),
         child: RefreshIndicator(
           onRefresh: () async {
-            print('🔄 [SUB-MENU 4] Refresh dipanggil');
+            // print('🔄 [SUB-MENU 4] Refresh dipanggil');
             ref.invalidate(scoreSummaryListProvider);
             ref.invalidate(topPerformersProvider);
             ref.invalidate(allOwnedQualificationsProvider);
@@ -86,7 +86,7 @@ class Submenu4SertifikasiPenilaian extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'SERTIFIKASI & PENILAIAN',
+          '       SERTIFIKASI & PENILAIAN',
           style: GoogleFonts.poppins(
             fontSize: 24,
             fontWeight: FontWeight.w800,

@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:ui';
@@ -33,8 +34,10 @@ import '../../../insights/stocks/views/storage_distribution_screen.dart';
 import '../../insights/stocks/views/storage_hierarchy_screen.dart';
 import '../../../insights/hospital/views/incident_response_screen.dart';
 import '../../../insights/hospital/views/occupancy_dashboard_screen.dart';
+import '../../l10n/app_localizations.dart';
+import '../../providers/locale_provider.dart';
 
-class MonitorDashboard extends StatefulWidget {
+class MonitorDashboard extends ConsumerStatefulWidget {
   final String userName;
   final VoidCallback onLogout;
 
@@ -45,10 +48,10 @@ class MonitorDashboard extends StatefulWidget {
   });
 
   @override
-  State<MonitorDashboard> createState() => _MonitorDashboardState();
+  ConsumerState<MonitorDashboard> createState() => _MonitorDashboardState();
 }
 
-class _MonitorDashboardState extends State<MonitorDashboard> {
+class _MonitorDashboardState extends ConsumerState<MonitorDashboard> {
   final _supabase = Supabase.instance.client;
 
   String _selectedMenu = "Organization Overview";
@@ -95,6 +98,10 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
     ) {
       widget.onLogout();
     });
+  }
+
+  void _changeLocale(Locale locale) {
+    ref.read(localeProvider.notifier).setLocale(locale);
   }
 
   @override
@@ -161,6 +168,8 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
   // SIDEBAR
   // ======================
   Widget _buildSidebar() {
+    final localizations = AppLocalizations.of(context);
+    
     return ClipRRect(
       borderRadius: const BorderRadius.only(
         topRight: Radius.circular(40),
@@ -206,54 +215,60 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _sectionTitle("ORGANIZATION INSIGHTS"),
-                      _menu("Organization Overview", Icons.business_outlined),
-                      _menu("Human Ratio & Analytics", Icons.people_outline),
+                      _sectionTitle(localizations?.monitor_section_organization_insights ?? "ORGANIZATION INSIGHTS"),
+                      _menu(localizations?.monitor_menu_organization_overview ?? "Organization Overview", Icons.business_outlined),
+                      _menu(localizations?.monitor_menu_human_ratio ?? "Human Ratio & Analytics", Icons.people_outline),
                       // Di dalam _sectionTitle "ORGANIZATION INSIGHTS" atau "HOSPITAL OPERATIONS"
-                      _menu("Bed Occupancy", Icons.bed),
-                      _menu("Incident & Response", Icons.warning_amber),
+                      _menu(localizations?.monitor_menu_bed_occupancy ?? "Bed Occupancy", Icons.bed),
+                      _menu(localizations?.monitor_menu_incident_response ?? "Incident & Response", Icons.warning_amber),
                       const SizedBox(height: 24),
-                      _sectionTitle("PEOPLE INSIGHTS"),
-                      _menu("Ringkasan Pegawai", Icons.people_alt),
-                      _menu("Wellbeing & Kinerja", Icons.favorite_outline),
-                      _menu("Lokasi & Kehadiran", Icons.location_on_outlined),
-                      _menu("Sertifikasi & Penilaian", Icons.verified_outlined),
-                      _menu("Insight Pegawai", Icons.people_outline_outlined),
-                      const SizedBox(height: 24),
-
-                      _sectionTitle("ASSET"),
-                      _menu("Asset Utilization", Icons.speed),
-                      _menu("Live Asset Tracking", Icons.inventory),
-                      _menu("Asset by Taxonomy", Icons.account_tree),
-                      _menu("Asset Intelligence", Icons.bar_chart),
-                      _menu("Asset Report", Icons.description),
+                      _sectionTitle(localizations?.monitor_section_people_insights ?? "PEOPLE INSIGHTS"),
+                      _menu(localizations?.monitor_menu_employee_summary ?? "Ringkasan Pegawai", Icons.people_alt),
+                      _menu(localizations?.monitor_menu_wellbeing_performance ?? "Wellbeing & Kinerja", Icons.favorite_outline),
+                      _menu(localizations?.monitor_menu_location_attendance ?? "Lokasi & Kehadiran", Icons.location_on_outlined),
+                      _menu(localizations?.monitor_menu_certification_assessment ?? "Sertifikasi & Penilaian", Icons.verified_outlined),
+                      _menu(localizations?.monitor_menu_employee_insight ?? "Insight Pegawai", Icons.people_outline_outlined),
                       const SizedBox(height: 24),
 
-                      _sectionTitle("STOCK & INVENTORY"),
-                      _menu("Stock Overview", Icons.inventory),
-                      _menu("Stock Tree View", Icons.account_tree),
-                      _menu("Stock Requests", Icons.request_page),
-                      _menu("Stock Opname", Icons.medical_information_outlined),
-                      _menu("Storage Distribution", Icons.inventory_2_outlined),
-                      _menu("Storage Tree View", Icons.account_tree_outlined),
-                      _menu("Stock Intelligence", Icons.watch_later),
-                      _menu("Stock Report", Icons.description),
+                      _sectionTitle(localizations?.monitor_section_asset ?? "ASSET"),
+                      _menu(localizations?.monitor_menu_asset_utilization ?? "Asset Utilization", Icons.speed),
+                      _menu(localizations?.monitor_menu_live_asset_tracking ?? "Live Asset Tracking", Icons.inventory),
+                      _menu(localizations?.monitor_menu_asset_by_taxonomy ?? "Asset by Taxonomy", Icons.account_tree),
+                      _menu(localizations?.monitor_menu_asset_intelligence ?? "Asset Intelligence", Icons.bar_chart),
+                      _menu(localizations?.monitor_menu_asset_report ?? "Asset Report", Icons.description),
                       const SizedBox(height: 24),
 
-                      _sectionTitle("PEOPLE TRACKING"),
-                      _menu("Live People Tracking", Icons.language),
-                      _menu("People Watch List", Icons.person),
+                      _sectionTitle(localizations?.monitor_section_stock_inventory ?? "STOCK & INVENTORY"),
+                      _menu(localizations?.monitor_menu_stock_overview ?? "Stock Overview", Icons.inventory),
+                      _menu(localizations?.monitor_menu_stock_tree_view ?? "Stock Tree View", Icons.account_tree),
+                      _menu(localizations?.monitor_menu_stock_requests ?? "Stock Requests", Icons.request_page),
+                      _menu(localizations?.monitor_menu_stock_opname ?? "Stock Opname", Icons.medical_information_outlined),
+                      _menu(localizations?.monitor_menu_storage_distribution ?? "Storage Distribution", Icons.inventory_2_outlined),
+                      _menu(localizations?.monitor_menu_storage_tree_view ?? "Storage Tree View", Icons.account_tree_outlined),
+                      _menu(localizations?.monitor_menu_stock_intelligence ?? "Stock Intelligence", Icons.watch_later),
+                      _menu(localizations?.monitor_menu_stock_report ?? "Stock Report", Icons.description),
                       const SizedBox(height: 24),
 
-                      _sectionTitle("SYSTEM"),
-                      _menu("Logout", Icons.logout, isLogout: true),
+                      _sectionTitle(localizations?.monitor_section_people_tracking ?? "PEOPLE TRACKING"),
+                      _menu(localizations?.monitor_menu_live_people_tracking ?? "Live People Tracking", Icons.language),
+                      _menu(localizations?.monitor_menu_people_watch_list ?? "People Watch List", Icons.person),
+                      const SizedBox(height: 24),
 
-                      const SizedBox(height: 32),
+                      _sectionTitle(localizations?.monitor_section_system ?? "SYSTEM"),
+                      _menu(localizations?.monitor_menu_logout ?? "Logout", Icons.logout, isLogout: true),
+
+                      const SizedBox(height: 16),
+                      
+                      // LANGUAGE TOGGLE
+                      _buildLanguageToggle(),
+                      
+                      const SizedBox(height: 16),
+                      
                       Center(
                         child: Column(
                           children: [
                             Text(
-                              "Developed By : PLATFORM PELAYANAN TERBAIK",
+                              localizations?.monitor_footer_developed_by ?? "Developed By : PLATFORM PELAYANAN TERBAIK",
                               textAlign: TextAlign.center,
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 8,
@@ -263,7 +278,7 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              "Distributed By : PT. REKAMITRA",
+                              localizations?.monitor_footer_distributed_by ?? "Distributed By : PT. REKAMITRA",
                               textAlign: TextAlign.center,
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 8,
@@ -273,7 +288,7 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              "2026 - Indonesia",
+                              localizations?.monitor_footer_year_country ?? "2026 - Indonesia",
                               style: GoogleFonts.plusJakartaSans(
                                 fontSize: 8,
                                 fontWeight: FontWeight.bold,
@@ -289,6 +304,67 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLanguageToggle() {
+    final currentLocale = ref.watch(localeProvider);
+    final isEnglish = currentLocale.languageCode == 'en';
+    final localizations = AppLocalizations.of(context);
+    
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildLangButton(
+            langCode: 'en',
+            label: 'EN',
+            isActive: isEnglish,
+            onTap: () => _changeLocale(const Locale('en')),
+          ),
+          const SizedBox(width: 4),
+          _buildLangButton(
+            langCode: 'id',
+            label: 'ID',
+            isActive: !isEnglish,
+            onTap: () => _changeLocale(const Locale('id')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLangButton({
+    required String langCode,
+    required String label,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        decoration: BoxDecoration(
+          color: isActive ? Colors.white.withValues(alpha: 0.25) : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.6),
           ),
         ),
       ),
@@ -458,50 +534,52 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
   // GET BODY BASED ON SELECTED MENU
   // ======================
   Widget _getBody() {
-    if (_selectedMenu == "Organization Overview") {
+    final localizations = AppLocalizations.of(context);
+    
+    if (_selectedMenu == (localizations?.monitor_menu_organization_overview ?? "Organization Overview")) {
       return const HospitalOverviewScreen();
     }
-    if (_selectedMenu == "Bed Occupancy") {
+    if (_selectedMenu == (localizations?.monitor_menu_bed_occupancy ?? "Bed Occupancy")) {
       return const OccupancyDashboardScreen();
     }
 
-    if (_selectedMenu == "Incident & Response") {
+    if (_selectedMenu == (localizations?.monitor_menu_incident_response ?? "Incident & Response")) {
       return const IncidentResponseScreen();
     }
 
-    if (_selectedMenu == "Ringkasan Pegawai") {
+    if (_selectedMenu == (localizations?.monitor_menu_employee_summary ?? "Ringkasan Pegawai")) {
       return const Submenu1Ringkasan();
     }
 
-    if (_selectedMenu == "Human Ratio & Analytics") {
+    if (_selectedMenu == (localizations?.monitor_menu_human_ratio ?? "Human Ratio & Analytics")) {
       return const HumanRatioScreen();
     }
 
-    if (_selectedMenu == "Wellbeing & Kinerja") {
+    if (_selectedMenu == (localizations?.monitor_menu_wellbeing_performance ?? "Wellbeing & Kinerja")) {
       return const Submenu2Wellbeing();
     }
 
-    if (_selectedMenu == "Lokasi & Kehadiran") {
+    if (_selectedMenu == (localizations?.monitor_menu_location_attendance ?? "Lokasi & Kehadiran")) {
       return const Submenu3LokasiKehadiran();
     }
 
-    if (_selectedMenu == "Sertifikasi & Penilaian") {
+    if (_selectedMenu == (localizations?.monitor_menu_certification_assessment ?? "Sertifikasi & Penilaian")) {
       return const Submenu4SertifikasiPenilaian();
     }
 
-    if (_selectedMenu == "Insight Pegawai") {
+    if (_selectedMenu == (localizations?.monitor_menu_employee_insight ?? "Insight Pegawai")) {
       return const Submenu5InsightPegawai();
     }
 
-    if (_selectedMenu == "Live People Tracking") {
+    if (_selectedMenu == (localizations?.monitor_menu_live_people_tracking ?? "Live People Tracking")) {
       return _peopleMapView;
     }
 
-    if (_selectedMenu == "Live Asset Tracking") {
+    if (_selectedMenu == (localizations?.monitor_menu_live_asset_tracking ?? "Live Asset Tracking")) {
       return _assetMapView;
     }
 
-    if (_selectedMenu == "People Watch List") {
+    if (_selectedMenu == (localizations?.monitor_menu_people_watch_list ?? "People Watch List")) {
       return const PeopleWatchList();
     }
 
@@ -509,58 +587,58 @@ class _MonitorDashboardState extends State<MonitorDashboard> {
       return const AssetOverviewScreen();
     }
 
-    if (_selectedMenu == "Asset by Taxonomy") {
+    if (_selectedMenu == (localizations?.monitor_menu_asset_by_taxonomy ?? "Asset by Taxonomy")) {
       return const AssetTreeScreen();
     }
 
-    if (_selectedMenu == "Asset Intelligence") {
+    if (_selectedMenu == (localizations?.monitor_menu_asset_intelligence ?? "Asset Intelligence")) {
       return const AssetIntelligenceScreen();
     }
 
-    if (_selectedMenu == "Asset Utilization") {
+    if (_selectedMenu == (localizations?.monitor_menu_asset_utilization ?? "Asset Utilization")) {
       return const AssetUtilizationScreen();
     }
 
-    if (_selectedMenu == "Asset Report") {
+    if (_selectedMenu == (localizations?.monitor_menu_asset_report ?? "Asset Report")) {
       return const AssetReportScreen();
     }
 
-    if (_selectedMenu == "Stock Overview") {
+    if (_selectedMenu == (localizations?.monitor_menu_stock_overview ?? "Stock Overview")) {
       return const StockOverviewScreen();
     }
 
-    if (_selectedMenu == "Stock Tree View") {
+    if (_selectedMenu == (localizations?.monitor_menu_stock_tree_view ?? "Stock Tree View")) {
       return const StockTreeView();
     }
 
-    if (_selectedMenu == "Stock Opname") {
+    if (_selectedMenu == (localizations?.monitor_menu_stock_opname ?? "Stock Opname")) {
       return const StockOpnameScreen();
     }
 
-    if (_selectedMenu == "Storage Distribution") {
+    if (_selectedMenu == (localizations?.monitor_menu_storage_distribution ?? "Storage Distribution")) {
       return const StorageDistributionScreen();
     }
 
-    if (_selectedMenu == "Storage Tree View") {
+    if (_selectedMenu == (localizations?.monitor_menu_storage_tree_view ?? "Storage Tree View")) {
       return const StorageHierarchyScreen();
     }
 
-    if (_selectedMenu == "Stock Requests") {
+    if (_selectedMenu == (localizations?.monitor_menu_stock_requests ?? "Stock Requests")) {
       return const StockRequestsScreen();
     }
 
-    if (_selectedMenu == "Stock Intelligence") {
+    if (_selectedMenu == (localizations?.monitor_menu_stock_intelligence ?? "Stock Intelligence")) {
       return const StocksIntelligenceScreen();
     }
 
-    if (_selectedMenu == "Stock Report") {
+    if (_selectedMenu == (localizations?.monitor_menu_stock_report ?? "Stock Report")) {
       return const StockReportScreen();
     }
 
     // DEFAULT
     return Center(
       child: Text(
-        "EMPTY",
+        localizations?.monitor_empty_state ?? "EMPTY",
         style: GoogleFonts.poppins(color: Colors.white, fontSize: 16),
       ),
     );

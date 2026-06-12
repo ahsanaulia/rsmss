@@ -2485,6 +2485,444 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Qualification added successfully'**
   String get crud_eq_success_create;
+
+  /// No description provided for @monitor_section_organization_insights.
+  ///
+  /// In en, this message translates to:
+  /// **'ORGANIZATION INSIGHTS'**
+  String get monitor_section_organization_insights;
+
+  /// No description provided for @monitor_section_people_insights.
+  ///
+  /// In en, this message translates to:
+  /// **'PEOPLE INSIGHTS'**
+  String get monitor_section_people_insights;
+
+  /// No description provided for @monitor_section_asset.
+  ///
+  /// In en, this message translates to:
+  /// **'ASSET'**
+  String get monitor_section_asset;
+
+  /// No description provided for @monitor_section_stock_inventory.
+  ///
+  /// In en, this message translates to:
+  /// **'STOCK & INVENTORY'**
+  String get monitor_section_stock_inventory;
+
+  /// No description provided for @monitor_section_people_tracking.
+  ///
+  /// In en, this message translates to:
+  /// **'PEOPLE TRACKING'**
+  String get monitor_section_people_tracking;
+
+  /// No description provided for @monitor_section_system.
+  ///
+  /// In en, this message translates to:
+  /// **'SYSTEM'**
+  String get monitor_section_system;
+
+  /// No description provided for @monitor_menu_organization_overview.
+  ///
+  /// In en, this message translates to:
+  /// **'Organization Overview'**
+  String get monitor_menu_organization_overview;
+
+  /// No description provided for @monitor_menu_human_ratio.
+  ///
+  /// In en, this message translates to:
+  /// **'Human Ratio & Analytics'**
+  String get monitor_menu_human_ratio;
+
+  /// No description provided for @monitor_menu_bed_occupancy.
+  ///
+  /// In en, this message translates to:
+  /// **'Bed Occupancy'**
+  String get monitor_menu_bed_occupancy;
+
+  /// No description provided for @monitor_menu_incident_response.
+  ///
+  /// In en, this message translates to:
+  /// **'Incident & Response'**
+  String get monitor_menu_incident_response;
+
+  /// No description provided for @monitor_menu_employee_summary.
+  ///
+  /// In en, this message translates to:
+  /// **'Employee Summary'**
+  String get monitor_menu_employee_summary;
+
+  /// No description provided for @monitor_menu_wellbeing_performance.
+  ///
+  /// In en, this message translates to:
+  /// **'Wellbeing & Performance'**
+  String get monitor_menu_wellbeing_performance;
+
+  /// No description provided for @monitor_menu_location_attendance.
+  ///
+  /// In en, this message translates to:
+  /// **'Location & Attendance'**
+  String get monitor_menu_location_attendance;
+
+  /// No description provided for @monitor_menu_certification_assessment.
+  ///
+  /// In en, this message translates to:
+  /// **'Certification & Assessment'**
+  String get monitor_menu_certification_assessment;
+
+  /// No description provided for @monitor_menu_employee_insight.
+  ///
+  /// In en, this message translates to:
+  /// **'Employee Insight'**
+  String get monitor_menu_employee_insight;
+
+  /// No description provided for @monitor_menu_asset_utilization.
+  ///
+  /// In en, this message translates to:
+  /// **'Asset Utilization'**
+  String get monitor_menu_asset_utilization;
+
+  /// No description provided for @monitor_menu_live_asset_tracking.
+  ///
+  /// In en, this message translates to:
+  /// **'Live Asset Tracking'**
+  String get monitor_menu_live_asset_tracking;
+
+  /// No description provided for @monitor_menu_asset_by_taxonomy.
+  ///
+  /// In en, this message translates to:
+  /// **'Asset by Taxonomy'**
+  String get monitor_menu_asset_by_taxonomy;
+
+  /// No description provided for @monitor_menu_asset_intelligence.
+  ///
+  /// In en, this message translates to:
+  /// **'Asset Intelligence'**
+  String get monitor_menu_asset_intelligence;
+
+  /// No description provided for @monitor_menu_asset_report.
+  ///
+  /// In en, this message translates to:
+  /// **'Asset Report'**
+  String get monitor_menu_asset_report;
+
+  /// No description provided for @monitor_menu_stock_overview.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock Overview'**
+  String get monitor_menu_stock_overview;
+
+  /// No description provided for @monitor_menu_stock_tree_view.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock Tree View'**
+  String get monitor_menu_stock_tree_view;
+
+  /// No description provided for @monitor_menu_stock_requests.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock Requests'**
+  String get monitor_menu_stock_requests;
+
+  /// No description provided for @monitor_menu_stock_opname.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock Opname'**
+  String get monitor_menu_stock_opname;
+
+  /// No description provided for @monitor_menu_storage_distribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage Distribution'**
+  String get monitor_menu_storage_distribution;
+
+  /// No description provided for @monitor_menu_storage_tree_view.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage Tree View'**
+  String get monitor_menu_storage_tree_view;
+
+  /// No description provided for @monitor_menu_stock_intelligence.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock Intelligence'**
+  String get monitor_menu_stock_intelligence;
+
+  /// No description provided for @monitor_menu_stock_report.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock Report'**
+  String get monitor_menu_stock_report;
+
+  /// No description provided for @monitor_menu_live_people_tracking.
+  ///
+  /// In en, this message translates to:
+  /// **'Live People Tracking'**
+  String get monitor_menu_live_people_tracking;
+
+  /// No description provided for @monitor_menu_people_watch_list.
+  ///
+  /// In en, this message translates to:
+  /// **'People Watch List'**
+  String get monitor_menu_people_watch_list;
+
+  /// No description provided for @monitor_menu_logout.
+  ///
+  /// In en, this message translates to:
+  /// **'Logout'**
+  String get monitor_menu_logout;
+
+  /// No description provided for @monitor_footer_developed_by.
+  ///
+  /// In en, this message translates to:
+  /// **'Developed By: PLATFORM PELAYANAN TERBAIK'**
+  String get monitor_footer_developed_by;
+
+  /// No description provided for @monitor_footer_distributed_by.
+  ///
+  /// In en, this message translates to:
+  /// **'Distributed By: PT. REKAMITRA'**
+  String get monitor_footer_distributed_by;
+
+  /// No description provided for @monitor_footer_year_country.
+  ///
+  /// In en, this message translates to:
+  /// **'2026 - Indonesia'**
+  String get monitor_footer_year_country;
+
+  /// No description provided for @monitor_empty_state.
+  ///
+  /// In en, this message translates to:
+  /// **'EMPTY'**
+  String get monitor_empty_state;
+
+  /// No description provided for @hospital_overview_kpi_buildings.
+  ///
+  /// In en, this message translates to:
+  /// **'Buildings'**
+  String get hospital_overview_kpi_buildings;
+
+  /// No description provided for @hospital_overview_kpi_floors.
+  ///
+  /// In en, this message translates to:
+  /// **'Floors'**
+  String get hospital_overview_kpi_floors;
+
+  /// No description provided for @hospital_overview_kpi_rooms.
+  ///
+  /// In en, this message translates to:
+  /// **'Rooms'**
+  String get hospital_overview_kpi_rooms;
+
+  /// No description provided for @hospital_overview_kpi_employees.
+  ///
+  /// In en, this message translates to:
+  /// **'Employees'**
+  String get hospital_overview_kpi_employees;
+
+  /// No description provided for @hospital_overview_kpi_units.
+  ///
+  /// In en, this message translates to:
+  /// **'Units'**
+  String get hospital_overview_kpi_units;
+
+  /// No description provided for @hospital_overview_kpi_present_today.
+  ///
+  /// In en, this message translates to:
+  /// **'Present'**
+  String get hospital_overview_kpi_present_today;
+
+  /// No description provided for @hospital_overview_chart_room_distribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Room Distribution by Category'**
+  String get hospital_overview_chart_room_distribution;
+
+  /// No description provided for @hospital_overview_chart_employee_per_unit.
+  ///
+  /// In en, this message translates to:
+  /// **'Employees per Unit'**
+  String get hospital_overview_chart_employee_per_unit;
+
+  /// No description provided for @hospital_overview_tree_organization_structure.
+  ///
+  /// In en, this message translates to:
+  /// **'Organization Structure'**
+  String get hospital_overview_tree_organization_structure;
+
+  /// No description provided for @hospital_overview_tree_building_structure.
+  ///
+  /// In en, this message translates to:
+  /// **'Building Structure'**
+  String get hospital_overview_tree_building_structure;
+
+  /// No description provided for @hospital_overview_empty_room_categories.
+  ///
+  /// In en, this message translates to:
+  /// **'No room category data'**
+  String get hospital_overview_empty_room_categories;
+
+  /// No description provided for @hospital_overview_empty_employee_per_unit.
+  ///
+  /// In en, this message translates to:
+  /// **'No employee per unit data'**
+  String get hospital_overview_empty_employee_per_unit;
+
+  /// No description provided for @hospital_overview_empty_organization_structure.
+  ///
+  /// In en, this message translates to:
+  /// **'No organization structure data'**
+  String get hospital_overview_empty_organization_structure;
+
+  /// No description provided for @hospital_overview_empty_building_data.
+  ///
+  /// In en, this message translates to:
+  /// **'No building data'**
+  String get hospital_overview_empty_building_data;
+
+  /// No description provided for @hospital_overview_error_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load data'**
+  String get hospital_overview_error_title;
+
+  /// No description provided for @hospital_overview_error_retry_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Try Again'**
+  String get hospital_overview_error_retry_button;
+
+  /// No description provided for @hospital_overview_unit_person_suffix.
+  ///
+  /// In en, this message translates to:
+  /// **'person'**
+  String get hospital_overview_unit_person_suffix;
+
+  /// No description provided for @hospital_overview_unit_person_suffix_plural.
+  ///
+  /// In en, this message translates to:
+  /// **'people'**
+  String get hospital_overview_unit_person_suffix_plural;
+
+  /// No description provided for @hospital_overview_floor_prefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Floor '**
+  String get hospital_overview_floor_prefix;
+
+  /// No description provided for @hospital_overview_more_units_suffix.
+  ///
+  /// In en, this message translates to:
+  /// **'more other units'**
+  String get hospital_overview_more_units_suffix;
+
+  /// No description provided for @human_ratio_title.
+  ///
+  /// In en, this message translates to:
+  /// **'HUMAN RATIO & ANALYTICS'**
+  String get human_ratio_title;
+
+  /// No description provided for @human_ratio_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Employee vs Non-Employee Comparison | Workload | Ratio'**
+  String get human_ratio_subtitle;
+
+  /// No description provided for @human_ratio_total_employees.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Employees'**
+  String get human_ratio_total_employees;
+
+  /// No description provided for @human_ratio_total_people.
+  ///
+  /// In en, this message translates to:
+  /// **'Total People'**
+  String get human_ratio_total_people;
+
+  /// No description provided for @human_ratio_employee_vs_patient.
+  ///
+  /// In en, this message translates to:
+  /// **'Employee vs Patient'**
+  String get human_ratio_employee_vs_patient;
+
+  /// No description provided for @human_ratio_nurse_vs_patient.
+  ///
+  /// In en, this message translates to:
+  /// **'Nurse vs Patient'**
+  String get human_ratio_nurse_vs_patient;
+
+  /// No description provided for @human_ratio_employee_vs_non_employee.
+  ///
+  /// In en, this message translates to:
+  /// **'Employee vs Non-Employee'**
+  String get human_ratio_employee_vs_non_employee;
+
+  /// No description provided for @human_ratio_employee_vs_non_employee_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Comparison of employees to non-employees'**
+  String get human_ratio_employee_vs_non_employee_desc;
+
+  /// No description provided for @human_ratio_chart_people_distribution.
+  ///
+  /// In en, this message translates to:
+  /// **'People Distribution by Category'**
+  String get human_ratio_chart_people_distribution;
+
+  /// No description provided for @human_ratio_chart_position_distribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Employee Distribution by Position'**
+  String get human_ratio_chart_position_distribution;
+
+  /// No description provided for @human_ratio_chart_employee_per_unit.
+  ///
+  /// In en, this message translates to:
+  /// **'Employees per Unit'**
+  String get human_ratio_chart_employee_per_unit;
+
+  /// No description provided for @human_ratio_empty_people_categories.
+  ///
+  /// In en, this message translates to:
+  /// **'No people category data'**
+  String get human_ratio_empty_people_categories;
+
+  /// No description provided for @human_ratio_empty_positions.
+  ///
+  /// In en, this message translates to:
+  /// **'No employee position data'**
+  String get human_ratio_empty_positions;
+
+  /// No description provided for @human_ratio_empty_employee_per_unit.
+  ///
+  /// In en, this message translates to:
+  /// **'No employee per unit data'**
+  String get human_ratio_empty_employee_per_unit;
+
+  /// No description provided for @human_ratio_person_suffix.
+  ///
+  /// In en, this message translates to:
+  /// **'person'**
+  String get human_ratio_person_suffix;
+
+  /// No description provided for @human_ratio_person_suffix_plural.
+  ///
+  /// In en, this message translates to:
+  /// **'people'**
+  String get human_ratio_person_suffix_plural;
+
+  /// No description provided for @human_ratio_error_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load data'**
+  String get human_ratio_error_title;
+
+  /// No description provided for @human_ratio_error_retry_button.
+  ///
+  /// In en, this message translates to:
+  /// **'Try Again'**
+  String get human_ratio_error_retry_button;
 }
 
 class _AppLocalizationsDelegate

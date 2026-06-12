@@ -62,7 +62,7 @@ class Submenu1Ringkasan extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'RINGKASAN PEGAWAI',
+          '      RINGKASAN PEGAWAI',
           style: GoogleFonts.poppins(
             fontSize: 24,
             fontWeight: FontWeight.w800,

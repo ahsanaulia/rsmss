@@ -76,8 +76,8 @@ class _IncidentResponseScreenState extends ConsumerState<IncidentResponseScreen>
                   const SizedBox(height: 20),
 
                   // ROW 2: KATEGORI KPI CARDS (DINAMIS)
-                  _buildCategoryKPICards(categoryDistribution, isMobile, isTablet),
-                  const SizedBox(height: 20),
+                  // _buildCategoryKPICards(categoryDistribution, isMobile, isTablet),
+                  // const SizedBox(height: 20),
 
                   // ROW 3: DONUT CHARTS (KATEGORI + SEVERITY + RESPONSE)
                   if (useTwoColumns)
@@ -188,10 +188,10 @@ class _IncidentResponseScreenState extends ConsumerState<IncidentResponseScreen>
       _kpiCard('Avg Response', '${summary.avgResponseTimeMinutes.toStringAsFixed(0)}m', Icons.speed, const Color(0xFF3B82F6)),
     ];
 
-    int crossAxisCount = isMobile ? 2 : (isTablet ? 3 : 4);
-    if (kpiCards.length < crossAxisCount) {
-      crossAxisCount = kpiCards.length;
-    }
+    int crossAxisCount = isMobile ? 2 : (isTablet ? 3 : 8);
+    // if (kpiCards.length < crossAxisCount) {
+    //   crossAxisCount = kpiCards.length;
+    // }
 
     return GridView.count(
       shrinkWrap: true,
@@ -226,7 +226,7 @@ class _IncidentResponseScreenState extends ConsumerState<IncidentResponseScreen>
       );
     }
 
-    int crossAxisCount = isMobile ? 2 : (isTablet ? 3 : 4);
+    int crossAxisCount = isMobile ? 2 : (isTablet ? 3 : 8);
     if (categoryCards.length < crossAxisCount) {
       crossAxisCount = categoryCards.length;
     }
@@ -247,9 +247,9 @@ class _IncidentResponseScreenState extends ConsumerState<IncidentResponseScreen>
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           crossAxisCount: crossAxisCount,
-          crossAxisSpacing: 8,
-          mainAxisSpacing: 8,
-          childAspectRatio: 1.8,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 1.3,
           children: categoryCards,
         ),
       ],
@@ -277,7 +277,7 @@ class _IncidentResponseScreenState extends ConsumerState<IncidentResponseScreen>
             value,
             style: GoogleFonts.poppins(
               color: Colors.white,
-              fontSize: 18,
+              fontSize: 22,
               fontWeight: FontWeight.w800,
             ),
             maxLines: 1,
@@ -287,7 +287,7 @@ class _IncidentResponseScreenState extends ConsumerState<IncidentResponseScreen>
             title,
             style: GoogleFonts.poppins(
               color: Colors.white.withValues(alpha: 0.6),
-              fontSize: 9,
+              fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
             maxLines: 2,

@@ -153,7 +153,7 @@ class _OccupancyDashboardScreenState extends ConsumerState<OccupancyDashboardScr
   }
 
   Widget _buildKPICards(OccupancySummary summary, bool isMobile, bool isTablet) {
-    final crossAxisCount = isMobile ? 2 : (isTablet ? 3 : 4);
+    final crossAxisCount = isMobile ? 2 : (isTablet ? 3 : 8);
     
     return GridView.count(
       shrinkWrap: true,

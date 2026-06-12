@@ -9,6 +9,7 @@ import '../models/hospital_overview_summary.dart';
 import '../models/hospital_profile_model.dart';
 import '../models/hospital_organization_model.dart';
 import '../../profiles/widgets/shared/donut_chart.dart';
+import '../../../l10n/app_localizations.dart';
 
 class HospitalOverviewScreen extends ConsumerStatefulWidget {
   const HospitalOverviewScreen({super.key});
@@ -28,6 +29,7 @@ class _HospitalOverviewScreenState extends ConsumerState<HospitalOverviewScreen>
 
   @override
   Widget build(BuildContext context) {
+    final localizations = AppLocalizations.of(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 600;
     final isTablet = screenWidth >= 600 && screenWidth < 1200;
@@ -196,7 +198,8 @@ class _HospitalOverviewScreenState extends ConsumerState<HospitalOverviewScreen>
   // KPI CARDS
   // ============================================================
   Widget _buildKPICards(HospitalOverviewSummary summary, bool isMobile, bool isTablet) {
-    final crossAxisCount = isMobile ? 2 : (isTablet ? 3 : 4);
+    final localizations = AppLocalizations.of(context);
+    final crossAxisCount = isMobile ? 1 : (isTablet ? 2 : 6);
     
     return GridView.count(
       shrinkWrap: true,
@@ -204,14 +207,14 @@ class _HospitalOverviewScreenState extends ConsumerState<HospitalOverviewScreen>
       crossAxisCount: crossAxisCount,
       crossAxisSpacing: 20,
       mainAxisSpacing: 20,
-      childAspectRatio: 1.3,
+      childAspectRatio: 1.4,
       children: [
-        _kpiCard('Gedung', summary.totalBuildings.toString(), Icons.business, const Color(0xFF3B82F6)),
-        _kpiCard('Lantai', summary.totalFloors.toString(), Icons.square, const Color(0xFF10B981)),
-        _kpiCard('Kamar', summary.totalRooms.toString(), Icons.meeting_room, const Color(0xFF8B5CF6)),
-        _kpiCard('Pegawai', summary.totalEmployees.toString(), Icons.people, const Color(0xFFF59E0B)),
-        _kpiCard('Unit', summary.totalUnits.toString(), Icons.account_tree, const Color(0xFF06B6D4)),
-        _kpiCard('Hadir Hari Ini', summary.presentToday.toString(), Icons.check_circle, const Color(0xFF10B981)),
+        _kpiCard(localizations?.hospital_overview_kpi_buildings ?? 'Gedung', summary.totalBuildings.toString(), Icons.business, const Color(0xFF3B82F6)),
+        _kpiCard(localizations?.hospital_overview_kpi_floors ?? 'Lantai', summary.totalFloors.toString(), Icons.square, const Color(0xFF10B981)),
+        _kpiCard(localizations?.hospital_overview_kpi_rooms ?? 'Kamar', summary.totalRooms.toString(), Icons.meeting_room, const Color(0xFF8B5CF6)),
+        _kpiCard(localizations?.hospital_overview_kpi_employees ?? 'Pegawai', summary.totalEmployees.toString(), Icons.people, const Color(0xFFF59E0B)),
+        _kpiCard(localizations?.hospital_overview_kpi_units ?? 'Unit', summary.totalUnits.toString(), Icons.account_tree, const Color(0xFF06B6D4)),
+        _kpiCard(localizations?.hospital_overview_kpi_present_today ?? 'Hadir', summary.presentToday.toString(), Icons.check_circle, const Color(0xFF10B981)),
       ],
     );
   }
@@ -223,15 +226,15 @@ class _HospitalOverviewScreenState extends ConsumerState<HospitalOverviewScreen>
       child: Row(
         children: [
           Container(
-            width: 30,
-            height: 30,
+            width: 54,
+            height: 54,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color, size: 36),
           ),
-          const SizedBox(width: 48),
+          const SizedBox(width: 18),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,7 +244,7 @@ class _HospitalOverviewScreenState extends ConsumerState<HospitalOverviewScreen>
                   title,
                   style: GoogleFonts.poppins(
                     color: Colors.white.withValues(alpha: 0.6),
-                    fontSize: 16,
+                    fontSize: 12,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -249,10 +252,10 @@ class _HospitalOverviewScreenState extends ConsumerState<HospitalOverviewScreen>
                   value,
                   style: GoogleFonts.poppins(
                     color: Colors.white,
-                    fontSize: 40,
+                    fontSize: 42,
                     fontWeight: FontWeight.w800,
                   ),
-                  maxLines: 2,
+                  maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
@@ -267,13 +270,15 @@ class _HospitalOverviewScreenState extends ConsumerState<HospitalOverviewScreen>
   // ROOM CATEGORY CHART
   // ============================================================
   Widget _buildRoomCategoryChart(List<RoomCategoryDistribution> categories) {
+    final localizations = AppLocalizations.of(context);
+    
     if (categories.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: _glassDecoration(),
         child: Center(
           child: Text(
-            'Tidak ada data kategori kamar',
+            localizations?.hospital_overview_empty_room_categories ?? 'Tidak ada data kategori kamar',
             style: GoogleFonts.poppins(color: Colors.white.withValues(alpha: 0.5), fontSize: 12),
           ),
         ),
@@ -292,7 +297,7 @@ class _HospitalOverviewScreenState extends ConsumerState<HospitalOverviewScreen>
       decoration: _glassDecoration(),
       child: DonutChart(
         data: chartData,
-        title: 'Distribusi Kamar per Kategori',
+        title: localizations?.hospital_overview_chart_room_distribution ?? 'Distribusi Kamar per Kategori',
         total: total.toDouble(),
       ),
     );
@@ -302,13 +307,15 @@ class _HospitalOverviewScreenState extends ConsumerState<HospitalOverviewScreen>
   // EMPLOYEE PER UNIT CHART
   // ============================================================
   Widget _buildEmployeePerUnitChart(List<EmployeePerUnit> employees) {
+    final localizations = AppLocalizations.of(context);
+    
     if (employees.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: _glassDecoration(),
         child: Center(
           child: Text(
-            'Tidak ada data pegawai per unit',
+            localizations?.hospital_overview_empty_employee_per_unit ?? 'Tidak ada data pegawai per unit',
             style: GoogleFonts.poppins(color: Colors.white.withValues(alpha: 0.5), fontSize: 12),
           ),
         ),
@@ -317,6 +324,9 @@ class _HospitalOverviewScreenState extends ConsumerState<HospitalOverviewScreen>
 
     final displayItems = employees.take(5).toList();
     final maxCount = displayItems.first.employeeCount;
+    final personSuffix = (displayItems.length == 1 && displayItems.first.employeeCount == 1)
+        ? (localizations?.hospital_overview_unit_person_suffix ?? 'org')
+        : (localizations?.hospital_overview_unit_person_suffix_plural ?? 'org');
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -325,7 +335,7 @@ class _HospitalOverviewScreenState extends ConsumerState<HospitalOverviewScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Pegawai per Unit',
+            localizations?.hospital_overview_chart_employee_per_unit ?? 'Pegawai per Unit',
             style: GoogleFonts.poppins(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 12),
@@ -335,6 +345,9 @@ class _HospitalOverviewScreenState extends ConsumerState<HospitalOverviewScreen>
               child: Column(
                 children: displayItems.map((item) {
                   final percent = maxCount > 0 ? (item.employeeCount / maxCount) * 100 : 0.0;
+                  final itemPersonSuffix = item.employeeCount == 1
+                      ? (localizations?.hospital_overview_unit_person_suffix ?? 'org')
+                      : (localizations?.hospital_overview_unit_person_suffix_plural ?? 'org');
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: Column(
@@ -355,7 +368,7 @@ class _HospitalOverviewScreenState extends ConsumerState<HospitalOverviewScreen>
                               ),
                             ),
                             Text(
-                              '${item.employeeCount} org',
+                              '${item.employeeCount} $itemPersonSuffix',
                               style: GoogleFonts.poppins(
                                 color: const Color(0xFF10B981),
                                 fontSize: 11,
@@ -386,7 +399,7 @@ class _HospitalOverviewScreenState extends ConsumerState<HospitalOverviewScreen>
               padding: const EdgeInsets.only(top: 8),
               child: Center(
                 child: Text(
-                  '📋 +${employees.length - 5} unit lainnya',
+                  '📋 +${employees.length - 5} ${localizations?.hospital_overview_more_units_suffix ?? 'unit lainnya'}',
                   style: GoogleFonts.poppins(color: Colors.white.withValues(alpha: 0.5), fontSize: 10),
                 ),
               ),
@@ -400,13 +413,15 @@ class _HospitalOverviewScreenState extends ConsumerState<HospitalOverviewScreen>
   // EMPLOYEE HIERARCHY TREE
   // ============================================================
   Widget _buildEmployeeHierarchyTree(List<EmployeeUnitNode> roots) {
+    final localizations = AppLocalizations.of(context);
+    
     if (roots.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: _glassDecoration(),
         child: Center(
           child: Text(
-            'Tidak ada data struktur organisasi',
+            localizations?.hospital_overview_empty_organization_structure ?? 'Tidak ada data struktur organisasi',
             style: GoogleFonts.poppins(color: Colors.white.withValues(alpha: 0.5), fontSize: 12),
           ),
         ),
@@ -420,7 +435,7 @@ class _HospitalOverviewScreenState extends ConsumerState<HospitalOverviewScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Struktur Organisasi',
+            localizations?.hospital_overview_tree_organization_structure ?? 'Struktur Organisasi',
             style: GoogleFonts.poppins(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 12),
@@ -438,6 +453,11 @@ class _HospitalOverviewScreenState extends ConsumerState<HospitalOverviewScreen>
   }
 
   Widget _buildEmployeeNode(EmployeeUnitNode node) {
+    final localizations = AppLocalizations.of(context);
+    final personSuffix = node.employeeCount == 1
+        ? (localizations?.hospital_overview_unit_person_suffix ?? 'org')
+        : (localizations?.hospital_overview_unit_person_suffix_plural ?? 'org');
+    
     return ExpansionTile(
       leading: Icon(
         node.children.isEmpty ? Icons.business_center : Icons.account_tree,
@@ -445,12 +465,12 @@ class _HospitalOverviewScreenState extends ConsumerState<HospitalOverviewScreen>
         size: 18,
       ),
       title: Text(
-        '🏛️ ${node.unitName} (${node.employeeCount} org)',
+        '🏛️ ${node.unitName} (${node.employeeCount} $personSuffix)',
         style: GoogleFonts.poppins(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
       ),
       subtitle: node.headOfUnitName != null
           ? Text(
-              'Kepala: ${node.headOfUnitName}',
+              node.headOfUnitName!,
               style: GoogleFonts.poppins(color: Colors.white54, fontSize: 10),
             )
           : null,
@@ -466,13 +486,15 @@ class _HospitalOverviewScreenState extends ConsumerState<HospitalOverviewScreen>
   // BUILDING HIERARCHY TREE
   // ============================================================
   Widget _buildBuildingHierarchyTree(List<BuildingNode> buildings) {
+    final localizations = AppLocalizations.of(context);
+    
     if (buildings.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(16),
         decoration: _glassDecoration(),
         child: Center(
           child: Text(
-            'Tidak ada data gedung',
+            localizations?.hospital_overview_empty_building_data ?? 'Tidak ada data gedung',
             style: GoogleFonts.poppins(color: Colors.white.withValues(alpha: 0.5), fontSize: 12),
           ),
         ),
@@ -486,7 +508,7 @@ class _HospitalOverviewScreenState extends ConsumerState<HospitalOverviewScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Struktur Gedung',
+            localizations?.hospital_overview_tree_building_structure ?? 'Struktur Gedung',
             style: GoogleFonts.poppins(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 12),
@@ -519,10 +541,13 @@ class _HospitalOverviewScreenState extends ConsumerState<HospitalOverviewScreen>
   }
 
   Widget _buildFloorNode(FloorNode floor) {
+    final localizations = AppLocalizations.of(context);
+    final floorPrefix = localizations?.hospital_overview_floor_prefix ?? 'Lantai ';
+    
     return ExpansionTile(
       leading: const Icon(Icons.square, color: Color(0xFFF59E0B), size: 16),
       title: Text(
-        '📐 Lantai ${floor.floorNumber}${floor.floorAlias != null ? ' - ${floor.floorAlias}' : ''} (${floor.totalRooms} kamar)',
+        '📐 $floorPrefix${floor.floorNumber}${floor.floorAlias != null ? ' - ${floor.floorAlias}' : ''} (${floor.totalRooms} kamar)',
         style: GoogleFonts.poppins(color: Colors.white70, fontSize: 11),
       ),
       backgroundColor: Colors.transparent,
@@ -603,6 +628,8 @@ class _HospitalOverviewScreenState extends ConsumerState<HospitalOverviewScreen>
   // ERROR WIDGET
   // ============================================================
   Widget _buildErrorWidget(String message) {
+    final localizations = AppLocalizations.of(context);
+    
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: _glassDecoration(),
@@ -615,7 +642,7 @@ class _HospitalOverviewScreenState extends ConsumerState<HospitalOverviewScreen>
           ),
           const SizedBox(height: 12),
           Text(
-            'Gagal memuat data',
+            localizations?.hospital_overview_error_title ?? 'Gagal memuat data',
             style: GoogleFonts.poppins(
               color: Colors.white,
               fontSize: 16,
@@ -637,7 +664,7 @@ class _HospitalOverviewScreenState extends ConsumerState<HospitalOverviewScreen>
               ref.invalidate(hospitalOverviewStateProvider);
             },
             icon: const Icon(Icons.refresh, size: 18),
-            label: const Text('Coba Lagi'),
+            label: Text(localizations?.hospital_overview_error_retry_button ?? 'Coba Lagi'),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF10B981),
               foregroundColor: Colors.white,

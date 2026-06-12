@@ -1232,4 +1232,233 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get crud_eq_success_create => 'Qualification added successfully';
+
+  @override
+  String get monitor_section_organization_insights => 'ORGANIZATION INSIGHTS';
+
+  @override
+  String get monitor_section_people_insights => 'PEOPLE INSIGHTS';
+
+  @override
+  String get monitor_section_asset => 'ASSET';
+
+  @override
+  String get monitor_section_stock_inventory => 'STOCK & INVENTORY';
+
+  @override
+  String get monitor_section_people_tracking => 'PEOPLE TRACKING';
+
+  @override
+  String get monitor_section_system => 'SYSTEM';
+
+  @override
+  String get monitor_menu_organization_overview => 'Organization Overview';
+
+  @override
+  String get monitor_menu_human_ratio => 'Human Ratio & Analytics';
+
+  @override
+  String get monitor_menu_bed_occupancy => 'Bed Occupancy';
+
+  @override
+  String get monitor_menu_incident_response => 'Incident & Response';
+
+  @override
+  String get monitor_menu_employee_summary => 'Employee Summary';
+
+  @override
+  String get monitor_menu_wellbeing_performance => 'Wellbeing & Performance';
+
+  @override
+  String get monitor_menu_location_attendance => 'Location & Attendance';
+
+  @override
+  String get monitor_menu_certification_assessment =>
+      'Certification & Assessment';
+
+  @override
+  String get monitor_menu_employee_insight => 'Employee Insight';
+
+  @override
+  String get monitor_menu_asset_utilization => 'Asset Utilization';
+
+  @override
+  String get monitor_menu_live_asset_tracking => 'Live Asset Tracking';
+
+  @override
+  String get monitor_menu_asset_by_taxonomy => 'Asset by Taxonomy';
+
+  @override
+  String get monitor_menu_asset_intelligence => 'Asset Intelligence';
+
+  @override
+  String get monitor_menu_asset_report => 'Asset Report';
+
+  @override
+  String get monitor_menu_stock_overview => 'Stock Overview';
+
+  @override
+  String get monitor_menu_stock_tree_view => 'Stock Tree View';
+
+  @override
+  String get monitor_menu_stock_requests => 'Stock Requests';
+
+  @override
+  String get monitor_menu_stock_opname => 'Stock Opname';
+
+  @override
+  String get monitor_menu_storage_distribution => 'Storage Distribution';
+
+  @override
+  String get monitor_menu_storage_tree_view => 'Storage Tree View';
+
+  @override
+  String get monitor_menu_stock_intelligence => 'Stock Intelligence';
+
+  @override
+  String get monitor_menu_stock_report => 'Stock Report';
+
+  @override
+  String get monitor_menu_live_people_tracking => 'Live People Tracking';
+
+  @override
+  String get monitor_menu_people_watch_list => 'People Watch List';
+
+  @override
+  String get monitor_menu_logout => 'Logout';
+
+  @override
+  String get monitor_footer_developed_by =>
+      'Developed By: PLATFORM PELAYANAN TERBAIK';
+
+  @override
+  String get monitor_footer_distributed_by => 'Distributed By: PT. REKAMITRA';
+
+  @override
+  String get monitor_footer_year_country => '2026 - Indonesia';
+
+  @override
+  String get monitor_empty_state => 'EMPTY';
+
+  @override
+  String get hospital_overview_kpi_buildings => 'Buildings';
+
+  @override
+  String get hospital_overview_kpi_floors => 'Floors';
+
+  @override
+  String get hospital_overview_kpi_rooms => 'Rooms';
+
+  @override
+  String get hospital_overview_kpi_employees => 'Employees';
+
+  @override
+  String get hospital_overview_kpi_units => 'Units';
+
+  @override
+  String get hospital_overview_kpi_present_today => 'Present';
+
+  @override
+  String get hospital_overview_chart_room_distribution =>
+      'Room Distribution by Category';
+
+  @override
+  String get hospital_overview_chart_employee_per_unit => 'Employees per Unit';
+
+  @override
+  String get hospital_overview_tree_organization_structure =>
+      'Organization Structure';
+
+  @override
+  String get hospital_overview_tree_building_structure => 'Building Structure';
+
+  @override
+  String get hospital_overview_empty_room_categories => 'No room category data';
+
+  @override
+  String get hospital_overview_empty_employee_per_unit =>
+      'No employee per unit data';
+
+  @override
+  String get hospital_overview_empty_organization_structure =>
+      'No organization structure data';
+
+  @override
+  String get hospital_overview_empty_building_data => 'No building data';
+
+  @override
+  String get hospital_overview_error_title => 'Failed to load data';
+
+  @override
+  String get hospital_overview_error_retry_button => 'Try Again';
+
+  @override
+  String get hospital_overview_unit_person_suffix => 'person';
+
+  @override
+  String get hospital_overview_unit_person_suffix_plural => 'people';
+
+  @override
+  String get hospital_overview_floor_prefix => 'Floor ';
+
+  @override
+  String get hospital_overview_more_units_suffix => 'more other units';
+
+  @override
+  String get human_ratio_title => 'HUMAN RATIO & ANALYTICS';
+
+  @override
+  String get human_ratio_subtitle =>
+      'Employee vs Non-Employee Comparison | Workload | Ratio';
+
+  @override
+  String get human_ratio_total_employees => 'Total Employees';
+
+  @override
+  String get human_ratio_total_people => 'Total People';
+
+  @override
+  String get human_ratio_employee_vs_patient => 'Employee vs Patient';
+
+  @override
+  String get human_ratio_nurse_vs_patient => 'Nurse vs Patient';
+
+  @override
+  String get human_ratio_employee_vs_non_employee => 'Employee vs Non-Employee';
+
+  @override
+  String get human_ratio_employee_vs_non_employee_desc =>
+      'Comparison of employees to non-employees';
+
+  @override
+  String get human_ratio_chart_people_distribution =>
+      'People Distribution by Category';
+
+  @override
+  String get human_ratio_chart_position_distribution =>
+      'Employee Distribution by Position';
+
+  @override
+  String get human_ratio_chart_employee_per_unit => 'Employees per Unit';
+
+  @override
+  String get human_ratio_empty_people_categories => 'No people category data';
+
+  @override
+  String get human_ratio_empty_positions => 'No employee position data';
+
+  @override
+  String get human_ratio_empty_employee_per_unit => 'No employee per unit data';
+
+  @override
+  String get human_ratio_person_suffix => 'person';
+
+  @override
+  String get human_ratio_person_suffix_plural => 'people';
+
+  @override
+  String get human_ratio_error_title => 'Failed to load data';
+
+  @override
+  String get human_ratio_error_retry_button => 'Try Again';
 }

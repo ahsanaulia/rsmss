@@ -1231,4 +1231,236 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get crud_eq_success_create => 'Kualifikasi berhasil ditambahkan';
+
+  @override
+  String get monitor_section_organization_insights => 'ORGANISASI';
+
+  @override
+  String get monitor_section_people_insights => 'ORANG DAN POPULASI';
+
+  @override
+  String get monitor_section_asset => 'ASET';
+
+  @override
+  String get monitor_section_stock_inventory => 'STOK DAN PERSEDIAAN';
+
+  @override
+  String get monitor_section_people_tracking => 'PEMETAAN ORANG';
+
+  @override
+  String get monitor_section_system => 'SYSTEM';
+
+  @override
+  String get monitor_menu_organization_overview => 'Ringkasan Organisasi';
+
+  @override
+  String get monitor_menu_human_ratio => 'Rasio SDM & Analitik';
+
+  @override
+  String get monitor_menu_bed_occupancy => 'Okupansi Tempat Tidur';
+
+  @override
+  String get monitor_menu_incident_response => 'Insiden & Respon';
+
+  @override
+  String get monitor_menu_employee_summary => 'Ringkasan Pegawai';
+
+  @override
+  String get monitor_menu_wellbeing_performance => 'Kesejahteraan & Kinerja';
+
+  @override
+  String get monitor_menu_location_attendance => 'Lokasi & Kehadiran';
+
+  @override
+  String get monitor_menu_certification_assessment => 'Sertifikasi & Penilaian';
+
+  @override
+  String get monitor_menu_employee_insight => 'Insight Pegawai';
+
+  @override
+  String get monitor_menu_asset_utilization => 'Utilisasi Aset';
+
+  @override
+  String get monitor_menu_live_asset_tracking => 'Lacak Aset Langsung';
+
+  @override
+  String get monitor_menu_asset_by_taxonomy => 'Aset Berdasarkan Taksonomi';
+
+  @override
+  String get monitor_menu_asset_intelligence => 'Intelijen Aset';
+
+  @override
+  String get monitor_menu_asset_report => 'Laporan Aset';
+
+  @override
+  String get monitor_menu_stock_overview => 'Ringkasan Stok';
+
+  @override
+  String get monitor_menu_stock_tree_view => 'Tampilan Pohon Stok';
+
+  @override
+  String get monitor_menu_stock_requests => 'Permintaan Stok';
+
+  @override
+  String get monitor_menu_stock_opname => 'Opname Stok';
+
+  @override
+  String get monitor_menu_storage_distribution => 'Distribusi Penyimpanan';
+
+  @override
+  String get monitor_menu_storage_tree_view => 'Tampilan Pohon Penyimpanan';
+
+  @override
+  String get monitor_menu_stock_intelligence => 'Intelijen Stok';
+
+  @override
+  String get monitor_menu_stock_report => 'Laporan Stok';
+
+  @override
+  String get monitor_menu_live_people_tracking => 'Lacak Orang Langsung';
+
+  @override
+  String get monitor_menu_people_watch_list => 'Daftar Pantau Orang';
+
+  @override
+  String get monitor_menu_logout => 'Keluar';
+
+  @override
+  String get monitor_footer_developed_by =>
+      'Dikembangkan Oleh: PLATFORM PELAYANAN TERBAIK';
+
+  @override
+  String get monitor_footer_distributed_by =>
+      'Didistribusikan Oleh: PT. REKAMITRA';
+
+  @override
+  String get monitor_footer_year_country => '2026 - Indonesia';
+
+  @override
+  String get monitor_empty_state => 'KOSONG';
+
+  @override
+  String get hospital_overview_kpi_buildings => 'Gedung';
+
+  @override
+  String get hospital_overview_kpi_floors => 'Lantai';
+
+  @override
+  String get hospital_overview_kpi_rooms => 'Kamar';
+
+  @override
+  String get hospital_overview_kpi_employees => 'Pegawai';
+
+  @override
+  String get hospital_overview_kpi_units => 'Unit';
+
+  @override
+  String get hospital_overview_kpi_present_today => 'Hadir';
+
+  @override
+  String get hospital_overview_chart_room_distribution =>
+      'Distribusi Kamar per Kategori';
+
+  @override
+  String get hospital_overview_chart_employee_per_unit => 'Pegawai per Unit';
+
+  @override
+  String get hospital_overview_tree_organization_structure =>
+      'Struktur Organisasi';
+
+  @override
+  String get hospital_overview_tree_building_structure => 'Struktur Gedung';
+
+  @override
+  String get hospital_overview_empty_room_categories =>
+      'Tidak ada data kategori kamar';
+
+  @override
+  String get hospital_overview_empty_employee_per_unit =>
+      'Tidak ada data pegawai per unit';
+
+  @override
+  String get hospital_overview_empty_organization_structure =>
+      'Tidak ada data struktur organisasi';
+
+  @override
+  String get hospital_overview_empty_building_data => 'Tidak ada data gedung';
+
+  @override
+  String get hospital_overview_error_title => 'Gagal memuat data';
+
+  @override
+  String get hospital_overview_error_retry_button => 'Coba Lagi';
+
+  @override
+  String get hospital_overview_unit_person_suffix => 'org';
+
+  @override
+  String get hospital_overview_unit_person_suffix_plural => 'org';
+
+  @override
+  String get hospital_overview_floor_prefix => 'Lantai ';
+
+  @override
+  String get hospital_overview_more_units_suffix => 'unit lainnya';
+
+  @override
+  String get human_ratio_title => 'HUMAN RATIO & ANALYTICS';
+
+  @override
+  String get human_ratio_subtitle =>
+      'Perbandingan Pegawai vs Non-Pegawai | Beban Kerja | Rasio';
+
+  @override
+  String get human_ratio_total_employees => 'Total Pegawai';
+
+  @override
+  String get human_ratio_total_people => 'Total People';
+
+  @override
+  String get human_ratio_employee_vs_patient => 'Pegawai vs Pasien';
+
+  @override
+  String get human_ratio_nurse_vs_patient => 'Perawat vs Pasien';
+
+  @override
+  String get human_ratio_employee_vs_non_employee => 'Pegawai vs Non-Pegawai';
+
+  @override
+  String get human_ratio_employee_vs_non_employee_desc =>
+      'Perbandingan pegawai dengan non-pegawai';
+
+  @override
+  String get human_ratio_chart_people_distribution =>
+      'Distribusi People per Kategori';
+
+  @override
+  String get human_ratio_chart_position_distribution =>
+      'Distribusi Pegawai per Posisi';
+
+  @override
+  String get human_ratio_chart_employee_per_unit => 'Pegawai per Unit';
+
+  @override
+  String get human_ratio_empty_people_categories =>
+      'Tidak ada data kategori people';
+
+  @override
+  String get human_ratio_empty_positions => 'Tidak ada data posisi pegawai';
+
+  @override
+  String get human_ratio_empty_employee_per_unit =>
+      'Tidak ada data pegawai per unit';
+
+  @override
+  String get human_ratio_person_suffix => 'org';
+
+  @override
+  String get human_ratio_person_suffix_plural => 'org';
+
+  @override
+  String get human_ratio_error_title => 'Gagal memuat data';
+
+  @override
+  String get human_ratio_error_retry_button => 'Coba Lagi';
 }

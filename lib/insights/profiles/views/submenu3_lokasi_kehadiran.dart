@@ -58,7 +58,7 @@ class Submenu3LokasiKehadiran extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'LOKASI & KEHADIRAN',
+          '       LOKASI & KEHADIRAN',
           style: GoogleFonts.poppins(
             fontSize: 24,
             fontWeight: FontWeight.w800,
